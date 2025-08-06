@@ -13,7 +13,8 @@ def controllers_main_menu(lang='uz'):
             [KeyboardButton(text="📊 Statistika"), KeyboardButton(text="🎯 Sifat nazorati")],
             [KeyboardButton(text="📊 Hisobotlar"), KeyboardButton(text="👨‍🔧 Texniklar")],
             [KeyboardButton(text="🔌 Ulanish arizasi yaratish"), KeyboardButton(text="🔧 Texnik xizmat yaratish")],
-            [KeyboardButton(text="🕐 Real vaqtda kuzatish")],
+            [KeyboardButton(text="🕐 Real vaqtda kuzatish"), KeyboardButton(text="🏆 Sifat boshqaruvi")],
+            [KeyboardButton(text="⚙️ Workflow boshqaruvi"), KeyboardButton(text="📋 Buyurtmalar nazorati")],
             [KeyboardButton(text="🌐 Tilni o'zgartirish"), KeyboardButton(text="🏠 Bosh menyu")]
         ]
     else:
@@ -22,7 +23,8 @@ def controllers_main_menu(lang='uz'):
             [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="🎯 Контроль качества")],
             [KeyboardButton(text="📊 Отчеты"), KeyboardButton(text="👨‍🔧 Техники")],
             [KeyboardButton(text="🔌 Создать заявку на подключение"), KeyboardButton(text="🔧 Создать техническую заявку")],
-            [KeyboardButton(text="🕐 Мониторинг в реальном времени")],
+            [KeyboardButton(text="🕐 Мониторинг в реальном времени"), KeyboardButton(text="🏆 Управление качеством")],
+            [KeyboardButton(text="⚙️ Управление процессами"), KeyboardButton(text="📋 Контроль заказов")],
             [KeyboardButton(text="🌐 Изменить язык"), KeyboardButton(text="🏠 Главное меню")]
         ]
     
