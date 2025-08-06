@@ -153,6 +153,19 @@ def get_warehouse_export_router():
         except Exception as e:
             await callback.message.answer("❌ Export xatoligi yuz berdi")
 
+    @router.callback_query(F.data == "warehouse_back")
+    async def handle_warehouse_back(callback: CallbackQuery, state: FSMContext):
+        """Handle warehouse back button"""
+        try:
+            await callback.answer()
+            
+            # Return to warehouse main menu
+            await callback.message.answer("Ombor bosh menyusi", reply_markup=warehouse_main_menu('uz'))
+            await state.set_state(WarehouseMainMenuStates.main_menu)
+            
+        except Exception as e:
+            await callback.message.answer("❌ Xatolik yuz berdi")
+
     @router.callback_query(F.data == "export_back")
     async def handle_export_back(callback: CallbackQuery, state: FSMContext):
         """Handle export back button"""

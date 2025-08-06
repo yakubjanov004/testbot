@@ -350,9 +350,9 @@ def export_format_keyboard(language: str) -> InlineKeyboardMarkup:
     word = "📝 Word" if language == 'uz' else "📝 Word"
     back = "◀️ Orqaga" if language == 'uz' else "◀️ Назад"
     keyboard = [
-        [InlineKeyboardButton(text=excel, callback_data="export_excel")],
-        [InlineKeyboardButton(text=pdf, callback_data="export_pdf")],
-        [InlineKeyboardButton(text=word, callback_data="export_word")],
+        [InlineKeyboardButton(text=excel, callback_data="export_format_xlsx")],
+        [InlineKeyboardButton(text=pdf, callback_data="export_format_pdf")],
+        [InlineKeyboardButton(text=word, callback_data="export_format_docx")],
         [InlineKeyboardButton(text=back, callback_data="warehouse_back")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
