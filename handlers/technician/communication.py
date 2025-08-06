@@ -1,13 +1,18 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
 from states.technician_states import TechnicianCommunicationStates
+from filters.role_filter import RoleFilter
 
 def get_technician_communication_router():
     """Technician communication router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("technician")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("technician")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.callback_query(F.data == "tech_send_location")
     async def tech_send_location_handler(callback: CallbackQuery, state: FSMContext):

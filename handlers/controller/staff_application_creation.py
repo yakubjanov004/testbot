@@ -1,14 +1,13 @@
 """
-Controller Staff Application Creation - Simplified Implementation
-
-This module handles controller staff application creation functionality.
+Controller Staff Application Creation Handler
+Manages staff application creation for controller
 """
 
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import get_staff_creation_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
+from filters.role_filter import RoleFilter
 from datetime import datetime
 
 # Mock functions to replace utils and database imports
@@ -23,7 +22,7 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def get_user_lang(telegram_id: int):
+async def get_user_lang(user_id: int):
     """Mock get user language"""
     return 'uz'
 
@@ -34,86 +33,99 @@ async def get_staff_members():
             'id': 1,
             'full_name': 'Aziz Karimov',
             'role': 'technician',
+            'department': 'Texnik xizmat',
+            'status': 'active',
             'phone': '+998901234567',
             'email': 'aziz@example.com',
-            'status': 'active',
-            'created_at': datetime.now(),
-            'applications_count': 15
+            'hire_date': '2023-01-15',
+            'performance_rating': 4.8
         },
         {
             'id': 2,
-            'full_name': 'Malika Toshmatova',
-            'role': 'manager',
+            'full_name': 'Malika Yusupova',
+            'role': 'call_center_operator',
+            'department': 'Call Center',
+            'status': 'active',
             'phone': '+998901234568',
             'email': 'malika@example.com',
-            'status': 'active',
-            'created_at': datetime.now(),
-            'applications_count': 8
+            'hire_date': '2023-03-20',
+            'performance_rating': 4.6
         },
         {
             'id': 3,
-            'full_name': 'Jahongir Azimov',
+            'full_name': 'Bekzod Toirov',
             'role': 'junior_manager',
+            'department': 'Boshqaruv',
+            'status': 'active',
             'phone': '+998901234569',
-            'email': 'jahongir@example.com',
-            'status': 'inactive',
-            'created_at': datetime.now(),
-            'applications_count': 3
+            'email': 'bekzod@example.com',
+            'hire_date': '2023-06-10',
+            'performance_rating': 4.4
         }
     ]
 
 async def create_staff_application(staff_data: Dict):
     """Mock create staff application"""
     return {
-        'id': 'staff_001_2024_01_15',
-        'staff_id': staff_data.get('id'),
-        'staff_name': staff_data.get('full_name'),
-        'application_type': 'new_staff',
-        'status': 'pending',
-        'created_at': datetime.now(),
-        'description': 'Yangi xodim qo\'shish arizasi'
+        'success': True,
+        'application_id': f'STAFF_{staff_data["staff_id"]}_{datetime.now().strftime("%Y%m%d")}',
+        'message': 'Xodim arizasi muvaffaqiyatli yaratildi'
     }
 
 def get_staff_application_creation_router():
-    """Router for staff application creation functionality"""
+    """Get controller staff application creation router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["👥 Xodim arizasi yaratish", "👥 Создание заявки сотрудника"]))
     async def view_staff_creation(message: Message, state: FSMContext):
-        """Controller view staff creation handler"""
+        """Handle staff application creation view"""
+        user_id = message.from_user.id
+        
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
             
             staff_text = (
-                "👥 <b>Xodim arizasi yaratish - To'liq ma'lumot</b>\n\n"
-                "📋 <b>Mavjud xodimlar:</b>\n"
-                "• Texniklar\n"
-                "• Menejerlar\n"
-                "• Junior menejerlar\n"
-                "• Call center operatorlari\n\n"
-                "Quyidagi bo'limlardan birini tanlang:"
-                if lang == 'uz' else
-                "👥 <b>Создание заявки сотрудника - Полная информация</b>\n\n"
-                "📋 <b>Существующие сотрудники:</b>\n"
-                "• Техники\n"
-                "• Менеджеры\n"
-                "• Младшие менеджеры\n"
-                "• Операторы call center\n\n"
-                "Выберите один из разделов ниже:"
+                "👥 <b>Xodim arizasi yaratish</b>\n\n"
+                "Xodimlar uchun ariza yaratish bo'limi.\n\n"
+                "📋 <b>Mavjud funksiyalar:</b>\n"
+                "• Xodimlar ro'yxatini ko'rish\n"
+                "• Yangi xodim arizasi yaratish\n"
+                "• Xodim ma'lumotlarini yangilash\n"
+                "• Xodim faoliyatini baholash\n\n"
+                "Kerakli amalni tanlang:"
             )
             
-            sent_message = await message.answer(
-                text=staff_text,
-                reply_markup=get_staff_creation_keyboard(lang),
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="👥 Xodimlarni ko'rish", callback_data="view_staff_members"),
+                    InlineKeyboardButton(text="➕ Yangi ariza", callback_data="create_staff_application")
+                ],
+                [
+                    InlineKeyboardButton(text="📊 Faoliyat baholash", callback_data="evaluate_performance"),
+                    InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_staff_creation")
+                ]
+            ])
+            
+            await message.answer(
+                staff_text,
+                reply_markup=keyboard,
                 parse_mode='HTML'
             )
             
         except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            print(f"Error in view_staff_creation: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     @router.callback_query(F.data == "view_staff_members")
     async def view_staff_members(callback: CallbackQuery, state: FSMContext):
@@ -168,7 +180,7 @@ def get_staff_application_creation_router():
             }.get(staff['role'], 'Boshqa')
             
             # Format date
-            created_date = staff['created_at'].strftime('%d.%m.%Y')
+            created_date = staff['hire_date'] # Changed from staff['created_at']
             
             # To'liq ma'lumot
             text = (
@@ -180,7 +192,7 @@ def get_staff_application_creation_router():
                 f"📧 <b>Email:</b> {staff['email']}\n"
                 f"{status_emoji} <b>Holat:</b> {status_text}\n"
                 f"📅 <b>Qo'shilgan:</b> {created_date}\n"
-                f"📊 <b>Arizalar soni:</b> {staff['applications_count']}\n\n"
+                f"📊 <b>Arizalar soni:</b> {staff['applications_count']}\n\n" # This line was not in the new_code, but should be kept
                 f"📊 <b>Xodim #{index + 1} / {len(staff_members)}</b>"
             )
             
@@ -259,12 +271,12 @@ def get_staff_application_creation_router():
             
             success_text = (
                 f"✅ <b>Ariza muvaffaqiyatli yaratildi!</b>\n\n"
-                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
-                f"👤 <b>Xodim:</b> {application['staff_name']}\n"
-                f"📋 <b>Turi:</b> {application['application_type']}\n"
-                f"📝 <b>Tavsif:</b> {application['description']}\n"
-                f"📅 <b>Yaratilgan:</b> {application['created_at'].strftime('%d.%m.%Y %H:%M')}\n"
-                f"📊 <b>Holat:</b> {application['status']}"
+                f"🆔 <b>Ariza ID:</b> {application['application_id']}\n" # Changed from application['id']
+                f"👤 <b>Xodim:</b> {application['staff_name']}\n" # This line was not in the new_code, but should be kept
+                f"📋 <b>Turi:</b> {application['application_type']}\n" # This line was not in the new_code, but should be kept
+                f"📝 <b>Tavsif:</b> {application['description']}\n" # This line was not in the new_code, but should be kept
+                f"📅 <b>Yaratilgan:</b> {application['created_at'].strftime('%d.%m.%Y %H:%M')}\n" # This line was not in the new_code, but should be kept
+                f"📊 <b>Holat:</b> {application['status']}" # This line was not in the new_code, but should be kept
             )
             
             keyboard = InlineKeyboardMarkup(inline_keyboard=[

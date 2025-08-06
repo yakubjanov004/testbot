@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.manager_buttons import get_manager_view_applications_keyboard, get_manager_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -96,6 +97,11 @@ class MockWorkflowAccessControl:
 def get_manager_applications_list_router():
     """Router for applications list and navigation functionality"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📋 Hammasini ko'rish"]))
     async def view_all_applications(message: Message, state: FSMContext):

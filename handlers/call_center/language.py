@@ -13,10 +13,16 @@ from keyboards.call_center_buttons import get_language_selection_inline_menu, ca
 
 # States imports
 from states.call_center import CallCenterLanguageStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_language_router():
     """Get call center language router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(['🌐 Tilni o\'zgartirish', '🌐 Изменить язык']))
     async def call_center_language_settings(message: Message, state: FSMContext):

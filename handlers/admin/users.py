@@ -17,10 +17,16 @@ from keyboards.admin_buttons import get_users_keyboard
 
 # States imports
 from states.admin_states import AdminUsersStates, AdminMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_admin_users_router():
     """Get admin users router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["👥 Foydalanuvchilar", "👥 Пользователи"]))
     async def users_menu(message: Message, state: FSMContext):
@@ -299,7 +305,8 @@ def get_admin_users_router():
             await message.answer(text, reply_markup=keyboard)
             
         except Exception as e:
-            await message.answer(f"Xatolik yuz berdi: {str(e)}")
+            # await message.answer(f"Xatolik yuz berdi: {str(e)}")
+            pass
         
         await state.clear()
 

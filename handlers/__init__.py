@@ -8,9 +8,9 @@ All modules have been simplified to focus on core functionality.
 from aiogram import Dispatcher
 
 def setup_handlers(dp: Dispatcher):
-    """Setup all role-based handlers with simplified integration"""
+    """Setup all role-based handlers with proper priority"""
     try:
-        # Import start handler first
+        # Import start handler first (highest priority)
         from handlers.start_handler import get_start_router
         start_router = get_start_router()
         dp.include_router(start_router)

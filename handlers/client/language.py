@@ -9,7 +9,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from keyboards.client_buttons import get_language_keyboard, get_main_menu_keyboard
 from states.client_states import LanguageStates
-from utils.role_system import get_role_router
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -32,7 +32,13 @@ async def update_user_language(user_id: int, language: str):
     return True
 
 def get_client_language_router():
-    router = get_role_router("client")
+    from aiogram import Router
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("client")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🌐 Til", "🌐 Язык"]))
     async def client_language_handler(message: Message, state: FSMContext):
@@ -95,7 +101,7 @@ def get_client_language_router():
                 await callback.message.edit_text(error_text)
                 
         except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "cancel_language")
     async def cancel_language_selection(callback: CallbackQuery, state: FSMContext):
@@ -107,19 +113,15 @@ def get_client_language_router():
             lang = user.get('language', 'uz')
             
             cancel_text = (
-                "❌ Til o'zgartirish bekor qilindi."
+                "❌ Til tanlash bekor qilindi."
                 if lang == 'uz' else
-                "❌ Изменение языка отменено."
+                "❌ Выбор языка отменен."
             )
             
-            await callback.message.edit_text(
-                text=cancel_text,
-                reply_markup=get_main_menu_keyboard(lang)
-            )
-            
+            await callback.message.edit_text(cancel_text)
             await state.clear()
             
         except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router

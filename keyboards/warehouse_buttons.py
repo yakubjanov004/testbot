@@ -1,10 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
-def get_warehouse_main_keyboard(lang="uz"):
-    """Warehouse main keyboard - returns main menu keyboard"""
-    return warehouse_main_menu(lang)
-
-def warehouse_main_menu(language: str) -> ReplyKeyboardMarkup:
+def get_warehouse_main_keyboard(language: str) -> ReplyKeyboardMarkup:
     """Warehouse uchun asosiy menyu - tex.txt talablariga mos"""
     inbox = "📥 Inbox"
     inventory = "📦 Inventarizatsiya" if language == 'uz' else "📦 Инвентаризация"

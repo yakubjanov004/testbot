@@ -17,10 +17,16 @@ from keyboards.admin_buttons import get_statistics_keyboard
 
 # States imports
 from states.admin_states import AdminStatisticsStates, AdminMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_admin_statistics_router():
     """Get admin statistics router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["📊 Statistika", "📊 Статистика"]))
     async def statistics_menu(message: Message, state: FSMContext):

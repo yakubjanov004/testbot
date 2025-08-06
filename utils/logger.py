@@ -18,6 +18,10 @@ activity_logger = logging.getLogger('activity')
 # Error logger
 error_logger = logging.getLogger('error')
 
+def get_logger(name: str):
+    """Get logger for specific module"""
+    return logging.getLogger(name)
+
 def log_user_activity(user_id: int, user_name: str, action: str, details: Optional[str] = None):
     """Foydalanuvchi faolligini log qilish"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

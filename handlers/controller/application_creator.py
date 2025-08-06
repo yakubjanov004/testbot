@@ -2,10 +2,11 @@
 Controller uchun zayavka yaratish handleri
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from states.controller_states import ControllerApplicationStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -58,8 +59,12 @@ async def create_controller_application(controller_id: int, client_id: int, appl
 
 def get_controller_application_creator_router():
     """Get controller application creator router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish"]))
     async def start_connection_application(message: Message, state: FSMContext):

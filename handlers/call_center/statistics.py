@@ -3,29 +3,36 @@ Call Center Statistics Handler
 Manages call center statistics and reports
 """
 
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
 from typing import Optional, Dict, Any
 
 # Keyboard imports
-from keyboards.call_center_buttons import call_center_statistics_menu, call_center_main_menu_reply
+from keyboards.call_center_buttons import call_center_statistics_menu
 
 # States imports
 from states.call_center import CallCenterReportsStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_statistics_router():
     """Get call center statistics router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text == "📊 Statistikalar")
     async def handle_statistics(message: Message, state: FSMContext):
         """Handle statistics menu"""
-        lang = 'uz'  # Default language
+        text = "📊 <b>Call Center Statistikalar</b>\n\nStatistikalar va hisobotlarni ko'rish uchun turini tanlang."
         
         await message.answer(
-            "📊 Call Center statistikalar" if lang == 'uz' else "📊 Статистика call-центра",
-            reply_markup=call_center_statistics_menu(lang)
+            text,
+            reply_markup=get_statistics_keyboard('uz')
         )
         await state.set_state(CallCenterReportsStates.statistics)
 

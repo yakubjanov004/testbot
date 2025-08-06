@@ -1,7 +1,6 @@
 """
-Junior Manager Orders - Simplified Implementation
-
-This module handles junior manager orders functionality.
+Junior Manager Orders Handler
+Manages orders for junior manager
 """
 
 from aiogram import F, Router
@@ -10,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.junior_manager_buttons import get_orders_keyboard, get_junior_manager_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -31,78 +31,72 @@ async def get_junior_manager_orders(user_id: int):
     """Mock get junior manager orders"""
     return [
         {
-            'id': 'ord_001_2024_01_15',
+            'id': 1,
+            'order_number': 'ORD-001',
             'client_name': 'Aziz Karimov',
-            'client_phone': '+998901234567',
-            'order_type': 'connection',
+            'service_type': 'Internet xizmati',
             'status': 'pending',
-            'description': 'Yangi internet ulanish',
-            'address': 'Tashkent, Chorsu',
             'priority': 'high',
             'created_at': datetime.now(),
-            'estimated_completion': '2-3 kun'
+            'assigned_to': 'Junior Manager'
         },
         {
-            'id': 'ord_002_2024_01_16',
+            'id': 2,
+            'order_number': 'ORD-002',
             'client_name': 'Malika Toshmatova',
-            'client_phone': '+998901234568',
-            'order_type': 'technical_service',
+            'service_type': 'TV xizmati',
             'status': 'in_progress',
-            'description': 'Internet tezligi sekin',
-            'address': 'Tashkent, Yunusabad',
-            'priority': 'normal',
+            'priority': 'medium',
             'created_at': datetime.now(),
-            'estimated_completion': '1 kun'
+            'assigned_to': 'Junior Manager'
         },
         {
-            'id': 'ord_003_2024_01_17',
-            'client_name': 'Jahongir Azimov',
-            'client_phone': '+998901234569',
-            'order_type': 'tv_service',
+            'id': 3,
+            'order_number': 'ORD-003',
+            'client_name': 'Jamshid Mirzayev',
+            'service_type': 'Telefon xizmati',
             'status': 'completed',
-            'description': 'TV signal muammosi',
-            'address': 'Tashkent, Sergeli',
             'priority': 'low',
             'created_at': datetime.now(),
-            'estimated_completion': 'Yakunlangan'
+            'assigned_to': 'Junior Manager'
         }
     ]
 
 def get_junior_manager_orders_router():
-    """Router for junior manager orders functionality"""
+    """Get junior manager orders router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📋 Buyurtmalar", "📋 Заказы"]))
     async def view_orders(message: Message, state: FSMContext):
-        """Junior manager view orders handler"""
+        """Handle view orders"""
+        user_id = message.from_user.id
+        
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'junior_manager':
+                await message.answer("Sizda ruxsat yo'q.")
                 return
             
             lang = user.get('language', 'uz')
-            
-            # Get junior manager orders
-            orders = await get_junior_manager_orders(message.from_user.id)
+            orders = await get_junior_manager_orders(user['id'])
             
             if not orders:
-                no_orders_text = (
-                    "📭 Hozircha buyurtmalar yo'q."
-                    if lang == 'uz' else
-                    "📭 Пока нет заказов."
-                )
-                
-                await message.answer(
-                    text=no_orders_text,
-                    reply_markup=get_junior_manager_back_keyboard(lang)
-                )
+                no_orders_text = "📋 Hozircha buyurtmalar yo'q."
+                await message.answer(no_orders_text)
                 return
             
             # Show first order
             await show_order_details(message, orders[0], orders, 0)
             
         except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            print(f"Error in view_orders: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     async def show_order_details(message_or_callback, order, orders, index):
         """Show order details with navigation"""

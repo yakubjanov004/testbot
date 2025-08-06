@@ -5,7 +5,7 @@ This module provides word document generation functionality for Manager role,
 allowing managers to create various types of documents (work orders, reports, quality control, work time reports).
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, date, timedelta
@@ -15,11 +15,16 @@ from keyboards.manager_buttons import (
     get_manager_main_keyboard
 )
 from states.manager_states import ManagerWordDocumentStates
+from filters.role_filter import RoleFilter
 
 def get_manager_word_documents_router():
     """Manager word documents router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text == "📄 Hujjatlar yaratish")
     async def show_word_documents_menu(message: Message, state: FSMContext):

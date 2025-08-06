@@ -1,8 +1,9 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from keyboards.controllers_buttons import controllers_main_menu
 from states.controller_states import ControllerMainMenuStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -36,8 +37,12 @@ async def get_user_lang(telegram_id: int):
 
 def get_controller_main_menu_router():
     """Get controller main menu router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🎛️ Controller", "🎛️ Nazoratchi"]))
     async def controllers_start(message: Message, state: FSMContext):

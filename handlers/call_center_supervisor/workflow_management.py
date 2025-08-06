@@ -1,8 +1,8 @@
 """
 Call Center Supervisor Workflow Management Handler
 
-This module handles workflow management functionality for call center supervisors,
-including workflow monitoring, process optimization, and team coordination.
+This module implements workflow management functionality for Call Center Supervisor role,
+providing comprehensive workflow optimization, monitoring, and coordination tools.
 """
 
 from aiogram import F, Router
@@ -11,12 +11,12 @@ from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 
-from keyboards.call_center_supervisor_buttons import (
-    get_workflow_management_menu, get_process_monitoring_menu,
-    get_workflow_optimization_menu, get_team_coordination_menu,
-    get_workflow_menu
-)
+# Keyboard imports
+from keyboards.call_center_supervisor_buttons import get_workflow_management_menu
+
+# States imports
 from states.call_center_supervisor_states import CallCenterSupervisorWorkflowStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -33,139 +33,129 @@ async def get_user_lang(user_id: int) -> str:
     """Mock user language"""
     return 'uz'
 
-# Removed duplicate get_role_router - using centralized version from utils.role_system
-
-
-
 async def get_call_center_supervisor_orders(supervisor_id: int, limit: int = 50, status: str = None):
-    """Mock supervisor orders"""
+    """Mock get supervisor orders"""
     return [
         {
-            'id': '12345678',
-            'status': 'new',
+            'id': 'ORD001',
+            'client_name': 'Test Client 1',
+            'status': 'pending',
             'priority': 'high',
-            'created_at': datetime.now(),
-            'updated_at': datetime.now(),
-            'client_name': 'Test Client',
-            'description': 'Internet ulanish muammosi'
+            'created_at': datetime.now()
         },
         {
-            'id': '87654321',
+            'id': 'ORD002',
+            'client_name': 'Test Client 2',
             'status': 'in_progress',
-            'priority': 'medium',
-            'created_at': datetime.now() - timedelta(hours=2),
-            'updated_at': datetime.now(),
-            'client_name': 'Another Client',
-            'description': 'Televizor signallari yo\'q'
+            'priority': 'normal',
+            'created_at': datetime.now()
         }
     ]
 
 async def get_supervised_staff_performance(supervisor_id: int):
-    """Mock staff performance"""
+    """Mock get supervised staff performance"""
     return [
         {
-            'id': 1,
-            'full_name': 'Operator 1',
-            'total_orders': 15,
-            'completed_orders': 12,
-            'active_orders': 3
+            'staff_id': 1,
+            'name': 'Operator 1',
+            'orders_completed': 15,
+            'avg_response_time': '2.3 min',
+            'satisfaction_rate': '4.8/5'
         },
         {
-            'id': 2,
-            'full_name': 'Operator 2',
-            'total_orders': 8,
-            'completed_orders': 7,
-            'active_orders': 1
+            'staff_id': 2,
+            'name': 'Operator 2',
+            'orders_completed': 12,
+            'avg_response_time': '2.8 min',
+            'satisfaction_rate': '4.6/5'
         }
     ]
 
 async def get_supervisor_dashboard_stats(supervisor_id: int):
-    """Mock dashboard stats"""
+    """Mock get supervisor dashboard stats"""
     return {
-        'total_orders': 25,
-        'completed_today': 8,
-        'active_orders': 12,
-        'issues': 2
+        'total_orders': 45,
+        'pending_orders': 8,
+        'completed_today': 12,
+        'avg_completion_time': '3.2 hours'
     }
 
 async def assign_order_to_staff(order_id: str, staff_id: int, supervisor_id: int, note: str = None):
-    """Mock assign order"""
+    """Mock assign order to staff"""
     return True
 
 async def get_workflow_performance_metrics(supervisor_id: int, days: int = 7):
-    """Mock performance metrics"""
+    """Mock get workflow performance metrics"""
     return {
-        'metrics': {
-            'total_processed': 45,
-            'completed': 38,
-            'issues': 3,
-            'avg_processing_hours': 2.5
-        },
-        'hourly_distribution': {
-            9: 5, 10: 8, 11: 12, 12: 6, 13: 4, 14: 7, 15: 9, 16: 6, 17: 3
-        }
+        'total_orders': 156,
+        'avg_completion_time': '2.8 hours',
+        'satisfaction_rate': '4.7/5',
+        'efficiency_score': '87%'
     }
 
 async def get_workflow_bottlenecks(supervisor_id: int):
-    """Mock workflow bottlenecks"""
-    return {
-        'status_bottlenecks': [
-            {'status': 'new', 'count': 5, 'avg_hours_stuck': 1.5},
-            {'status': 'in_progress', 'count': 3, 'avg_hours_stuck': 4.2}
-        ],
-        'overloaded_staff': [
-            {'full_name': 'Operator 1', 'active_orders': 8}
-        ],
-        'priority_issues': {
-            'high_priority_waiting': 2
-        }
-    }
-
-async def get_staff_workload_distribution(supervisor_id: int):
-    """Mock workload distribution"""
+    """Mock get workflow bottlenecks"""
     return [
         {
-            'id': 1,
-            'full_name': 'Operator 1',
-            'current_workload': 8
+            'type': 'order_assignment',
+            'description': 'Buyurtmalar tayinlash kechikmoqda',
+            'impact': 'high',
+            'suggested_solution': 'Avtomatik tayinlash tizimini yoqish'
         },
         {
-            'id': 2,
-            'full_name': 'Operator 2',
-            'current_workload': 3
+            'type': 'response_time',
+            'description': 'Javob vaqti oshib ketmoqda',
+            'impact': 'medium',
+            'suggested_solution': 'Qo\'shimcha xodimlar qo\'shish'
         }
     ]
 
+async def get_staff_workload_distribution(supervisor_id: int):
+    """Mock get staff workload distribution"""
+    return [
+        {'staff_id': 1, 'name': 'Operator 1', 'workload': 75, 'capacity': 100},
+        {'staff_id': 2, 'name': 'Operator 2', 'workload': 60, 'capacity': 100},
+        {'staff_id': 3, 'name': 'Operator 3', 'workload': 90, 'capacity': 100}
+    ]
+
 async def optimize_order_assignments(supervisor_id: int, max_assignments: int = 5):
-    """Mock optimize assignments"""
+    """Mock optimize order assignments"""
     return {
-        'assignments_made': 3,
-        'total_unassigned': 2,
-        'available_staff': 4
+        'optimized_assignments': 3,
+        'estimated_improvement': '15%',
+        'time_saved': '2.5 hours'
     }
 
 def get_call_center_supervisor_workflow_management_router():
-    """Get router for call center supervisor workflow management handlers"""
-    from utils.role_system import get_role_router
-    router = get_role_router("call_center_supervisor")
+    """Get call center supervisor workflow management router"""
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["⚙️ Workflow boshqaruvi"]))
     async def workflow_management_menu(message: Message, state: FSMContext):
-        """Main workflow management menu"""
-        try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            
-            if not user or user['role'] != 'call_center_supervisor':
-                text = "Sizda call center supervisor huquqi yo'q."
-                await message.answer(text)
-                return
-            
-            text = f"⚙️ Workflow Boshqaruvi\n\nQuyidagi bo'limlardan birini tanlang:"
-            await message.answer(text, reply_markup=get_workflow_menu('uz'))
-            
-        except Exception as e:
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+        """Handle workflow management menu"""
+        lang = 'uz'  # Default language
+        
+        text = (
+            "⚙️ <b>Workflow boshqaruvi</b>\n\n"
+            "Call center jarayonlarini boshqarish va optimallashtirish:\n\n"
+            "📊 Jarayonlarni nazorat qilish\n"
+            "🎯 Workflow optimallashtirish\n"
+            "👥 Jamoa koordinatsiyasi\n"
+            "📈 Workflow analitikasi\n"
+            "🤖 Avtomatlashtirish\n"
+            "⏱️ Real vaqtda nazorat"
+        )
+        
+        await message.answer(
+            text,
+            reply_markup=get_workflow_management_keyboard(lang)
+        )
+        await state.set_state(CallCenterSupervisorWorkflowStates.workflow_management)
 
     @router.callback_query(F.data.startswith("ccs_workflow_"))
     async def handle_workflow_actions(callback: CallbackQuery, state: FSMContext):
@@ -306,7 +296,7 @@ async def _show_process_monitoring(callback: CallbackQuery, supervisor_id: int):
             f"Batafsil monitoring tanlang:"
         )
         
-        await callback.message.edit_text(text, reply_markup=get_process_monitoring_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -344,7 +334,7 @@ async def _show_workflow_optimization(callback: CallbackQuery, supervisor_id: in
         
         text += "\nOptimizatsiya turini tanlang:"
         
-        await callback.message.edit_text(text, reply_markup=get_workflow_optimization_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -376,7 +366,7 @@ async def _show_team_coordination(callback: CallbackQuery, supervisor_id: int):
             f"Koordinatsiya turini tanlang:"
         )
         
-        await callback.message.edit_text(text, reply_markup=get_team_coordination_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -525,7 +515,7 @@ async def _show_bottleneck_analysis(callback: CallbackQuery, supervisor_id: int)
         if not status_bottlenecks and not overloaded_staff and high_priority_waiting == 0:
             text += "✅ Hozircha bottleneck topilmadi!"
         
-        await callback.message.edit_text(text, reply_markup=get_process_monitoring_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -560,7 +550,7 @@ async def _show_performance_monitoring(callback: CallbackQuery, supervisor_id: i
             bar = "█" * min(count // 2, 10)
             text += f"{hour:02d}:00 {bar} {count}\n"
         
-        await callback.message.edit_text(text, reply_markup=get_process_monitoring_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -620,7 +610,7 @@ async def _show_workflow_alerts(callback: CallbackQuery, supervisor_id: int):
         
         text += f"\n⏰ Oxirgi yangilanish: {now.strftime('%H:%M')}"
         
-        await callback.message.edit_text(text, reply_markup=get_process_monitoring_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -632,7 +622,7 @@ async def _optimize_workload_distribution(callback: CallbackQuery, supervisor_id
     try:
         result = await optimize_order_assignments(supervisor_id, max_assignments=5)
         
-        assignments_made = result.get('assignments_made', 0)
+        assignments_made = result.get('optimized_assignments', 0)
         total_unassigned = result.get('total_unassigned', 0)
         available_staff = result.get('available_staff', 0)
         
@@ -749,7 +739,7 @@ async def _optimize_resource_allocation(callback: CallbackQuery, supervisor_id: 
         if len(overloaded) == 0 and len(underloaded) == 0:
             text += "✅ Resurslar optimal taqsimlangan!"
         
-        await callback.message.edit_text(text, reply_markup=get_workflow_optimization_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -793,7 +783,7 @@ async def _optimize_scheduling(callback: CallbackQuery, supervisor_id: int):
             f"• Navbatchilik jadvalini optimizatsiya qilish"
         )
         
-        await callback.message.edit_text(text, reply_markup=get_workflow_optimization_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -822,7 +812,7 @@ async def _show_task_distribution(callback: CallbackQuery, supervisor_id: int):
             f"• Muhimlik darajasini hisobga olish"
         )
         
-        await callback.message.edit_text(text, reply_markup=get_team_coordination_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -845,7 +835,7 @@ async def _show_communication_optimization(callback: CallbackQuery, supervisor_i
             f"• Feedback tizimini yaxshilash"
         )
         
-        await callback.message.edit_text(text, reply_markup=get_team_coordination_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -868,7 +858,7 @@ async def _show_teamwork_enhancement(callback: CallbackQuery, supervisor_id: int
             f"• Jamoa building tadbirlari"
         )
         
-        await callback.message.edit_text(text, reply_markup=get_team_coordination_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:
@@ -908,7 +898,7 @@ async def _show_team_efficiency(callback: CallbackQuery, supervisor_id: int):
             medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉"
             text += f"{medal} {staff['full_name']}: {efficiency:.1f}%\n"
         
-        await callback.message.edit_text(text, reply_markup=get_team_coordination_menu('uz'))
+        await callback.message.edit_text(text, reply_markup=get_workflow_management_keyboard('uz'))
         await callback.answer()
         
     except Exception as e:

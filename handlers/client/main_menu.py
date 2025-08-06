@@ -9,7 +9,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from keyboards.client_buttons import get_main_menu_keyboard
 from states.client_states import MainMenuStates
-from utils.role_system import get_role_router
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -32,7 +32,13 @@ async def get_user_role(user_id: int) -> str:
     return 'client'
 
 def get_client_main_menu_router():
-    router = get_role_router("client")
+    from aiogram import Router
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("client")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🏠 Asosiy menyu", "🏠 Главное меню"]))
     async def main_menu_handler(message: Message, state: FSMContext):

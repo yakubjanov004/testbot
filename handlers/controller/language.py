@@ -1,8 +1,9 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
 from keyboards.controllers_buttons import controllers_main_menu
 from states.controller_states import ControllerSettingsStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -29,8 +30,12 @@ async def get_user_lang(user_id: int) -> str:
 
 def get_controller_language_router():
     """Get controller language router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🌐 Tilni o'zgartirish"]))
     async def show_language_options(message: Message, state: FSMContext):

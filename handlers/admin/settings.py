@@ -17,10 +17,16 @@ from keyboards.admin_buttons import get_settings_keyboard
 
 # States imports
 from states.admin_states import AdminSettingsStates, AdminMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_admin_settings_router():
     """Get admin settings router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["⚙️ Sozlamalar", "⚙️ Настройки"]))
     async def settings_menu(message: Message, state: FSMContext):

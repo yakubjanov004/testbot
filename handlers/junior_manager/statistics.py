@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.junior_manager_buttons import get_statistics_keyboard, get_junior_manager_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -54,6 +55,11 @@ async def get_junior_manager_statistics(user_id: int):
 def get_junior_manager_statistics_router():
     """Router for junior manager statistics functionality"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📊 Statistika", "📊 Статистика"]))
     async def view_statistics(message: Message, state: FSMContext):

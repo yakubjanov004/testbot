@@ -5,17 +5,22 @@ This module provides technician assignment functionality for Manager role,
 allowing managers to assign technicians to applications and track their work.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from keyboards.manager_buttons import get_manager_main_keyboard
 from states.manager_states import ManagerTechnicianAssignmentStates
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 def get_manager_technician_assignment_router():
     """Get technician assignment router for manager"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
     
     @router.message(F.text == "👨‍🔧 Texnik biriktirish")
     async def manager_technician_assignment_main(message: Message, state: FSMContext):

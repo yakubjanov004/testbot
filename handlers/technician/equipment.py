@@ -1,15 +1,20 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from datetime import datetime
 from states.technician_states import TechnicianEquipmentStates
 from keyboards.technician_buttons import get_equipment_keyboard, get_back_technician_keyboard
+from filters.role_filter import RoleFilter
 
 def get_technician_equipment_router():
     """Technician equipment router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("technician")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("technician")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.callback_query(F.data == "tech_equipment_request")
     async def tech_equipment_request_handler(callback: CallbackQuery, state: FSMContext):

@@ -7,9 +7,10 @@ This module handles junior manager inbox functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_inbox_keyboard, get_junior_manager_back_keyboard
-from typing import Dict, Any, List, Optional
+from keyboards.junior_manager_buttons import get_junior_manager_back_keyboard
 from datetime import datetime
+from filters.role_filter import RoleFilter
+from states.junior_manager_states import JuniorManagerStates
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -22,10 +23,6 @@ async def get_user_by_telegram_id(telegram_id: int):
         'full_name': 'Test Junior Manager',
         'phone_number': '+998901234567'
     }
-
-async def get_user_lang(telegram_id: int):
-    """Mock get user language"""
-    return 'uz'
 
 async def get_junior_manager_applications(user_id: int):
     """Mock get junior manager applications"""
@@ -65,19 +62,18 @@ async def get_junior_manager_applications(user_id: int):
 def get_junior_manager_inbox_router():
     """Router for junior manager inbox functionality"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📥 Inbox", "📥 Входящие"]))
     async def view_inbox(message: Message, state: FSMContext):
         """Junior manager view inbox handler"""
         try:
-            # Check user role first - only process if user is junior_manager
-            from loader import get_user_role
-            user_role = get_user_role(message.from_user.id)
-            if user_role != 'junior_manager':
-                return  # Skip processing for non-junior-manager users
-            
             user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'junior_manager':
+            if not user:
                 return
             
             lang = user.get('language', 'uz')
@@ -102,7 +98,7 @@ def get_junior_manager_inbox_router():
             await show_application_details(message, applications[0], applications, 0)
             
         except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            pass
 
     async def show_application_details(message_or_callback, application, applications, index):
         """Show application details with navigation"""
@@ -175,10 +171,7 @@ def get_junior_manager_inbox_router():
                 await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
                 
         except Exception as e:
-            if isinstance(message_or_callback, Message):
-                await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
-            else:
-                await message_or_callback.answer("Xatolik yuz berdi")
+            pass
 
     @router.callback_query(F.data == "jm_prev_application")
     async def show_previous_application(callback: CallbackQuery, state: FSMContext):
@@ -200,7 +193,7 @@ def get_junior_manager_inbox_router():
                 await callback.answer("Bu birinchi ariza")
                 
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            pass
 
     @router.callback_query(F.data == "jm_next_application")
     async def show_next_application(callback: CallbackQuery, state: FSMContext):
@@ -221,6 +214,279 @@ def get_junior_manager_inbox_router():
             else:
                 await callback.answer("Bu oxirgi ariza")
                 
+        except Exception as e:
+            pass
+
+    @router.callback_query(F.data == "jm_contact_client")
+    async def contact_client_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle contact client button"""
+        try:
+            await callback.answer()
+            
+            # Get current application
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
+            
+            applications = await get_junior_manager_applications(callback.from_user.id)
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
+                return
+            
+            application = applications[current_index]
+            
+            # Show contact information
+            contact_text = (
+                f"📞 <b>Mijoz bilan bog'lanish</b>\n\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📞 <b>Telefon:</b> {application['contact_info']['phone']}\n"
+                f"🏠 <b>Manzil:</b> {application.get('address', 'Noma\'lum')}\n"
+                f"📝 <b>Ariza ID:</b> {application['id']}\n\n"
+            )
+            
+            # Create back button
+            back_button = InlineKeyboardButton(
+                text="⬅️ Orqaga qaytish",
+                callback_data="jm_back_to_application"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+            
+            await callback.message.edit_text(
+                contact_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "jm_send_to_controller")
+    async def send_to_controller_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle send to controller button"""
+        try:
+            await callback.answer()
+            
+            # Get current application
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
+            
+            applications = await get_junior_manager_applications(callback.from_user.id)
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
+                return
+            
+            application = applications[current_index]
+            
+            # Store application info in state for later use
+            await state.update_data(
+                current_application_id=application['id'],
+                current_application_data=application
+            )
+            
+            # Show text input prompt
+            input_text = (
+                f"📝 <b>Controller'ga qo'shimcha ma'lumot kiriting</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📝 <b>Asosiy tavsif:</b> {application['description']}\n\n"
+                f"📝 Iltimos, qo'shimcha ma'lumotlarni yozing:"
+            )
+            
+            # Create cancel button
+            cancel_button = InlineKeyboardButton(
+                text="❌ Bekor qilish",
+                callback_data="jm_back_to_application"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            
+            await callback.message.edit_text(
+                input_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+            # Set state to wait for text input
+            await state.set_state(JuniorManagerStates.waiting_for_controller_note)
+            
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.message(JuniorManagerStates.waiting_for_controller_note)
+    async def handle_controller_note_input(message: Message, state: FSMContext):
+        """Handle text input for controller note"""
+        try:
+            # Get the note text
+            note_text = message.text.strip()
+            
+            if len(note_text) < 10:
+                await message.answer(
+                    "⚠️ Iltimos, kamida 10 ta belgi kiriting. Qo'shimcha ma'lumotlarni batafsil yozing."
+                )
+                return
+            
+            # Store the note in state
+            await state.update_data(controller_note=note_text)
+            
+            # Get application data from state
+            data = await state.get_data()
+            application = data.get('current_application_data')
+            
+            if not application:
+                await message.answer("❌ Ariza ma'lumotlari topilmadi. Iltimos, qaytadan urinib ko'ring.")
+                return
+            
+            # Show review and confirmation
+            review_text = (
+                f"📋 <b>Yuborishdan oldin tekshirish</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📞 <b>Telefon:</b> {application['contact_info']['phone']}\n"
+                f"🏠 <b>Manzil:</b> {application.get('address', 'Noma\'lum')}\n"
+                f"📝 <b>Asosiy tavsif:</b> {application['description']}\n\n"
+                f"📝 <b>Qo'shimcha ma'lumotlar:</b>\n"
+                f"<i>{note_text}</i>\n\n"
+                f"Controller'ga yuborishni tasdiqlaysizmi?"
+            )
+            
+            # Create confirmation buttons
+            confirm_button = InlineKeyboardButton(
+                text="✅ Ha, yuborish",
+                callback_data="jm_confirm_send_to_controller"
+            )
+            edit_button = InlineKeyboardButton(
+                text="✏️ Qayta yozish",
+                callback_data="jm_edit_controller_note"
+            )
+            cancel_button = InlineKeyboardButton(
+                text="❌ Bekor qilish",
+                callback_data="jm_back_to_application"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[confirm_button], [edit_button], [cancel_button]])
+            
+            await message.answer(
+                review_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+            # Clear the waiting state
+            await state.clear()
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.callback_query(F.data == "jm_edit_controller_note")
+    async def edit_controller_note_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle edit controller note button"""
+        try:
+            await callback.answer()
+            
+            # Get application data from state
+            data = await state.get_data()
+            application = data.get('current_application_data')
+            
+            if not application:
+                await callback.answer("Ariza ma'lumotlari topilmadi")
+                return
+            
+            # Show text input prompt again
+            input_text = (
+                f"📝 <b>Controller'ga qo'shimcha ma'lumot kiriting</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📝 <b>Asosiy tavsif:</b> {application['description']}\n\n"
+                f"📝 <b>Qo'shimcha ma'lumotlarni yozing:</b>"
+            )
+            
+            # Create cancel button
+            cancel_button = InlineKeyboardButton(
+                text="❌ Bekor qilish",
+                callback_data="jm_back_to_application"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            
+            await callback.message.edit_text(
+                input_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+            # Set state to wait for text input again
+            await state.set_state(JuniorManagerStates.waiting_for_controller_note)
+            
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "jm_confirm_send_to_controller")
+    async def confirm_send_to_controller_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle confirmation to send to controller"""
+        try:
+            await callback.answer()
+            
+            # Get application data and note from state
+            data = await state.get_data()
+            application = data.get('current_application_data')
+            note_text = data.get('controller_note', '')
+            
+            if not application:
+                await callback.answer("Ariza ma'lumotlari topilmadi")
+                return
+            
+            # Mock sending to controller (in real implementation, this would update database)
+            success_text = (
+                f"✅ <b>Ariza muvaffaqiyatli yuborildi!</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📤 <b>Yuborilgan vaqt:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}\n\n"
+                f"📝 <b>Qo'shimcha ma'lumotlar:</b>\n"
+                f"<i>{note_text}</i>\n\n"
+            )
+            
+            # Create back to inbox button
+            back_button = InlineKeyboardButton(
+                text="📥 Inbox'ga qaytish",
+                callback_data="jm_back_to_inbox"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+            
+            await callback.message.edit_text(
+                success_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "jm_back_to_application")
+    async def back_to_application_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle back to application button"""
+        try:
+            await callback.answer()
+            
+            # Get current application
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
+            
+            applications = await get_junior_manager_applications(callback.from_user.id)
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
+                return
+            
+            # Show application details again
+            await show_application_details(callback, applications[current_index], applications, current_index)
+            
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "jm_back_to_inbox")
+    async def back_to_inbox_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle back to inbox button"""
+        try:
+            await callback.answer()
+            
+            # Show inbox again
+            await view_inbox(callback.message, state)
+            
         except Exception as e:
             await callback.answer("Xatolik yuz berdi")
 
@@ -250,7 +516,21 @@ def get_applications_navigation_keyboard(current_index: int, total_applications:
     if nav_buttons:
         keyboard.append(nav_buttons)
     
-    # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa_inbox_jm", callback_data="back_to_main_menu")])
+    # Action buttons row
+    action_buttons = []
     
+    # Contact client button
+    action_buttons.append(InlineKeyboardButton(
+        text="📞 Mijoz bilan bog'lanish",
+        callback_data="jm_contact_client"
+    ))
+    
+    # Send to controller button
+    action_buttons.append(InlineKeyboardButton(
+        text="📤 Controller'ga yuborish",
+        callback_data="jm_send_to_controller"
+    ))
+    
+    keyboard.append(action_buttons)
+     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

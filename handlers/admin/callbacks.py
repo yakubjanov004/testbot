@@ -60,7 +60,14 @@ async def assign_order_to_technician(order_id: int, technician_id: int) -> bool:
 
 def get_admin_callbacks_router():
     """Get admin callbacks router"""
+    from aiogram import Router
     router = Router()
+    
+    # Apply role filter
+    from filters.role_filter import RoleFilter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.callback_query(F.data.startswith("search_by_"))
     async def search_method_selected(call: CallbackQuery, state: FSMContext):

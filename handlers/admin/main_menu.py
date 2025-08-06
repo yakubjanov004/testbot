@@ -13,10 +13,16 @@ from keyboards.admin_buttons import get_admin_main_menu
 
 # States imports
 from states.admin_states import AdminMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_admin_main_menu_router():
     """Get admin main menu router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["/start", "/admin"]))
     async def admin_start(message: Message, state: FSMContext):

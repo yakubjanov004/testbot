@@ -1,15 +1,19 @@
 """
-Junior Manager Language Handler - Soddalashtirilgan versiya
-
-Bu modul junior manager uchun til o'zgartirish funksionalligini o'z ichiga oladi.
+Junior Manager Language Handler
+Manages language settings for junior manager
 """
 
-from aiogram import Router, F
-from aiogram.types import Message
+from aiogram import F, Router
+from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.context import FSMContext
+from keyboards.junior_manager_buttons import get_language_keyboard
+from states.junior_manager_states import JuniorManagerLanguageStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def set_user_language(user_id: int, language: str):
     """Mock set user language"""
+    print(f"Mock: Setting user {user_id} language to {language}")
     return True
 
 async def get_user_by_telegram_id(telegram_id: int):
@@ -34,8 +38,13 @@ class JuniorManagerLanguageStates(StatesGroup):
     changing_language = State()
 
 def get_junior_manager_language_router():
-    """Get router for junior manager language handlers"""
+    """Get junior manager language router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🌐 Tilni o'zgartirish"]))
     async def change_language(message: Message):
@@ -43,24 +52,27 @@ def get_junior_manager_language_router():
         user_id = message.from_user.id
         
         try:
-            # Get current language
-            lang = await get_user_lang(user_id)
+            user = await get_user_by_telegram_id(user_id)
+            if not user or user['role'] != 'junior_manager':
+                await message.answer("Sizda ruxsat yo'q.")
+                return
             
-            # Set new language
-            if lang == "uz":
-                await set_user_language(user_id, "ru")
-                response_text = "Til rus tiliga o'zgartirildi."
-            else:
-                await set_user_language(user_id, "uz")
-                response_text = "Til o'zbek tiliga o'zgartirildi."
+            lang = user.get('language', 'uz')
             
-            # Send response
-            await message.answer(response_text)
+            text = (
+                "🌐 <b>Tilni o'zgartirish</b>\n\n"
+                "Kerakli tilni tanlang:"
+            )
+            
+            await message.answer(
+                text,
+                reply_markup=get_language_keyboard(lang),
+                parse_mode='HTML'
+            )
             
         except Exception as e:
-            print(f"Error in change_language: {e}")
-            
-            # Send error message
-            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            print(f"Error in change_language: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     return router 

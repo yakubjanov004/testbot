@@ -5,17 +5,22 @@ This module provides complete status management functionality for Manager role,
 allowing managers to change application statuses according to tex.txt workflow.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
 from keyboards.manager_buttons import get_status_keyboard, get_manager_main_keyboard
 from states.manager_states import ManagerStatusStates
+from filters.role_filter import RoleFilter
 
 def get_manager_status_management_router():
     """Get complete status management router for manager"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
     
     @router.message(F.text == "🔄 Status o'zgartirish")
     async def manager_status_management_main(message: Message, state: FSMContext):

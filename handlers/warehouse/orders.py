@@ -1,19 +1,35 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from keyboards.warehouse_buttons import warehouse_orders_menu, order_status_keyboard
 from states.warehouse_states import WarehouseOrdersStates, WarehouseMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_warehouse_orders_router():
     """Warehouse orders router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("warehouse")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("warehouse")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text == "📋 Buyurtmalar")
     async def orders_management_handler(message: Message, state: FSMContext):
-        """Handle orders management"""
+        """Orders management handler"""
         try:
-            orders_text = "📋 Buyurtmalar"
+            # Debug logging
+            print(f"Warehouse orders handler called by user {message.from_user.id}")
+            
+            # Mock user data (like other modules)
+            user = {
+                'id': 1,
+                'full_name': 'Warehouse xodimi',
+                'language': 'uz'
+            }
+            
+            await state.update_data(lang='uz')
+            orders_text = "📋 Buyurtmalar boshqaruvi"
             
             await message.answer(
                 orders_text,
@@ -21,7 +37,10 @@ def get_warehouse_orders_router():
             )
             await state.set_state(WarehouseOrdersStates.orders_menu)
             
+            print(f"Warehouse orders handler completed successfully")
+            
         except Exception as e:
+            print(f"Error in warehouse orders handler: {str(e)}")
             await message.answer("Xatolik yuz berdi")
 
     @router.message(F.text == "⏳ Kutilayotgan buyurtmalar")
@@ -172,8 +191,8 @@ def get_warehouse_orders_router():
     async def orders_back_reply_handler(message: Message, state: FSMContext):
         """Buyurtmalar menyusidan orqaga qaytish"""
         try:
-            from keyboards.warehouse_buttons import warehouse_main_menu
-            await message.answer("Ombor bosh menyusi", reply_markup=warehouse_main_menu('uz'))
+            from keyboards.warehouse_buttons import get_warehouse_main_keyboard
+            await message.answer("Ombor bosh menyusi", reply_markup=get_warehouse_main_keyboard('uz'))
             await state.set_state(WarehouseMainMenuStates.main_menu)
             
         except Exception as e:

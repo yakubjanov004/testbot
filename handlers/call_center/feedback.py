@@ -14,10 +14,16 @@ from keyboards.call_center_buttons import get_feedback_keyboard
 
 # States imports
 from states.call_center_states import CallCenterFeedbackStates, CallCenterMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_feedback_router():
     """Get call center feedback router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(CallCenterMainMenuStates.main_menu), F.text.in_(["📝 Fikrlar", "📝 Отзывы"]))
     async def feedback_menu(message: Message, state: FSMContext):

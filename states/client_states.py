@@ -40,6 +40,7 @@ class FeedbackStates(StatesGroup):
 
 class ProfileStates(StatesGroup):
     """Profile states for client"""
+    profile_menu = State()
     viewing_profile = State()
     editing_name = State()
     editing_address = State()

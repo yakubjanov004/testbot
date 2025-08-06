@@ -4,10 +4,11 @@ Manager Main Menu Handler - Soddalashtirilgan versiya
 Bu modul manager uchun asosiy menyu funksionalligini o'z ichiga oladi.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.filters.state import StateFilter
+from filters.role_filter import RoleFilter
 
 from keyboards.manager_buttons import get_manager_main_keyboard
 from states.manager_states import ManagerMainMenuStates
@@ -30,8 +31,12 @@ async def get_user_lang(telegram_id: int):
 
 def get_manager_main_menu_router():
     """Get manager main menu router"""
-    from aiogram import Router
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["/start", "🏠 Asosiy menyu"]))
     async def manager_main_menu_handler(message: Message, state: FSMContext):

@@ -1,13 +1,18 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from keyboards.warehouse_buttons import equipment_preparation_keyboard
 from states.warehouse_states import WarehouseWorkflowStates
+from filters.role_filter import RoleFilter
 
 def get_warehouse_workflow_router():
     """Warehouse workflow integration router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("warehouse")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("warehouse")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.callback_query(F.data.startswith("prepare_equipment_"))
     async def prepare_equipment_handler(callback: CallbackQuery, state: FSMContext):

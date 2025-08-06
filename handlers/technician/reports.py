@@ -1,13 +1,18 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 from keyboards.technician_buttons import get_reports_keyboard
+from filters.role_filter import RoleFilter
 
 def get_reports_router():
     """Technician reports router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("technician")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("technician")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text == "📊 Hisobotlar")
     async def show_reports_menu(message: Message, state: FSMContext):

@@ -1,50 +1,45 @@
 """
 Call Center Staff Application Creation Handler
-
-This module implements application creation handlers for Call Center role,
-allowing call center operators to create both connection requests and technical service
-applications on behalf of clients during phone calls.
+Manages staff application creation for call center operators
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
-from typing import Dict, Any, Optional
+from aiogram.filters import StateFilter
+from typing import Optional, Dict, Any
+
+# Keyboard imports
+from keyboards.call_center_buttons import get_application_type_inline_menu
 
 # States imports
 from states.staff_application_states import StaffApplicationStates
-
-# Keyboard imports
-from keyboards.call_center_buttons import call_center_main_menu_reply
+from filters.role_filter import RoleFilter
 
 def get_call_center_staff_application_creation_router():
-    """Get router for call center staff application creation handlers"""
-    router = Router(name="call_center_staff_application")
+    """Get call center staff application creation router"""
+    router = Router()
     
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
+
     @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish", "🔌 Создать заявку на подключение"]))
     async def call_center_create_connection_request(message: Message, state: FSMContext):
-        """Handle call center creating connection request for client"""
-        lang = 'uz'  # Default language
-        
-        # Mock application creation start
-        await state.update_data(
-            creator_context={'role': 'call_center', 'id': 123},
-            application_type='connection_request'
+        """Create connection request for call center"""
+        text = (
+            "🔌 <b>Ulanish arizasi yaratish</b>\n\n"
+            "Mijoz ma'lumotlarini kiriting:\n\n"
+            "👤 <b>Mijoz ismi:</b> To'liq ism\n"
+            "📱 <b>Telefon:</b> +998 XX XXX XX XX\n"
+            "📍 <b>Manzil:</b> To'liq manzil\n"
+            "📝 <b>Xizmat turi:</b> Internet/TV/Telefon\n\n"
+            "Ma'lumotlarni kiriting:"
         )
         
-        await state.set_state(StaffApplicationStates.selecting_client_search_method)
-        
-        prompt_text = (
-            "📞 Call Center: Ulanish arizasi yaratish\n\n"
-            "Mijoz bilan telefon orqali gaplashayotgan vaqtda ariza yaratish.\n\n"
-            "Mijozni qanday qidirishni xohlaysiz?\n\n"
-            "📱 Telefon raqami bo'yicha\n"
-            "👤 Ism bo'yicha\n"
-            "🆔 Mijoz ID bo'yicha\n"
-            "➕ Yangi mijoz qo'shish"
-        )
-        
-        await message.answer(prompt_text)
+        await message.answer(text)
+        await state.set_state(StaffApplicationStates.entering_client_phone)
 
     @router.message(F.text.in_(["🔧 Texnik xizmat yaratish", "🔧 Создать техническую заявку"]))
     async def call_center_create_technical_service(message: Message, state: FSMContext):

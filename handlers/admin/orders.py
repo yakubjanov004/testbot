@@ -22,6 +22,7 @@ from keyboards.admin_buttons import (
 
 # States imports
 from states.admin_states import AdminOrderStates, AdminMainMenuStates
+from filters.role_filter import RoleFilter
 
 def format_order(order: dict, lang: str) -> str:
     """Format order details in both Uzbek and Russian"""
@@ -39,6 +40,11 @@ def format_order(order: dict, lang: str) -> str:
 def get_admin_orders_router():
     """Get admin orders router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
     
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["📝 Zayavkalar", "📝 Заявки"]))
     async def orders_menu(message: Message, state: FSMContext):

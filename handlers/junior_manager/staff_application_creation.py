@@ -1,7 +1,6 @@
 """
-Junior Manager Staff Application Creation Handler - Soddalashtirilgan versiya
-
-Bu modul junior manager uchun xodimlar arizasi yaratish funksionalligini o'z ichiga oladi.
+Junior Manager Staff Application Creation Handler
+Manages staff application creation for junior manager
 """
 
 from aiogram import F, Router
@@ -9,6 +8,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 from states.staff_application_states import StaffApplicationStates
 
 # Mock functions to replace utils and database imports
@@ -25,63 +25,70 @@ async def get_user_by_telegram_id(telegram_id: int):
 
 async def search_clients_by_name(query: str, exact_match: bool = False):
     """Mock search clients by name"""
-    if "test" in query.lower():
-        return [{'id': 123, 'full_name': 'Test Client', 'phone': '+998901234567', 'address': 'Tashkent'}]
-    return []
+    return [
+        {
+            'id': 1,
+            'full_name': 'Aziz Karimov',
+            'phone': '+998901234567',
+            'address': 'Tashkent, Chorsu'
+        }
+    ]
 
 async def create_new_client(client_data: Dict):
     """Mock create new client"""
-    print(f"Mock: Creating new client: {client_data}")
-    return 456 # Mock client ID
+    return {
+        'id': 1,
+        'full_name': client_data.get('name', ''),
+        'phone': client_data.get('phone', ''),
+        'address': client_data.get('address', '')
+    }
 
 async def get_client_by_id(client_id: int):
     """Mock get client by ID"""
-    if client_id == 456:
-        return {'id': 456, 'full_name': 'New Test Client', 'phone': '+998909876543', 'address': 'New Address'}
-    return None
+    return {
+        'id': client_id,
+        'full_name': f'Test Client {client_id}',
+        'phone': '+998901234567',
+        'address': 'Tashkent, Test Address'
+    }
 
-# Mock application handler
 class RoleBasedApplicationHandler:
-    """Mock application handler"""
+    """Mock role-based application handler"""
+    
     async def start_application_creation(self, creator_role: str, creator_id: int, application_type: str):
         """Mock start application creation"""
         return {
             'success': True,
-            'creator_context': {
-                'role': creator_role,
-                'id': creator_id,
-                'application_type': application_type
-            }
+            'application_id': f'APP_{creator_role}_{creator_id}_{application_type}'
         }
 
-# Mock keyboard functions
 def get_junior_manager_main_keyboard(lang: str = 'uz'):
     """Mock junior manager main keyboard"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="📥 Inbox", callback_data="jm_inbox"),
-            InlineKeyboardButton(text="📋 Arizalar", callback_data="jm_applications")
+            InlineKeyboardButton(text="🔌 Ulanish arizasi yaratish", callback_data="create_connection"),
+            InlineKeyboardButton(text="🔧 Texnik xizmat yaratish", callback_data="create_technical")
         ],
         [
-            InlineKeyboardButton(text="🔌 Yangi ariza", callback_data="jm_new_application"),
-            InlineKeyboardButton(text="📊 Hisobotlar", callback_data="jm_reports")
+            InlineKeyboardButton(text="📥 Inbox", callback_data="view_inbox"),
+            InlineKeyboardButton(text="📋 Buyurtmalar", callback_data="view_orders")
         ],
         [
-            InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="jm_settings"),
-            InlineKeyboardButton(text="🌐 Til", callback_data="jm_language")
+            InlineKeyboardButton(text="🔍 Mijoz qidiruv", callback_data="search_clients"),
+            InlineKeyboardButton(text="📊 Statistika", callback_data="view_statistics")
         ]
     ])
 
 def get_client_search_menu(lang: str = 'uz'):
-    """Mock client search menu keyboard"""
+    """Mock client search menu"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🔍 Telefon raqami bilan qidirish", callback_data="jm_client_search_phone"),
-            InlineKeyboardButton(text="👤 Ism bilan qidirish", callback_data="jm_client_search_name")
+            InlineKeyboardButton(text="📱 Telefon raqami", callback_data="search_by_phone"),
+            InlineKeyboardButton(text="👤 Ism", callback_data="search_by_name")
         ],
         [
-            InlineKeyboardButton(text="➕ Yangi mijoz qo'shish", callback_data="jm_add_new_client"),
-            InlineKeyboardButton(text="🆔 ID bilan qidirish", callback_data="jm_client_search_id")
+            InlineKeyboardButton(text="🆔 ID", callback_data="search_by_id"),
+            InlineKeyboardButton(text="➕ Yangi mijoz", callback_data="create_new_client")
         ],
         [
             InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
@@ -92,15 +99,15 @@ def get_application_priority_keyboard(lang: str = 'uz'):
     """Mock application priority keyboard"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🟢 Past", callback_data="jm_priority_low"),
-            InlineKeyboardButton(text="🟡 O'rta", callback_data="jm_priority_medium")
+            InlineKeyboardButton(text="🟢 Past", callback_data="priority_low"),
+            InlineKeyboardButton(text="🟡 O'rta", callback_data="priority_medium")
         ],
         [
-            InlineKeyboardButton(text="🟠 Yuqori", callback_data="jm_priority_high"),
-            InlineKeyboardButton(text="🔴 Shoshilinch", callback_data="jm_priority_urgent")
+            InlineKeyboardButton(text="🟠 Yuqori", callback_data="priority_high"),
+            InlineKeyboardButton(text="🔴 Shoshilinch", callback_data="priority_urgent")
         ],
         [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="jm_back_to_client_search")
+            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_details")
         ]
     ])
 
@@ -108,65 +115,63 @@ def get_application_confirmation_keyboard(lang: str = 'uz'):
     """Mock application confirmation keyboard"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="jm_confirm_application"),
-            InlineKeyboardButton(text="❌ Bekor qilish", callback_data="jm_cancel_application")
-        ],
-        [
-            InlineKeyboardButton(text="✏️ Tahrirlash", callback_data="jm_edit_application")
+            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="confirm_application"),
+            InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_application")
         ]
     ])
 
-# Import states
-from states.staff_application_states import StaffApplicationStates
-
 def get_junior_manager_staff_application_router():
-    """Get router for junior manager staff application handlers"""
+    """Get junior manager staff application router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish"]))
     async def junior_manager_create_connection_request(message: Message, state: FSMContext):
-        """Handle connection request creation for junior manager"""
+        """Handle junior manager creating connection request"""
+        user_id = message.from_user.id
+        
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'junior_manager':
                 await message.answer("Sizda ruxsat yo'q.")
                 return
-
+            
             lang = user.get('language', 'uz')
             
-            # Initialize application handler
+            # Initialize application creation
             app_handler = RoleBasedApplicationHandler()
-            
-            # Start application creation
             result = await app_handler.start_application_creation(
-                creator_role=user['role'],
+                creator_role='junior_manager',
                 creator_id=user['id'],
                 application_type='connection_request'
             )
             
-            if not result.get('success'):
-                await message.answer("Ariza yaratishda xatolik yuz berdi.")
-                return
-            
-            # Show client search menu
-            text = """🔌 **Ulanish arizasi yaratish**
-
-Mijozni topish uchun quyidagi usullardan birini tanlang:"""
-            
-            keyboard = get_client_search_menu(lang)
-            
-            await message.answer(
-                text,
-                reply_markup=keyboard,
-                parse_mode="Markdown"
-            )
-            
-            # Set state
-            await state.set_state(StaffApplicationStates.selecting_client_search_method)
+            if result['success']:
+                text = (
+                    "🔌 <b>Ulanish arizasi yaratish</b>\n\n"
+                    "Mijozni qanday qidirishni xohlaysiz?\n\n"
+                    "📱 Telefon raqami bo'yicha\n"
+                    "👤 Ism bo'yicha\n"
+                    "🆔 ID bo'yicha\n"
+                    "➕ Yangi mijoz qo'shish"
+                )
+                
+                await message.answer(
+                    text,
+                    reply_markup=get_client_search_menu(lang),
+                    parse_mode='HTML'
+                )
+            else:
+                await message.answer("Ariza yaratishda xatolik yuz berdi")
             
         except Exception as e:
-            print(f"Error in junior_manager_create_connection_request: {e}")
-            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            print(f"Error in junior_manager_create_connection_request: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["🔧 Texnik xizmat yaratish"]))
     async def junior_manager_technical_service_denied(message: Message, state: FSMContext):

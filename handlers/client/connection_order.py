@@ -15,7 +15,7 @@ from keyboards.client_buttons import (
     zayavka_type_keyboard, geolocation_keyboard, confirmation_keyboard
 )
 from states.client_states import ConnectionOrderStates
-from utils.role_system import get_role_router
+from filters.role_filter import RoleFilter
 
 # Logger sozlash
 logger = logging.getLogger(__name__)
@@ -58,7 +58,13 @@ async def format_group_zayavka_message(order_type: str, public_id: str, user: di
     return f"🔌 Yangi ulanish arizasi #{public_id}\n👤 {user.get('full_name', 'N/A')}\n📞 {phone}\n📍 {address}\n📋 {description}\n💳 {tariff}"
 
 def get_connection_order_router():
-    router = get_role_router("client")
+    from aiogram import Router
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("client")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🔌 Ulanish uchun ariza"]))
     async def start_connection_order(message: Message, state: FSMContext):
@@ -103,7 +109,7 @@ def get_connection_order_router():
             
         except Exception as e:
             logger.error(f"Error in select_region - User ID: {callback.from_user.id}, Error: {str(e)}", exc_info=True)
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("zayavka_type_"), StateFilter(ConnectionOrderStates.selecting_connection_type))
     async def select_connection_type(callback: CallbackQuery, state: FSMContext):

@@ -13,10 +13,16 @@ from keyboards.call_center_buttons import get_orders_menu, get_order_actions_men
 
 # States imports
 from states.call_center import CallCenterOrdersStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_orders_router():
     """Get call center orders router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(['📋 Buyurtmalar', '📋 Заказы']))
     async def call_center_orders(message: Message, state: FSMContext):

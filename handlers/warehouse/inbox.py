@@ -9,6 +9,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from states.warehouse_states import WarehouseWorkflowStates
+from filters.role_filter import RoleFilter
 
 class WarehouseWorkflowFSM(StatesGroup):
     viewing_request = State()
@@ -17,8 +18,12 @@ class WarehouseWorkflowFSM(StatesGroup):
 
 def get_warehouse_inbox_router():
     """Warehouse inbox router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("warehouse")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("warehouse")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
     
     @router.callback_query(F.data.startswith("open_inbox_"))
     async def handle_inbox_notification(callback: CallbackQuery, state: FSMContext):
@@ -128,11 +133,14 @@ def get_warehouse_inbox_router():
     async def show_warehouse_inbox(message: Message, state: FSMContext):
         """Show warehouse inbox with all warehouse-related requests"""
         try:
+            # Debug logging
+            print(f"Warehouse inbox handler called by user {message.from_user.id}")
+            
             # Check user role first - only process if user is warehouse
-            from loader import get_user_role
-            user_role = get_user_role(message.from_user.id)
-            if user_role != 'warehouse':
-                return  # Skip processing for non-warehouse users
+            # from loader import get_user_role
+            # user_role = get_user_role(message.from_user.id)
+            # if user_role != 'warehouse':
+            #     return  # Skip processing for non-warehouse users
             
             # Mock user data (like other modules)
             user = {
@@ -190,7 +198,10 @@ def get_warehouse_inbox_router():
             # Display first request in a new message
             await display_application(message, state, lang, applications, 0)
             
+            print(f"Warehouse inbox handler completed successfully")
+            
         except Exception as e:
+            print(f"Error in warehouse inbox handler: {str(e)}")
             await message.answer("Xatolik yuz berdi")
 
     async def display_application(message: Message, state: FSMContext, lang: str, applications: List[Dict], index: int):
@@ -214,28 +225,29 @@ def get_warehouse_inbox_router():
                     if isinstance(materials, str):
                         materials = json.loads(materials)
                     
-                    materials_text = "\n📦 <b>Materiallar:</b>\n"
+                    materials_text = "\n"
                     for i, material in enumerate(materials, 1):
                         name = material.get('name', 'N/A')
                         quantity = material.get('quantity', 0)
                         unit = material.get('unit', 'dona')
                         materials_text += f"  {i}. {name} - {quantity} {unit}\n"
                 except Exception as e:
-                    materials_text = "\n📦 <b>Materiallar:</b> Xatolik\n"
+                    materials_text = "\n❌ Materiallar ma'lumotida xatolik\n"
             else:
-                materials_text = "\n📦 <b>Materiallar:</b> Ko'rsatilmagan\n"
+                materials_text = "\n❌ Materiallar ko'rsatilmagan\n"
             
             # Mock comments count (like other modules)
             comments_count = 2
 
-            # Detailed text with materials info
+            # More detailed text with better formatting
             text = (
                 f"📦 <b>Zayavka #{app_id[:8]}</b>\n"
                 f"👤 <b>Mijoz:</b> {client_name}\n"
                 f"📅 <b>Sana:</b> {created}\n"
                 f"📄 <b>Tavsif:</b> {description}\n"
                 f"🔧 <b>Diagnostika:</b> {diagnosis}\n"
-                f"💬 <b>Izohlar:</b> {comments_count} ta{materials_text}"
+                f"💬 <b>Izohlar:</b> {comments_count} ta\n"
+                f"📦 <b>Materiallar kerak:</b>{materials_text}"
             )
             
             # Create action buttons
@@ -248,12 +260,6 @@ def get_warehouse_inbox_router():
             action_buttons.append(InlineKeyboardButton(
                 text="✅ Yakunlash",
                 callback_data=f"wh_complete_{app_id}"
-            ))
-            
-            # Add Word document button
-            action_buttons.append(InlineKeyboardButton(
-                text="📄 Word hujjat",
-                callback_data=f"wh_word_doc_{app_id[:20]}"
             ))
             
             # Add return to technician button
@@ -312,28 +318,29 @@ def get_warehouse_inbox_router():
                     if isinstance(materials, str):
                         materials = json.loads(materials)
                     
-                    materials_text = "\n📦 <b>Materiallar:</b>\n"
+                    materials_text = "\n"
                     for i, material in enumerate(materials, 1):
                         name = material.get('name', 'N/A')
                         quantity = material.get('quantity', 0)
                         unit = material.get('unit', 'dona')
                         materials_text += f"  {i}. {name} - {quantity} {unit}\n"
                 except Exception as e:
-                    materials_text = "\n📦 <b>Materiallar:</b> Xatolik\n"
+                    materials_text = "\n❌ Materiallar ma'lumotida xatolik\n"
             else:
-                materials_text = "\n📦 <b>Materiallar:</b> Ko'rsatilmagan\n"
+                materials_text = "\n❌ Materiallar ko'rsatilmagan\n"
             
             # Mock comments count (like other modules)
             comments_count = 2
 
-            # Detailed text with materials info
+            # More detailed text with better formatting
             text = (
                 f"📦 <b>Zayavka #{app_id[:8]}</b>\n"
                 f"👤 <b>Mijoz:</b> {client_name}\n"
                 f"📅 <b>Sana:</b> {created}\n"
                 f"📄 <b>Tavsif:</b> {description}\n"
                 f"🔧 <b>Diagnostika:</b> {diagnosis}\n"
-                f"💬 <b>Izohlar:</b> {comments_count} ta{materials_text}"
+                f"💬 <b>Izohlar:</b> {comments_count} ta\n"
+                f"📦 <b>Materiallar kerak:</b>{materials_text}"
             )
             
             # Create action buttons
@@ -483,8 +490,30 @@ def get_warehouse_inbox_router():
                 f"ℹ️ Texnik ham yakunlagandan keyin zayavka to'liq yopiladi"
             )
             
+            # Update the message with completion status
             await callback.message.edit_text(text, parse_mode='HTML')
-            await callback.answer()
+            await callback.answer("✅ Zayavka yakunlandi!")
+            
+            # Remove the application from the list and show next one
+            data = await state.get_data()
+            applications = data.get('application_list', [])
+            current_index = data.get('current_index', 0)
+            
+            # Remove completed application
+            if applications and current_index < len(applications):
+                applications.pop(current_index)
+                await state.update_data(application_list=applications)
+                
+                if applications:
+                    # Show next application or previous if at end
+                    new_index = min(current_index, len(applications) - 1)
+                    await state.update_data(current_index=new_index)
+                    
+                    # Show updated application list
+                    await display_application_edit(callback.message, state, lang, applications, new_index)
+                else:
+                    # No more applications
+                    await callback.message.edit_text("📭 Barcha zayavkalar yakunlandi!")
             
         except Exception as e:
             await callback.answer("Xatolik yuz berdi", show_alert=True)
@@ -506,34 +535,100 @@ def get_warehouse_inbox_router():
             lang = user.get('language', 'uz')
             request_id = callback.data.replace("wh_return_tech_", "")
             
-            # Mock success response (like other modules)
-            await callback.answer("✅ Zayavka texnikka qaytarildi!", show_alert=True)
-            # Refresh the inbox
-            await back_to_inbox(callback, state)
+            # Update message with return status
+            text = (
+                f"🔧 <b>Zayavka texnikka qaytarildi!</b>\n"
+                f"📦 Ombor: ❌ Qaytarildi\n"
+                f"🔧 Texnik: ⏳ Yangi vazifa\n"
+                f"📝 Ariza ID: {request_id}\n"
+                f"ℹ️ Texnik zayavkani qayta ko'rib chiqadi"
+            )
+            
+            await callback.message.edit_text(text, parse_mode='HTML')
+            await callback.answer("✅ Zayavka texnikka qaytarildi!")
+            
+            # Remove the application from the list and show next one
+            data = await state.get_data()
+            applications = data.get('application_list', [])
+            current_index = data.get('current_index', 0)
+            
+            # Remove returned application
+            if applications and current_index < len(applications):
+                applications.pop(current_index)
+                await state.update_data(application_list=applications)
+                
+                if applications:
+                    # Show next application or previous if at end
+                    new_index = min(current_index, len(applications) - 1)
+                    await state.update_data(current_index=new_index)
+                    
+                    # Show updated application list
+                    await display_application_edit(callback.message, state, lang, applications, new_index)
+                else:
+                    # No more applications
+                    await callback.message.edit_text("📭 Barcha zayavkalar qaytarildi!")
                 
         except Exception as e:
             await callback.answer("Xatolik yuz berdi!", show_alert=True)
 
-
-
-    @router.callback_query(F.data.startswith("wh_word_doc_"))
-    async def warehouse_generate_word(callback: CallbackQuery, state: FSMContext):
-        """Generate Word document for warehouse"""
+    async def back_to_inbox(callback: CallbackQuery, state: FSMContext):
+        """Return to warehouse inbox"""
         try:
-            await callback.answer()
+            # Mock user data (like other modules)
+            user = {
+                'id': 1,
+                'full_name': 'Warehouse xodimi',
+                'language': 'uz',
+                'role': 'warehouse'
+            }
             
-            # Extract request_id
-            request_id = callback.data.replace("wh_word_doc_", "")
+            lang = user.get('language', 'uz')
             
-            await callback.message.answer("📄 Word hujjat yaratilmoqda...")
+            # Mock applications data (like other modules)
+            applications = [
+                {
+                    'id': 'WH001',
+                    'application_details': {
+                        'id': 'WH001',
+                        'client_name': 'Test Client 1',
+                        'description': 'Test description 1',
+                        'created_at': datetime.now(),
+                        'materials': [
+                            {'name': 'Cable', 'quantity': 2, 'unit': 'dona'},
+                            {'name': 'Router', 'quantity': 1, 'unit': 'dona'}
+                        ]
+                    }
+                },
+                {
+                    'id': 'WH002',
+                    'application_details': {
+                        'id': 'WH002',
+                        'client_name': 'Test Client 2',
+                        'description': 'Test description 2',
+                        'created_at': datetime.now(),
+                        'materials': [
+                            {'name': 'Connector', 'quantity': 5, 'unit': 'dona'}
+                        ]
+                    }
+                }
+            ]
             
-            # Mock success response (like other modules)
-            await callback.message.answer(
-                f"✅ Word hujjat tayyor!\n\nZayavka ID: {request_id[:8]}\nTuri: connection"
-            )
+            if not applications:
+                no_requests_text = "📭 Sizga biriktirilgan zayavkalar yo'q."
+                await callback.message.edit_text(no_requests_text)
+                return
+
+            await state.update_data(application_list=applications, current_index=0)
+            inbox_title = "📥 <b>Ombor Inbox - Sizga biriktirilgan zayavkalar:</b>"
+            
+            # Display first request
+            await display_application_edit(callback.message, state, lang, applications, 0)
             
         except Exception as e:
-            await callback.message.answer(f"Xatolik: {str(e)}")
+            await callback.message.edit_text("Xatolik yuz berdi")
+
+
+
 
     async def display_warehouse_request(message: Message, state: FSMContext, requests: List[Dict], index: int, lang: str):
         """Display warehouse request (helper function)"""

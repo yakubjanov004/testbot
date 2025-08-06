@@ -5,15 +5,20 @@ This module provides complete staff activity monitoring functionality for Manage
 allowing managers to view online staff, performance, workload, attendance, and junior manager work.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, date, timedelta
+from filters.role_filter import RoleFilter
 
 def get_manager_staff_activity_router():
     """Get router for manager staff activity handlers"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text == "👥 Xodimlar faoliyati")
     async def show_staff_activity_menu(message: Message, state: FSMContext):

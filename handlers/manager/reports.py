@@ -6,6 +6,7 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, date, timedelta
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -94,6 +95,11 @@ def get_reports_keyboard(lang: str):
 
 def get_manager_reports_router():
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(['📊 Hisobot yaratish', '📊 Создать отчет']))
     async def show_reports_menu(message: Message, state: FSMContext):

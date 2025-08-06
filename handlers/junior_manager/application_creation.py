@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional
 import asyncio
 import json
 from datetime import datetime
-from utils.role_system import get_role_router
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -107,7 +107,12 @@ class JuniorManagerApplicationStates(StatesGroup):
 
 def get_junior_manager_application_creation_router():
     """Get router for junior manager application creation handlers"""
-    router = get_role_router("junior_manager")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish"]))
     async def start_application_creation(message: Message, state: FSMContext):

@@ -14,10 +14,16 @@ from keyboards.call_center_buttons import get_direct_resolution_keyboard
 
 # States imports
 from states.call_center_states import CallCenterDirectResolutionStates, CallCenterMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_direct_resolution_router():
     """Get call center direct resolution router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(CallCenterMainMenuStates.main_menu), F.text.in_(["🔧 To'g'ridan-to'g'ri hal qilish", "🔧 Прямое решение"]))
     async def direct_resolution_menu(message: Message, state: FSMContext):

@@ -8,6 +8,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -72,6 +73,11 @@ class WorkflowAction:
 def get_manager_applications_actions_router():
     """Router for applications actions functionality"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.callback_query(F.data.startswith("assign_junior_"))
     async def assign_to_junior_manager(callback: CallbackQuery, state: FSMContext):

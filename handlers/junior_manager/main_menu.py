@@ -1,13 +1,14 @@
 """
-Junior Manager Main Menu Handler - Soddalashtirilgan versiya
-
-Bu modul junior manager uchun asosiy menyu funksionalligini o'z ichiga oladi.
+Junior Manager Main Menu Handler
+Manages main menu for junior manager
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_junior_manager_main_keyboard
+from keyboards.junior_manager_buttons import get_junior_manager_main_menu
+from states.junior_manager_states import JuniorManagerMainMenuStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -25,52 +26,41 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-
 def get_junior_manager_main_menu_router():
-    """Get router for junior manager main menu handlers"""
+    """Get junior manager main menu router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["/start", "🏠 Asosiy menyu"]))
     async def show_main_menu(message: Message, state: FSMContext):
-        """Show main menu for junior manager"""
+        """Show junior manager main menu"""
+        user_id = message.from_user.id
+        
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            await state.clear()
+            user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'junior_manager':
-                await message.answer(
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                text = "Sizda ruxsat yo'q."
+                await message.answer(text)
                 return
-
+                
+            await state.set_state(JuniorManagerMainMenuStates.main_menu)
             lang = user.get('language', 'uz')
             
-            # Build main menu text
-            text = f"""🏠 **Asosiy menyu**
-
-            👤 **Foydalanuvchi:** {user.get('full_name', 'N/A')}
-            📱 **Telefon:** {user.get('phone_number', 'N/A')}
-            🎯 **Rol:** Kichik menejer
-
-            Quyidagi bo'limlardan birini tanlang:"""
-            
-            # Create keyboard
-            keyboard = get_junior_manager_main_keyboard(lang)
-            
-            # Send message
-            await message.answer(
-                text,
-                message.from_user.id,
-                reply_markup=keyboard,
-                parse_mode="Markdown"
+            welcome_text = (
+                "👨‍💼 <b>Junior Manager paneli</b>\n\n"
+                "Xush kelibsiz! Quyidagi bo'limlardan birini tanlang:"
             )
+            
+            await message.answer(welcome_text, reply_markup=get_junior_manager_main_menu(lang), parse_mode='HTML')
             
         except Exception as e:
-            print(f"Error in show_main_menu: {e}")
-            await message.answer(
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
-
-    
+            print(f"Error in show_main_menu: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     return router

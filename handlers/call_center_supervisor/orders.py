@@ -1,6 +1,6 @@
 """
 Call Center Supervisor Orders Handler
-Manages orders for call center supervisor
+Manages orders for call center supervisors
 """
 
 from aiogram import F, Router
@@ -13,14 +13,20 @@ from keyboards.call_center_supervisor_buttons import get_orders_menu, get_order_
 
 # States imports
 from states.call_center_supervisor_states import CallCenterSupervisorOrdersStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_supervisor_orders_router():
     """Get call center supervisor orders router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(['📋 Buyurtmalar', '📋 Заказы']))
     async def call_center_supervisor_orders(message: Message, state: FSMContext):
-        """Handle orders"""
+        """Handle call center supervisor orders"""
         lang = 'uz'  # Default language
         
         # Mock orders data
@@ -31,7 +37,6 @@ def get_call_center_supervisor_orders_router():
                 'client_name': 'Ahmad Karimov',
                 'service_type': 'Internet xizmati',
                 'status': 'Yangi',
-                'assigned_to': 'Aziz Karimov',
                 'created_at': '2024-01-15 10:30'
             },
             {
@@ -40,24 +45,34 @@ def get_call_center_supervisor_orders_router():
                 'client_name': 'Malika Yusupova',
                 'service_type': 'TV xizmati',
                 'status': 'Jarayonda',
-                'assigned_to': 'Malika Yusupova',
                 'created_at': '2024-01-15 09:15'
             }
         ]
         
         if not orders:
-            text = "📋 Yangi buyurtmalar yo'q."
+            text = (
+                "📋 Yangi buyurtmalar yo'q." if lang == 'uz'
+                else "📋 Новых заказов нет."
+            )
             await message.answer(text)
             await state.clear()
         else:
-            text = f"📋 <b>Buyurtmalar ({len(orders)})</b>\n\n"
-            for i, order in enumerate(orders[:10], 1):
-                text += f"{i}. {order.get('order_number', 'N/A')}\n"
-                text += f"   👤 {order.get('client_name', 'N/A')}\n"
-                text += f"   📝 {order.get('service_type', 'N/A')}\n"
-                text += f"   📊 {order.get('status', 'N/A')}\n"
-                text += f"   👨‍💼 {order.get('assigned_to', 'N/A')}\n"
-                text += f"   ⏰ {order.get('created_at', 'N/A')}\n\n"
+            if lang == 'uz':
+                text = f"📋 <b>Buyurtmalar ({len(orders)})</b>\n\n"
+                for i, order in enumerate(orders[:10], 1):
+                    text += f"{i}. {order.get('order_number', 'N/A')}\n"
+                    text += f"   👤 {order.get('client_name', 'N/A')}\n"
+                    text += f"   📝 {order.get('service_type', 'N/A')}\n"
+                    text += f"   📊 {order.get('status', 'N/A')}\n"
+                    text += f"   ⏰ {order.get('created_at', 'N/A')}\n\n"
+            else:
+                text = f"📋 <b>Заказы ({len(orders)})</b>\n\n"
+                for i, order in enumerate(orders[:10], 1):
+                    text += f"{i}. {order.get('order_number', 'N/A')}\n"
+                    text += f"   👤 {order.get('client_name', 'N/A')}\n"
+                    text += f"   📝 {order.get('service_type', 'N/A')}\n"
+                    text += f"   📊 {order.get('status', 'N/A')}\n"
+                    text += f"   ⏰ {order.get('created_at', 'N/A')}\n\n"
             
             await message.answer(
                 text,

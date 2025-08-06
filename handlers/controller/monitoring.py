@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.controllers_buttons import get_monitoring_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -59,6 +60,11 @@ async def get_system_status():
 def get_monitoring_router():
     """Router for monitoring functionality"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📊 Monitoring", "📊 Мониторинг"]))
     async def view_monitoring(message: Message, state: FSMContext):

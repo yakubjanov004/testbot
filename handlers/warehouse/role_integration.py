@@ -1,11 +1,14 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
+from filters.role_filter import RoleFilter
 
 def get_warehouse_role_integration_router():
     """Router for warehouse integration with other roles"""
-    from utils.role_system import get_role_router
-    router = get_role_router("all")  # Available for all roles
+    router = Router()
+    
+    # Apply role filter - this is for all roles, so we don't apply a specific role filter
+    # The role checking is done within the handlers themselves
 
     @router.message(F.text == "📦 Ombor bilan ishlash")
     async def warehouse_integration_menu(message: Message, state: FSMContext):

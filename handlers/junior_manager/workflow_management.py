@@ -9,6 +9,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -100,11 +101,11 @@ def get_workflow_management_menu(lang: str = 'uz'):
             InlineKeyboardButton(text="📊 Vazifalar monitoringi", callback_data="jm_workflow_monitoring")
         ],
         [
-            InlineKeyboardButton(text="📈 Workflow hisobotlari", callback_data="jm_workflow_reports"),
-            InlineKeyboardButton(text="📊 Workflow analitikasi", callback_data="jm_workflow_analytics")
+            InlineKeyboardButton(text="📈 Hisobotlar", callback_data="jm_workflow_reports"),
+            InlineKeyboardButton(text="📊 Tahlil", callback_data="jm_workflow_analytics")
         ],
         [
-            InlineKeyboardButton(text="🔙 Orqaga", callback_data="jm_back_to_main")
+            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
         ]
     ])
 
@@ -112,7 +113,7 @@ def get_application_tracking_menu(lang: str = 'uz'):
     """Mock application tracking menu keyboard"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="⏳ Kutilayotgan", callback_data="jm_track_pending"),
+            InlineKeyboardButton(text="⏳ Kutilmoqda", callback_data="jm_track_pending"),
             InlineKeyboardButton(text="🔄 Jarayonda", callback_data="jm_track_progress")
         ],
         [
@@ -120,7 +121,7 @@ def get_application_tracking_menu(lang: str = 'uz'):
             InlineKeyboardButton(text="📋 Barchasi", callback_data="jm_track_all")
         ],
         [
-            InlineKeyboardButton(text="🔙 Orqaga", callback_data="jm_back_to_workflow")
+            InlineKeyboardButton(text="◀️ Orqaga", callback_data="jm_workflow_back")
         ]
     ])
 
@@ -133,10 +134,10 @@ def get_task_monitoring_menu(lang: str = 'uz'):
         ],
         [
             InlineKeyboardButton(text="📈 Samaradorlik", callback_data="jm_monitor_performance"),
-            InlineKeyboardButton(text="📋 Batafsil", callback_data="jm_monitor_detailed")
+            InlineKeyboardButton(text="📋 Barchasi", callback_data="jm_monitor_all")
         ],
         [
-            InlineKeyboardButton(text="🔙 Orqaga", callback_data="jm_back_to_workflow")
+            InlineKeyboardButton(text="◀️ Orqaga", callback_data="jm_workflow_back")
         ]
     ])
 
@@ -149,8 +150,13 @@ class JuniorManagerWorkflowStates(StatesGroup):
     task_monitoring = State()
 
 def get_junior_manager_workflow_router():
-    """Get router for junior manager workflow handlers"""
+    """Get router for junior manager workflow management handlers"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["⚙️ Workflow boshqaruvi"]))
     async def workflow_management_menu(message: Message, state: FSMContext):

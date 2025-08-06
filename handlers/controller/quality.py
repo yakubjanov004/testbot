@@ -1,15 +1,13 @@
 """
-Controller Quality Management - Simplified Implementation
-
-This module handles controller quality management functionality.
+Controller Quality Handler
+Manages quality control for controller
 """
 
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import get_quality_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -32,13 +30,11 @@ async def get_quality_metrics():
     return {
         'overall_quality_score': 4.2,
         'customer_satisfaction': 85,
-        'response_time_score': 4.5,
+        'response_time_avg': '2.3 soat',
         'resolution_rate': 92,
-        'technician_ratings': 4.3,
-        'total_reviews': 150,
-        'positive_reviews': 128,
-        'neutral_reviews': 15,
-        'negative_reviews': 7
+        'rework_rate': 8,
+        'total_orders_reviewed': 150,
+        'quality_issues_found': 12
     }
 
 async def get_quality_issues():
@@ -46,88 +42,90 @@ async def get_quality_issues():
     return [
         {
             'id': 1,
-            'type': 'response_time',
-            'severity': 'medium',
-            'description': 'Javob vaqti sekin',
-            'affected_applications': 5,
-            'created_at': datetime.now(),
-            'status': 'open'
+            'issue_type': 'Texnik xizmat',
+            'description': 'Internet uzulish muammosi to\'liq hal qilinmagan',
+            'severity': 'Yuqori',
+            'affected_orders': 5,
+            'created_at': '2024-01-15 10:30',
+            'status': 'Ochiq'
         },
         {
             'id': 2,
-            'type': 'technician_skill',
-            'severity': 'low',
-            'description': 'Texnik malakasi past',
-            'affected_applications': 2,
-            'created_at': datetime.now(),
-            'status': 'resolved'
+            'issue_type': 'Mijoz xizmati',
+            'description': 'Javob vaqti oshib ketmoqda',
+            'severity': 'O\'rta',
+            'affected_orders': 3,
+            'created_at': '2024-01-15 09:15',
+            'status': 'Hal qilindi'
         },
         {
             'id': 3,
-            'type': 'communication',
-            'severity': 'high',
-            'description': 'Mijoz bilan aloqa muammosi',
-            'affected_applications': 8,
-            'created_at': datetime.now(),
-            'status': 'open'
+            'issue_type': 'Tizim',
+            'description': 'Bildirishnomalar kechikmoqda',
+            'severity': 'Past',
+            'affected_orders': 2,
+            'created_at': '2024-01-15 08:45',
+            'status': 'Ochiq'
         }
     ]
 
 def get_quality_router():
-    """Router for quality management functionality"""
+    """Get controller quality router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🏆 Sifat boshqaruvi", "🏆 Управление качеством"]))
     async def view_quality_management(message: Message, state: FSMContext):
-        """Controller view quality management handler"""
+        """Handle quality management view"""
+        user_id = message.from_user.id
+        
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
-            
-            # Get quality metrics
-            metrics = await get_quality_metrics()
+            quality_metrics = await get_quality_metrics()
             
             quality_text = (
-                "🏆 <b>Sifat boshqaruvi - To'liq ma'lumot</b>\n\n"
-                "📊 <b>Asosiy ko'rsatkichlar:</b>\n"
-                f"• Umumiy sifat balli: {metrics['overall_quality_score']}/5.0\n"
-                f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
-                f"• Javob vaqti balli: {metrics['response_time_score']}/5.0\n"
-                f"• Muammo hal qilish: {metrics['resolution_rate']}%\n"
-                f"• Texniklar reytingi: {metrics['technician_ratings']}/5.0\n\n"
-                f"📈 <b>Reytinglar:</b>\n"
-                f"• Jami sharhlar: {metrics['total_reviews']}\n"
-                f"• Ijobiy: {metrics['positive_reviews']}\n"
-                f"• Neytral: {metrics['neutral_reviews']}\n"
-                f"• Salbiy: {metrics['negative_reviews']}\n\n"
-                "Quyidagi bo'limlardan birini tanlang:"
-                if lang == 'uz' else
-                "🏆 <b>Управление качеством - Полная информация</b>\n\n"
-                "📊 <b>Основные показатели:</b>\n"
-                f"• Общий балл качества: {metrics['overall_quality_score']}/5.0\n"
-                f"• Удовлетворенность клиентов: {metrics['customer_satisfaction']}%\n"
-                f"• Балл времени ответа: {metrics['response_time_score']}/5.0\n"
-                f"• Решение проблем: {metrics['resolution_rate']}%\n"
-                f"• Рейтинг техников: {metrics['technician_ratings']}/5.0\n\n"
-                f"📈 <b>Рейтинги:</b>\n"
-                f"• Всего отзывов: {metrics['total_reviews']}\n"
-                f"• Положительные: {metrics['positive_reviews']}\n"
-                f"• Нейтральные: {metrics['neutral_reviews']}\n"
-                f"• Отрицательные: {metrics['negative_reviews']}\n\n"
-                "Выберите один из разделов ниже:"
+                "🏆 <b>Sifat boshqaruvi</b>\n\n"
+                "📊 <b>Umumiy ko'rsatkichlar:</b>\n"
+                f"• Umumiy sifat bahosi: {quality_metrics['overall_quality_score']}/5 ⭐\n"
+                f"• Mijoz mamnuniyati: {quality_metrics['customer_satisfaction']}%\n"
+                f"• O'rtacha javob vaqti: {quality_metrics['response_time_avg']}\n"
+                f"• Hal qilish foizi: {quality_metrics['resolution_rate']}%\n"
+                f"• Qayta ishlash foizi: {quality_metrics['rework_rate']}%\n\n"
+                f"📋 <b>Statistika:</b>\n"
+                f"• Ko'rib chiqilgan buyurtmalar: {quality_metrics['total_orders_reviewed']}\n"
+                f"• Topilgan sifat muammolari: {quality_metrics['quality_issues_found']}\n\n"
+                "Kerakli bo'limni tanlang:"
             )
             
-            sent_message = await message.answer(
-                text=quality_text,
-                reply_markup=get_quality_keyboard(lang),
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="📊 Sifat ko'rsatkichlari", callback_data="view_quality_metrics"),
+                    InlineKeyboardButton(text="⚠️ Sifat muammolari", callback_data="view_quality_issues")
+                ],
+                [
+                    InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_quality")
+                ]
+            ])
+            
+            await message.answer(
+                quality_text,
+                reply_markup=keyboard,
                 parse_mode='HTML'
             )
             
         except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            print(f"Error in view_quality_management: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     @router.callback_query(F.data == "view_quality_issues")
     async def view_quality_issues(callback: CallbackQuery, state: FSMContext):
@@ -197,11 +195,11 @@ def get_quality_router():
             text = (
                 f"🏆 <b>Sifat muammosi - To'liq ma'lumot</b>\n\n"
                 f"🆔 <b>Muammo ID:</b> {issue['id']}\n"
-                f"📋 <b>Turi:</b> {issue['type']}\n"
+                f"📋 <b>Turi:</b> {issue['issue_type']}\n"
                 f"{severity_emoji} <b>Jiddiylik:</b> {severity_text}\n"
                 f"{status_emoji} <b>Holat:</b> {status_text}\n"
                 f"📝 <b>Tavsif:</b> {issue['description']}\n"
-                f"📊 <b>Ta'sir qilgan arizalar:</b> {issue['affected_applications']}\n"
+                f"📊 <b>Ta'sir qilgan arizalar:</b> {issue['affected_orders']}\n"
                 f"📅 <b>Yaratilgan:</b> {created_date}\n\n"
                 f"📊 <b>Muammo #{index + 1} / {len(issues)}</b>"
             )
@@ -271,13 +269,20 @@ def get_quality_router():
                 "📊 <b>Batafsil sifat ko'rsatkichlari - To'liq ma'lumot</b>\n\n"
                 "🏆 <b>Asosiy ballar:</b>\n"
                 f"• Umumiy sifat: {metrics['overall_quality_score']}/5.0\n"
-                f"• Javob vaqti: {metrics['response_time_score']}/5.0\n"
-                f"• Texniklar: {metrics['technician_ratings']}/5.0\n\n"
+                f"• Javob vaqti: {metrics['response_time_avg']}\n"
+                f"• Texniklar: {metrics['rework_rate']}%\n\n"
                 "📈 <b>Foizli ko'rsatkichlar:</b>\n"
                 f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
-                f"• Muammo hal qilish: {metrics['resolution_rate']}%\n\n"
+                f"• Hal qilish foizi: {metrics['resolution_rate']}%\n"
+                f"• Qayta ishlash foizi: {metrics['rework_rate']}%\n\n"
                 "📊 <b>Reytinglar tahlili:</b>\n"
-                f"• Jami sharhlar: {metrics['total_reviews']}\n"
+                f"• Ko'rib chiqilgan buyurtmalar: {metrics['total_orders_reviewed']}\n"
+                f"• Topilgan sifat muammolari: {metrics['quality_issues_found']}\n"
+                f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
+                f"• Hal qilish foizi: {metrics['resolution_rate']}%\n"
+                f"• Qayta ishlash foizi: {metrics['rework_rate']}%\n\n"
+                "📊 <b>Reytinglar tahlili:</b>\n"
+                f"• Jami sharhlar: {metrics['total_orders_reviewed']}\n"
                 f"• Ijobiy: {metrics['positive_reviews']} ({(metrics['positive_reviews']/max(metrics['total_reviews'], 1)*100):.1f}%)\n"
                 f"• Neytral: {metrics['neutral_reviews']} ({(metrics['neutral_reviews']/max(metrics['total_reviews'], 1)*100):.1f}%)\n"
                 f"• Salbiy: {metrics['negative_reviews']} ({(metrics['negative_reviews']/max(metrics['total_reviews'], 1)*100):.1f}%)"
@@ -309,28 +314,15 @@ def get_quality_router():
                 "📊 <b>Asosiy ko'rsatkichlar:</b>\n"
                 f"• Umumiy sifat balli: {metrics['overall_quality_score']}/5.0\n"
                 f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
-                f"• Javob vaqti balli: {metrics['response_time_score']}/5.0\n"
+                f"• Javob vaqti balli: {metrics['response_time_avg']}\n"
                 f"• Muammo hal qilish: {metrics['resolution_rate']}%\n"
-                f"• Texniklar reytingi: {metrics['technician_ratings']}/5.0\n\n"
+                f"• Texniklar reytingi: {metrics['rework_rate']}%\n\n"
                 f"📈 <b>Reytinglar:</b>\n"
-                f"• Jami sharhlar: {metrics['total_reviews']}\n"
-                f"• Ijobiy: {metrics['positive_reviews']}\n"
-                f"• Neytral: {metrics['neutral_reviews']}\n"
-                f"• Salbiy: {metrics['negative_reviews']}\n\n"
-                "Quyidagi bo'limlardan birini tanlang:"
-                if lang == 'uz' else
-                "🏆 <b>Управление качеством - Полная информация</b>\n\n"
-                "📊 <b>Основные показатели:</b>\n"
-                f"• Общий балл качества: {metrics['overall_quality_score']}/5.0\n"
-                f"• Удовлетворенность клиентов: {metrics['customer_satisfaction']}%\n"
-                f"• Балл времени ответа: {metrics['response_time_score']}/5.0\n"
-                f"• Решение проблем: {metrics['resolution_rate']}%\n"
-                f"• Рейтинг техников: {metrics['technician_ratings']}/5.0\n\n"
-                f"📈 <b>Рейтинги:</b>\n"
-                f"• Всего отзывов: {metrics['total_reviews']}\n"
-                f"• Положительные: {metrics['positive_reviews']}\n"
-                f"• Нейтральные: {metrics['neutral_reviews']}\n"
-                f"• Отрицательные: {metrics['negative_reviews']}\n\n"
+                f"• Ko'rib chiqilgan buyurtmalar: {metrics['total_orders_reviewed']}\n"
+                f"• Topilgan sifat muammolari: {metrics['quality_issues_found']}\n"
+                f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
+                f"• Hal qilish foizi: {metrics['resolution_rate']}%\n"
+                f"• Qayta ishlash foizi: {metrics['rework_rate']}%\n\n"
                 "Выберите один из разделов ниже:"
             )
             

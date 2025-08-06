@@ -17,10 +17,12 @@ class WarehouseOrdersStates(StatesGroup):
     viewing_orders = State()
     entering_order_number = State()
     viewing_order_details = State()
+    orders_menu = State()
 
 
 class WarehouseInventoryStates(StatesGroup):
     """Inventory states for warehouse"""
+    inventory_menu = State()
     viewing_inventory = State()
     entering_item_details = State()
     selecting_item = State()
@@ -34,6 +36,7 @@ class WarehouseInventoryStates(StatesGroup):
     adding_item_status = State()
     selecting_item_to_update = State()
     updating_item_quantity = State()
+    updating_item_info = State()
     searching_inventory = State()
 
 

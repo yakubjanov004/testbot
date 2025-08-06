@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.call_center_supervisor_buttons import get_supervisor_inbox_keyboard, get_supervisor_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -65,6 +66,11 @@ async def get_supervisor_applications(user_id: int):
 def get_supervisor_inbox_router():
     """Router for supervisor inbox functionality"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📥 Inbox", "📥 Входящие"]))
     async def view_inbox(message: Message, state: FSMContext):

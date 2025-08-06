@@ -5,12 +5,10 @@ This module handles client feedback functionality.
 """
 
 from aiogram import F
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
-from keyboards.client_buttons import get_feedback_keyboard, get_main_menu_keyboard
 from states.client_states import FeedbackStates
-from utils.role_system import get_role_router
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -28,57 +26,92 @@ async def get_user_lang(user_id: int) -> str:
     """Mock get user language"""
     return 'uz'
 
-def get_client_feedback_router():
-    router = get_role_router("client")
+async def get_user_role(user_id: int) -> str:
+    """Mock get user role"""
+    return 'client'
 
-    @router.message(F.text.in_(["📝 Fikr-mulohaza", "📝 Обратная связь"]))
-    async def client_feedback_handler(message: Message, state: FSMContext):
-        """Client feedback handler"""
+def get_client_feedback_router():
+    """Get client feedback router with role filtering"""
+    from aiogram import Router
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("client")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
+
+    @router.message(F.text.in_(["💬 Fikr bildirish", "💬 Оставить отзыв"]))
+    async def feedback_handler(message: Message, state: FSMContext):
+        """Handle feedback request"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
-            if not user:
-                await message.answer("Foydalanuvchi topilmadi.")
-                return
-            
             lang = user.get('language', 'uz')
+            
             feedback_text = (
-                "Fikr-mulohaza yuborish uchun matnni kiriting:"
+                "💬 <b>Fikr bildirish</b>\n\n"
+                "Sizning fikringiz biz uchun muhim! Iltimos, xizmatimiz haqida fikr bildiring.\n\n"
+                "📝 Fikr yozish uchun quyidagi formatda yozing:\n"
+                "• Xizmat sifatini baholang (1-5 yulduz)\n"
+                "• Izoh qoldiring\n"
+                "• Takliflar bo'lsa yozing\n\n"
+                "Masalan:\n"
+                "⭐⭐⭐⭐⭐\n"
+                "Ajoyib xizmat! Tez va sifatli ishlar. Rahmat!"
                 if lang == 'uz' else
-                "Введите текст для отправки обратной связи:"
+                "💬 <b>Оставить отзыв</b>\n\n"
+                "Ваше мнение важно для нас! Пожалуйста, оставьте отзыв о наших услугах.\n\n"
+                "📝 Для написания отзыва используйте следующий формат:\n"
+                "• Оцените качество услуги (1-5 звезд)\n"
+                "• Оставьте комментарий\n"
+                "• Напишите предложения, если есть\n\n"
+                "Например:\n"
+                "⭐⭐⭐⭐⭐\n"
+                "Отличный сервис! Быстрая и качественная работа. Спасибо!"
             )
             
-            sent_message = await message.answer(
-                text=feedback_text,
-                reply_markup=get_feedback_keyboard(lang)
-            )
+            from keyboards.client_buttons import get_cancel_keyboard
+            keyboard = get_cancel_keyboard(lang)
             
+            await message.answer(feedback_text, reply_markup=keyboard, parse_mode='HTML')
             await state.set_state(FeedbackStates.waiting_for_feedback)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @router.message(StateFilter(FeedbackStates.waiting_for_feedback))
+    @router.message(FeedbackStates.waiting_for_feedback)
     async def process_feedback(message: Message, state: FSMContext):
-        """Process feedback message"""
+        """Process user feedback"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             lang = user.get('language', 'uz')
             
-            # Save feedback (mock)
             feedback_text = message.text
-            user_name = message.from_user.full_name or message.from_user.first_name
+            
+            # Save feedback (mock)
+            feedback_data = {
+                'user_id': user['id'],
+                'feedback': feedback_text,
+                'timestamp': '2024-01-15 10:30:00'
+            }
             
             success_text = (
-                f"✅ Fikr-mulohaza muvaffaqiyatli yuborildi!\n\n"
-                f"📝 Sizning fikringiz: {feedback_text[:100]}{'...' if len(feedback_text) > 100 else ''}\n\n"
-                f"Rahmat, {user_name}! Sizning fikringiz biz uchun muhim."
+                "✅ <b>Fikringiz qabul qilindi!</b>\n\n"
+                "Rahmat, fikringiz biz uchun muhim. Sizning takliflaringiz xizmatimizni yaxshilashga yordam beradi.\n\n"
+                "📞 Qo'shimcha savollaringiz bo'lsa, biz bilan bog'laning:\n"
+                "• Telefon: +998 71 123 45 67\n"
+                "• Telegram: @alfaconnect_support"
                 if lang == 'uz' else
-                f"✅ Обратная связь успешно отправлена!\n\n"
-                f"📝 Ваш отзыв: {feedback_text[:100]}{'...' if len(feedback_text) > 100 else ''}\n\n"
-                f"Спасибо, {user_name}! Ваше мнение важно для нас."
+                "✅ <b>Ваш отзыв принят!</b>\n\n"
+                "Спасибо, ваше мнение важно для нас. Ваши предложения помогают улучшить наш сервис.\n\n"
+                "📞 Если у вас есть дополнительные вопросы, свяжитесь с нами:\n"
+                "• Телефон: +998 71 123 45 67\n"
+                "• Telegram: @alfaconnect_support"
             )
             
-            await message.answer(success_text, reply_markup=get_main_menu_keyboard(lang))
+            from keyboards.client_buttons import get_back_keyboard
+            keyboard = get_back_keyboard(lang)
+            
+            await message.answer(success_text, reply_markup=keyboard, parse_mode='HTML')
             await state.clear()
             
         except Exception as e:
@@ -94,19 +127,18 @@ def get_client_feedback_router():
             lang = user.get('language', 'uz')
             
             cancel_text = (
-                "❌ Fikr-mulohaza bekor qilindi."
+                "❌ Fikr bildirish bekor qilindi."
                 if lang == 'uz' else
-                "❌ Обратная связь отменена."
+                "❌ Отзыв отменен."
             )
             
-            await callback.message.edit_text(
-                text=cancel_text,
-                reply_markup=get_main_menu_keyboard(lang)
-            )
+            from keyboards.client_buttons import get_back_keyboard
+            keyboard = get_back_keyboard(lang)
             
+            await callback.message.edit_text(cancel_text, reply_markup=keyboard)
             await state.clear()
             
         except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router

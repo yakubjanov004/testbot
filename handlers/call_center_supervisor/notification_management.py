@@ -11,10 +11,14 @@ from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
+# Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
     get_notification_management_keyboard, get_communication_menu
 )
+
+# States imports
 from states.call_center_supervisor_states import CallCenterSupervisorStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -69,8 +73,12 @@ async def get_call_center_staff_list(supervisor_id: int):
 
 def get_call_center_supervisor_notification_management_router():
     """Get router for call center supervisor notification management handlers"""
-    from utils.role_system import get_role_router
-    router = get_role_router("call_center_supervisor")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📢 E'lon yuborish"]))
     async def handle_send_announcement(message: Message, state: FSMContext):

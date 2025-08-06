@@ -1,13 +1,15 @@
 """
 Call Center Supervisor Statistics Handler
-Manages statistics and analytics for call center supervisor
+
+This module implements statistics and reporting functionality for Call Center Supervisor role,
+providing comprehensive analytics and performance metrics for call center operations.
 """
 
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
@@ -17,10 +19,16 @@ from keyboards.call_center_supervisor_buttons import (
 
 # States imports
 from states.call_center_supervisor_states import CallCenterSupervisorStatisticsStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_supervisor_statistics_router():
     """Get router for call center supervisor statistics handlers"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📊 Statistikalar", "📊 Статистика"]))
     async def supervisor_statistics(message: Message, state: FSMContext):

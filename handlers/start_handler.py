@@ -43,7 +43,8 @@ def get_start_router():
                 await show_role_menu(message, user_role)
             
         except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            #await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            pass
     
     @router.callback_query(F.data == "back_to_main_menu")
     async def back_to_main_menu_handler(callback: CallbackQuery, state: FSMContext):
@@ -68,6 +69,7 @@ def get_start_router():
                 await show_role_menu(callback.message, user_role)
             
         except Exception as e:
-            await callback.message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            #await callback.message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            pass
     
     return router 

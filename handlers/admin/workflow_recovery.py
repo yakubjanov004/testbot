@@ -17,15 +17,21 @@ from keyboards.admin_buttons import get_workflow_recovery_keyboard
 
 # States imports
 from states.admin_states import AdminWorkflowRecoveryStates, AdminMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_admin_workflow_recovery_router():
     """Get admin workflow recovery router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["🔄 Workflow tiklash", "🔄 Восстановление workflow"]))
     async def workflow_recovery_menu(message: Message, state: FSMContext):
         """Workflow recovery main menu"""
-        text = "🔄 <b>Workflow tiklash va tizim boshqaruvi</b>\n\nTizim holatini boshqarish va workflowlarni tiklash uchun turini tanlang."
+        text = "🔄 <b>Workflow tiklash va tizim boshqaruvi</b>\n\nTizim holatini boshqarish uchun turini tanlang."
         
         sent_message = await message.answer(
             text,

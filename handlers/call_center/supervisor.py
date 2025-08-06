@@ -1,39 +1,43 @@
 """
 Call Center Supervisor Handler
-Manages call center supervisor functionality
+Manages call center supervisor functions
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from typing import Optional, Dict, Any
 
 # Keyboard imports
-from keyboards.call_center_buttons import (
-    call_center_supervisor_main_menu, call_center_operator_selection_keyboard
-)
+from keyboards.call_center_buttons import call_center_supervisor_main_menu
 
 # States imports
 from states.call_center import CallCenterSupervisorStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_supervisor_router():
     """Get call center supervisor router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📞 Call Center Supervisor", "📞 Руководитель call-центра"]))
     async def call_center_supervisor_start(message: Message, state: FSMContext):
-        """Call center supervisor main menu"""
-        lang = 'uz'  # Default language
-        
-        await state.set_state(CallCenterSupervisorStates.main_menu)
-        
-        welcome_text = "📞 Call center supervisor paneliga xush kelibsiz!" if lang == 'uz' else "📞 Добро пожаловать в панель руководителя call-центра!"
+        """Call center supervisor start"""
+        text = (
+            "📞 <b>Call Center Supervisor</b>\n\n"
+            "Call center operatorlarini boshqarish va nazorat qilish uchun bo'limni tanlang."
+        )
         
         await message.answer(
-            welcome_text,
-            reply_markup=call_center_supervisor_main_menu(lang)
+            text,
+            reply_markup=get_supervisor_keyboard('uz')
         )
+        await state.set_state(CallCenterSupervisorStates.supervisor)
 
     @router.message(F.text.in_(["📋 So'rovlarni tayinlash", "📋 Назначить запросы"]))
     async def show_pending_assignments(message: Message, state: FSMContext):

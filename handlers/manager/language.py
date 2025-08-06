@@ -4,9 +4,10 @@ Manager Language Handler - Soddalashtirilgan versiya
 Bu modul manager uchun til o'zgartirish funksionalligini o'z ichiga oladi.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from filters.role_filter import RoleFilter
 
 from keyboards.manager_buttons import get_manager_main_keyboard
 
@@ -35,50 +36,54 @@ async def update_user_language(telegram_id: int, language: str):
 
 def get_manager_language_router():
     """Get manager language router"""
-    from aiogram import Router
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(['🌐 Tilni o\'zgartirish']))
-    async def change_manager_language(message: Message, state: FSMContext):
-        """Manager language change handler"""
-        try:
-            await message.delete()
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'manager':
-                return
+    # @router.message(F.text.in_(['🌐 Tilni o\'zgartirish']))
+    # async def change_manager_language(message: Message, state: FSMContext):
+    #     """Manager language change handler"""
+    #     try:
+    #         await message.delete()
+    #         user = await get_user_by_telegram_id(message.from_user.id)
+    #         if not user or user['role'] != 'manager':
+    #             return
             
-            current_lang = user.get('language', 'uz')
+    #         current_lang = user.get('language', 'uz')
             
-            # Create language selection keyboard
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="🇺🇿 O'zbekcha" + (" ✅" if current_lang == 'uz' else ""),
-                        callback_data="manager_lang_uz"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🇷🇺 Русский" + (" ✅" if current_lang == 'ru' else ""),
-                        callback_data="manager_lang_ru"
-                    )
-                ]
-            ])
+    #         # Create language selection keyboard
+    #         keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    #             [
+    #                 InlineKeyboardButton(
+    #                     text="🇺🇿 O'zbekcha" + (" ✅" if current_lang == 'uz' else ""),
+    #                     callback_data="manager_lang_uz"
+    #                 )
+    #             ],
+    #             [
+    #                 InlineKeyboardButton(
+    #                     text="🇷🇺 Русский" + (" ✅" if current_lang == 'ru' else ""),
+    #                     callback_data="manager_lang_ru"
+    #                 )
+    #             ]
+    #         ])
             
-            lang_text = "🌐 Tilni tanlang:\n\nJoriy til: O'zbekcha"
+#            lang_text = "🌐 Tilni tanlang:\n\nJoriy til: O'zbekcha"
             
-            sent_message = await message.answer(
-                text=lang_text,
-                reply_markup=keyboard
-            )
+#             sent_message = await message.answer(
+#                 text=lang_text,
+#                 reply_markup=keyboard
+#             )
             
-            await state.update_data(last_message_id=sent_message.message_id)
+#             await state.update_data(last_message_id=sent_message.message_id)
             
-        except Exception as e:
-            print(f"Error in change_manager_language: {str(e)}")
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+#         except Exception as e:
+#             print(f"Error in change_manager_language: {str(e)}")
+#             lang = await get_user_lang(message.from_user.id)
+#             error_text = "Xatolik yuz berdi"
+#             await message.answer(error_text)
 
     @router.callback_query(F.data.startswith("manager_lang_"))
     async def set_manager_language(callback: CallbackQuery, state: FSMContext):
@@ -100,19 +105,47 @@ def get_manager_language_router():
             # Create success message
             success_text = "✅ Til muvaffaqiyatli o'zgartirildi!\n\n🌐 Til: O'zbekcha"
             
-            # Create main menu keyboard
-            main_menu_keyboard = get_manager_main_keyboard(selected_lang)
+            # Create inline keyboard for back to main menu
+            back_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="manager_back_to_main")]
+            ])
             
-            # Edit message with success and main menu
+            # Edit message with success and inline keyboard
             await callback.message.edit_text(
                 text=success_text,
-                reply_markup=main_menu_keyboard
+                reply_markup=back_keyboard
             )
             
             await callback.answer()
             
         except Exception as e:
             print(f"Error in set_manager_language: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "manager_back_to_main")
+    async def manager_back_to_main_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle back to main menu button"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'manager':
+                return
+            
+            lang = user.get('language', 'uz')
+            main_menu_text = "Menejer paneliga xush kelibsiz! Quyidagi menyudan kerakli bo'limni tanlang."
+            
+            # Send new message with main menu keyboard
+            await callback.message.answer(
+                text=main_menu_text,
+                reply_markup=get_manager_main_keyboard(lang)
+            )
+            
+            # Delete the previous message
+            await callback.message.delete()
+            
+        except Exception as e:
+            print(f"Error in manager_back_to_main_handler: {str(e)}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     return router

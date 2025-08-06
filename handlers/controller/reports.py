@@ -1,6 +1,13 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+"""
+Controller Reports Handler
+Manages reports for controller
+"""
+
+from aiogram import F, Router
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from typing import Dict, Any, List, Optional
+from filters.role_filter import RoleFilter
 from datetime import datetime, timedelta
 
 # Mock functions to replace utils and database imports
@@ -16,86 +23,98 @@ async def get_user_by_telegram_id(telegram_id: int):
     }
 
 async def get_system_statistics():
-    """Mock system statistics"""
+    """Mock get system statistics"""
     return {
         'total_orders': 150,
         'completed_orders': 120,
         'pending_orders': 30,
-        'active_clients': 45,
+        'active_clients': 85,
         'active_technicians': 12,
         'revenue_today': 2500000,
         'avg_completion_time': 2.5
     }
 
 async def get_all_technicians():
-    """Mock technicians data"""
+    """Mock get all technicians"""
     return [
         {
             'id': 1,
-            'full_name': 'Technician 1',
-            'is_active': True
+            'full_name': 'Aziz Karimov',
+            'role': 'technician',
+            'active_orders': 3,
+            'completed_today': 2,
+            'avg_rating': 4.8,
+            'status': 'active'
         },
         {
             'id': 2,
-            'full_name': 'Technician 2',
-            'is_active': True
+            'full_name': 'Malika Yusupova',
+            'role': 'technician',
+            'active_orders': 1,
+            'completed_today': 3,
+            'avg_rating': 4.6,
+            'status': 'active'
         },
         {
             'id': 3,
-            'full_name': 'Technician 3',
-            'is_active': False
+            'full_name': 'Bekzod Toirov',
+            'role': 'technician',
+            'active_orders': 0,
+            'completed_today': 1,
+            'avg_rating': 4.4,
+            'status': 'inactive'
         }
     ]
 
 async def get_technician_performance(tech_id: int):
-    """Mock technician performance"""
+    """Mock get technician performance"""
     return {
-        'completed_orders': 25,
-        'active_orders': 3,
-        'avg_rating': 4.5
+        'total_orders': 45,
+        'completed_orders': 42,
+        'avg_completion_time': '2.1 soat',
+        'customer_satisfaction': 4.7,
+        'response_time': '15 daqiqa'
     }
 
 async def get_service_quality_metrics():
-    """Mock quality metrics"""
+    """Mock get service quality metrics"""
     return {
-        'avg_rating': 4.3,
-        'total_reviews': 85,
-        'satisfaction_rate': 92,
-        'rating_distribution': {
-            5: 45,
-            4: 25,
-            3: 10,
-            2: 3,
-            1: 2
-        }
+        'overall_quality': 4.5,
+        'response_time_score': 4.3,
+        'resolution_rate': 94,
+        'customer_satisfaction': 88,
+        'rework_rate': 6
     }
 
 async def get_all_orders(limit: int = 100):
-    """Mock orders data"""
+    """Mock get all orders"""
     return [
         {
             'id': 1,
-            'status': 'completed',
-            'created_at': datetime.now() - timedelta(hours=2)
+            'order_number': 'ORD-001',
+            'client_name': 'Test Client 1',
+            'service_type': 'Internet xizmati',
+            'status': 'Bajarilgan',
+            'created_at': '2024-01-15 10:30',
+            'completed_at': '2024-01-15 14:30',
+            'assigned_to': 'Aziz Karimov',
+            'rating': 5
         },
         {
             'id': 2,
-            'status': 'in_progress',
-            'created_at': datetime.now() - timedelta(hours=1)
-        },
-        {
-            'id': 3,
-            'status': 'new',
-            'created_at': datetime.now()
+            'order_number': 'ORD-002',
+            'client_name': 'Test Client 2',
+            'service_type': 'TV xizmati',
+            'status': 'Jarayonda',
+            'created_at': '2024-01-15 09:15',
+            'completed_at': None,
+            'assigned_to': 'Malika Yusupova',
+            'rating': None
         }
     ]
 
-# Removed duplicate get_role_router - using centralized version from utils.role_system
-
-# Mock keyboards
 def reports_menu(lang: str):
-    """Mock reports menu keyboard"""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    """Create reports menu"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="📈 Tizim hisoboti", callback_data="system_report"),
@@ -106,34 +125,32 @@ def reports_menu(lang: str):
             InlineKeyboardButton(text="📅 Kunlik hisobot", callback_data="daily_report")
         ],
         [
-            InlineKeyboardButton(text="📊 Haftalik hisobot", callback_data="weekly_report")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_controllers")
+            InlineKeyboardButton(text="📊 Haftalik hisobot", callback_data="weekly_report"),
+            InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_controllers")
         ]
     ])
 
 def back_to_controllers_menu(lang: str):
-    """Mock back to controllers menu keyboard"""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    """Create back to controllers menu"""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_controllers")
-        ]
+        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_controllers")]
     ])
 
-# Mock states
 class ControllerReportsStates:
     reports_menu = "reports_menu"
 
 def get_controller_reports_router():
     """Get controller reports router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📊 Hisobotlar"]))
     async def reports_menu_handler(message: Message, state: FSMContext):
-        """Hisobotlar menyusi"""
+        """Handle reports menu"""
         user_id = message.from_user.id
         
         try:
@@ -143,28 +160,26 @@ def get_controller_reports_router():
                 return
             
             lang = user.get('language', 'uz')
-            await state.set_state(ControllerReportsStates.reports_menu)
             
-            text = """📊 <b>Hisobotlar bo'limi</b>
-
-Quyidagi hisobotlarni olishingiz mumkin:
-
-• Tizim hisoboti
-• Texniklar hisoboti  
-• Sifat hisoboti
-• Kunlik hisobot
-• Haftalik hisobot
-
-Kerakli hisobotni tanlang:"""
+            reports_text = (
+                "📊 <b>Hisobotlar</b>\n\n"
+                "Tizim hisobotlarini ko'rish uchun kerakli bo'limni tanlang:\n\n"
+                "📈 Tizim hisoboti - Umumiy statistika\n"
+                "👨‍🔧 Texniklar hisoboti - Texniklar faoliyati\n"
+                "⭐ Sifat hisoboti - Xizmat sifatini baholash\n"
+                "📅 Kunlik hisobot - Bugungi natijalar\n"
+                "📊 Haftalik hisobot - Haftalik tahlil"
+            )
             
             await message.answer(
-                text,
+                reports_text,
                 reply_markup=reports_menu(lang),
                 parse_mode='HTML'
             )
+            await state.set_state(ControllerReportsStates.reports_menu)
             
         except Exception as e:
-            print(f"Error in reports menu handler: {e}")
+            print(f"Error in reports_menu_handler: {str(e)}")
             error_text = "Xatolik yuz berdi"
             await message.answer(error_text)
 
@@ -238,7 +253,7 @@ Kerakli hisobotni tanlang:"""
                 
                 # Statistikani hisoblash
                 total_technicians = len(technicians)
-                active_technicians = len([t for t in technicians if t['is_active']])
+                active_technicians = len([t for t in technicians if t['status'] == 'active'])
                 
                 total_completed = 0
                 total_active = 0
@@ -323,9 +338,9 @@ Kerakli hisobotni tanlang:"""
 📅 <b>Sana:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}
 
 📊 <b>Umumiy ko'rsatkichlar:</b>
-• O'rtacha baho: {quality_metrics.get('avg_rating') or 0:.1f}/5.0
+• O'rtacha baho: {quality_metrics.get('overall_quality') or 0:.1f}/5.0
 • Jami sharhlar: {quality_metrics.get('total_reviews', 0)}
-• Mijoz qoniqishi: {quality_metrics.get('satisfaction_rate', 0)}%
+• Mijoz qoniqishi: {quality_metrics.get('customer_satisfaction', 0)}%
 
 📈 <b>Baholar taqsimoti:</b>"""
                 

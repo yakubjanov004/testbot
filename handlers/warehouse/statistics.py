@@ -1,18 +1,26 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from keyboards.warehouse_buttons import warehouse_main_menu, warehouse_statistics_menu, statistics_period_menu
+from keyboards.warehouse_buttons import get_warehouse_main_keyboard, warehouse_statistics_menu, statistics_period_menu
 from states.warehouse_states import WarehouseStatisticsStates
+from filters.role_filter import RoleFilter
 
 def get_warehouse_statistics_router():
     """Warehouse statistics router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("warehouse")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("warehouse")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text == "📊 Statistikalar")
     async def statistics_handler(message: Message, state: FSMContext):
         """Handle statistics and reports"""
         try:
+            # Debug logging
+            print(f"Warehouse statistics handler called by user {message.from_user.id}")
+            
             stats_text = "📊 Statistika va hisobotlar"
             
             await message.answer(
@@ -21,8 +29,12 @@ def get_warehouse_statistics_router():
             )
             await state.set_state(WarehouseStatisticsStates.statistics_menu)
             
+            print(f"Warehouse statistics handler completed successfully")
+            
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+            print(f"Error in warehouse statistics handler: {str(e)}")
+            # await message.answer("Xatolik yuz berdi")
+            pass
 
     @router.callback_query(F.data == "daily_statistics")
     async def daily_statistics_handler(callback: CallbackQuery, state: FSMContext):
@@ -48,8 +60,9 @@ def get_warehouse_statistics_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
+            # await callback.message.edit_text("Statistikani olishda xatolik")
+            # await callback.answer()
+            pass
 
     @router.callback_query(F.data == "weekly_statistics")
     async def weekly_statistics_handler(callback: CallbackQuery, state: FSMContext):
@@ -75,8 +88,9 @@ def get_warehouse_statistics_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
+            # await callback.message.edit_text("Statistikani olishda xatolik")
+            # await callback.answer()
+            pass
 
     @router.callback_query(F.data == "monthly_statistics")
     async def monthly_statistics_handler(callback: CallbackQuery, state: FSMContext):
@@ -102,8 +116,9 @@ def get_warehouse_statistics_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
+            # await callback.message.edit_text("Statistikani olishda xatolik")
+            # await callback.answer()
+            pass
 
     @router.callback_query(F.data == "turnover_statistics")
     async def turnover_statistics_handler(callback: CallbackQuery, state: FSMContext):
@@ -133,8 +148,9 @@ def get_warehouse_statistics_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
+            # await callback.message.edit_text("Statistikani olishda xatolik")
+            # await callback.answer()
+            pass
 
     @router.callback_query(F.data == "performance_report")
     async def performance_report_handler(callback: CallbackQuery, state: FSMContext):
@@ -176,8 +192,9 @@ def get_warehouse_statistics_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Hisobotni olishda xatolik")
-            await callback.answer()
+            # await callback.message.edit_text("Hisobotni olishda xatolik")
+            # await callback.answer()
+            pass
 
     @router.message(F.text == "📦 Inventarizatsiya statistikasi")
     async def inventory_stats_reply_handler(message: Message, state: FSMContext):
@@ -203,7 +220,8 @@ def get_warehouse_statistics_router():
             await state.set_state(WarehouseStatisticsStates.statistics_menu)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            # await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.message(F.text == "📋 Buyurtmalar statistikasi")
     async def orders_stats_reply_handler(message: Message, state: FSMContext):
@@ -229,7 +247,8 @@ def get_warehouse_statistics_router():
             await state.set_state(WarehouseStatisticsStates.statistics_menu)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            # await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.message(F.text == "⚠️ Kam zaxira statistikasi")
     async def low_stock_stats_reply_handler(message: Message, state: FSMContext):
@@ -253,7 +272,8 @@ def get_warehouse_statistics_router():
             await state.set_state(WarehouseStatisticsStates.statistics_menu)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            # await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.message(F.text == "💰 Moliyaviy hisobot")
     async def financial_stats_reply_handler(message: Message, state: FSMContext):
@@ -275,7 +295,8 @@ def get_warehouse_statistics_router():
             await state.set_state(WarehouseStatisticsStates.statistics_menu)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            # await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.message(F.text == "📆 Vaqt oralig'idagi statistika")
     async def period_stats_reply_handler(message: Message, state: FSMContext):
@@ -288,7 +309,8 @@ def get_warehouse_statistics_router():
             await state.set_state(WarehouseStatisticsStates.period_menu)
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+            # await message.answer("Xatolik yuz berdi")
+            pass
 
     @router.message(F.text == "📈 Oylik statistika")
     async def monthly_stats_reply_handler(message: Message, state: FSMContext):
@@ -313,7 +335,8 @@ def get_warehouse_statistics_router():
             await message.answer(text)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            # await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.message(F.text == "📅 Kunlik statistika")
     async def daily_stats_reply_handler(message: Message, state: FSMContext):
@@ -338,7 +361,8 @@ def get_warehouse_statistics_router():
             await message.answer(text)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            # await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.message(F.text == "📊 Haftalik statistika")
     async def weekly_stats_reply_handler(message: Message, state: FSMContext):
@@ -363,7 +387,8 @@ def get_warehouse_statistics_router():
             await message.answer(text)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            # await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.message(F.text == "🗓 Yillik statistika")
     async def yearly_stats_reply_handler(message: Message, state: FSMContext):
@@ -373,7 +398,8 @@ def get_warehouse_statistics_router():
             await message.answer(text)
             
         except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
+            #          await message.answer("Statistikani olishda xatolik")
+            pass
 
     @router.callback_query(F.data == "back")
     async def statistics_back_reply_handler(callback: CallbackQuery, state: FSMContext):
@@ -401,12 +427,13 @@ def get_warehouse_statistics_router():
                 # Go back to main menu
                 await callback.message.edit_text(
                     "Ombor bosh menyusi",
-                    reply_markup=warehouse_main_menu('uz')
+                    reply_markup=get_warehouse_main_keyboard('uz')
                 )
                 await state.set_state(WarehouseStatisticsStates.main_menu)
 
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            # await callback.answer("Xatolik yuz berdi")
+            pass
 
     return router
 

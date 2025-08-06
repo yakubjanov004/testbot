@@ -9,7 +9,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
 from states.client_states import OrderStates
-from utils.role_system import get_role_router
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -98,59 +98,69 @@ async def get_order_details(order_id: int):
         'type': 'service' if order_id % 2 == 1 else 'connection',
         'status': 'active',
         'created_at': '2024-01-15 10:30:00',
-        'description': 'Internet tezligi sekin',
-        'region': 'Toshkent shahri',
-        'address': 'Chilanzar tumani, 15-uy',
-        'request_id': f"{'TX' if order_id % 2 == 1 else 'UL'}_{order_id}",
-        'technician': 'Ahmad Karimov',
-        'estimated_time': '2-3 kun',
-        'priority': 'normal'
+        'description': 'Test order description',
+        'region': 'Test region',
+        'address': 'Test address',
+        'request_id': f'{"TX" if order_id % 2 == 1 else "UL"}_{order_id:08d}',
+        'phone': '+998901234567',
+        'full_name': 'Test Client'
     }
 
 def get_orders_router():
-    router = get_role_router("client")
+    from aiogram import Router
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("client")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📋 Mening buyurtmalarim"]))
     async def show_my_orders(message: Message, state: FSMContext):
-        """Show user orders with pagination"""
+        """Show user orders"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user:
-                await message.answer("Xatolik: Foydalanuvchi ma'lumotlari topilmadi. Iltimos, qaytadan kiriting.")
+                await message.answer("Xatolik: Foydalanuvchi ma'lumotlari topilmadi.")
                 return
             
-            # Get first page of orders
+            # Get user orders
             orders_data = await get_user_orders(message.from_user.id, page=1)
             
             if not orders_data['orders']:
-                await message.answer("Sizda hali buyurtmalar yo'q.")
+                await message.answer("📋 Sizda hali buyurtmalar mavjud emas.")
                 return
             
             # Show first order
             await show_order_details(message, orders_data['orders'][0], orders_data, 0)
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data.startswith("order_"))
     async def handle_order_navigation(callback: CallbackQuery, state: FSMContext):
-        """Handle order navigation (next/previous)"""
+        """Handle order navigation"""
         try:
             await callback.answer()
             
-            action = callback.data.split("_")[1]
+            data = callback.data.split("_")
+            action = data[1]
             
             if action == "next":
-                current_index = int(callback.data.split("_")[2])
-                page = int(callback.data.split("_")[3])
-                await show_next_order(callback, current_index, page)
+                current_index = int(data[2])
+                current_page = int(data[3])
+                await show_next_order(callback, current_index, current_page)
             elif action == "prev":
-                current_index = int(callback.data.split("_")[2])
-                page = int(callback.data.split("_")[3])
-                await show_previous_order(callback, current_index, page)
-            
+                current_index = int(data[2])
+                current_page = int(data[3])
+                await show_previous_order(callback, current_index, current_page)
+            elif action == "details":
+                order_id = int(data[2])
+                order = await get_order_details(order_id)
+                await show_order_details(callback, order, None, 0)
+                
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     async def show_order_details(message_or_callback, order, orders_data, index):
         """Show order details with navigation"""
@@ -210,7 +220,7 @@ def get_orders_router():
             else:
                 await message_or_callback.answer("Xatolik yuz berdi")
 
-    async def show_next_order(callback: CallbackQuery, current_index: int, current_page: int):
+    async def show_next_order(callback: CallbackQuery, current_index: int, current_page: int, order_id: int = None):
         """Show next order"""
         try:
             orders_data = await get_user_orders(callback.from_user.id, page=current_page)
@@ -228,7 +238,7 @@ def get_orders_router():
         except Exception as e:
             await callback.answer("Xatolik yuz berdi")
 
-    async def show_previous_order(callback: CallbackQuery, current_index: int, current_page: int):
+    async def show_previous_order(callback: CallbackQuery, current_index: int, current_page: int, order_id: int = None):
         """Show previous order"""
         try:
             if current_index > 0:
@@ -259,20 +269,17 @@ def get_orders_navigation_keyboard(current_index: int, current_page: int, total_
     if current_index > 0 or current_page > 1:
         nav_buttons.append(InlineKeyboardButton(
             text="⬅️ Oldingi",
-            callback_data=f"order_prev_{current_index}_{current_page}"
+            callback_data=f"order_prev_{current_index}_{current_page}_{order_id}"
         ))
     
     # Next button
     if current_index < orders_on_page - 1 or current_page < total_pages:
         nav_buttons.append(InlineKeyboardButton(
             text="Keyingi ➡️",
-            callback_data=f"order_next_{current_index}_{current_page}"
+            callback_data=f"order_next_{current_index}_{current_page}_{order_id}"
         ))
     
     if nav_buttons:
         keyboard.append(nav_buttons)
-    
-    # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifaclientorders", callback_data="back_to_main_menu")])
-    
+        
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

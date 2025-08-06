@@ -5,15 +5,20 @@ This module provides complete statistics functionality for Manager role,
 allowing managers to view various statistics and reports.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import date, datetime, timedelta
+from filters.role_filter import RoleFilter
 
 def get_manager_statistics_router():
     """Get manager statistics router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
     
     @router.message(F.text == "📊 Statistika")
     async def manager_statistics_menu(message: Message):

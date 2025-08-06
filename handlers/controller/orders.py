@@ -1,7 +1,13 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+"""
+Controller Orders Handler
+Manages orders for controller
+"""
+
+from aiogram import F, Router
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -16,74 +22,68 @@ async def get_user_by_telegram_id(telegram_id: int):
     }
 
 async def get_all_orders(limit: int = 50):
-    """Mock all orders data"""
+    """Mock get all orders"""
     return [
         {
             'id': 1,
-            'status': 'new',
-            'client_name': 'Client 1',
-            'description': 'Test order 1',
-            'created_at': '2024-01-15 10:30:00'
+            'order_number': 'ORD-001',
+            'client_name': 'Test Client 1',
+            'service_type': 'Internet xizmati',
+            'status': 'Yangi',
+            'priority': 'Yuqori',
+            'created_at': '2024-01-15 10:30',
+            'assigned_to': 'Aziz Karimov'
         },
         {
             'id': 2,
-            'status': 'assigned',
-            'client_name': 'Client 2',
-            'description': 'Test order 2',
-            'created_at': '2024-01-15 11:00:00'
-        },
-        {
-            'id': 3,
-            'status': 'completed',
-            'client_name': 'Client 3',
-            'description': 'Test order 3',
-            'created_at': '2024-01-15 09:00:00'
+            'order_number': 'ORD-002',
+            'client_name': 'Test Client 2',
+            'service_type': 'TV xizmati',
+            'status': 'Jarayonda',
+            'priority': 'O\'rta',
+            'created_at': '2024-01-15 09:15',
+            'assigned_to': 'Malika Yusupova'
         }
     ]
 
 async def get_orders_by_status(statuses: list):
-    """Mock orders by status"""
-    all_orders = await get_all_orders()
-    return [order for order in all_orders if order['status'] in statuses]
+    """Mock get orders by status"""
+    return await get_all_orders()
 
 async def update_order_priority(order_id: int, priority: str):
     """Mock update order priority"""
     return True
 
 async def get_unresolved_issues():
-    """Mock unresolved issues"""
+    """Mock get unresolved issues"""
     return [
         {
             'id': 1,
-            'client_name': 'Client 1',
-            'description': 'Problem with order 1',
-            'days_pending': 3
-        },
-        {
-            'id': 2,
-            'client_name': 'Client 2',
-            'description': 'Problem with order 2',
-            'days_pending': 5
+            'order_number': 'ORD-003',
+            'client_name': 'Test Client 3',
+            'issue_type': 'Texnik muammo',
+            'description': 'Internet uzulish',
+            'priority': 'Shoshilinch',
+            'created_at': '2024-01-15 08:00'
         }
     ]
 
 async def get_single_order_details(order_id: int):
-    """Mock single order details"""
+    """Mock get single order details"""
     return {
         'id': order_id,
-        'status': 'new',
-        'client_name': f'Client {order_id}',
-        'description': f'Test order {order_id}',
-        'created_at': '2024-01-15 10:30:00',
-        'priority': 'normal'
+        'order_number': f'ORD-{order_id:03d}',
+        'client_name': f'Test Client {order_id}',
+        'service_type': 'Internet xizmati',
+        'status': 'Yangi',
+        'priority': 'Yuqori',
+        'created_at': '2024-01-15 10:30',
+        'assigned_to': 'Aziz Karimov',
+        'description': 'Test order description'
     }
 
-# Removed duplicate get_role_router - using centralized version from utils.role_system
-
-# Mock keyboards
 def orders_control_menu(lang: str):
-    """Mock orders control menu keyboard"""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    """Create orders control menu"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="🆕 Yangi buyurtmalar", callback_data="new_orders"),
@@ -94,34 +94,32 @@ def orders_control_menu(lang: str):
             InlineKeyboardButton(text="📊 Buyurtmalar hisoboti", callback_data="orders_report")
         ],
         [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_controllers")
+            InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_controllers")
         ]
     ])
 
 def order_priority_keyboard(order_id: int):
-    """Mock order priority keyboard"""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    """Create order priority keyboard"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🔴 Yuqori", callback_data=f"priority_high_{order_id}"),
-            InlineKeyboardButton(text="🟡 O'rtacha", callback_data=f"priority_medium_{order_id}")
+            InlineKeyboardButton(text="🟢 Past", callback_data=f"priority_low_{order_id}"),
+            InlineKeyboardButton(text="🟡 O'rta", callback_data=f"priority_medium_{order_id}")
         ],
         [
-            InlineKeyboardButton(text="🟢 Past", callback_data=f"priority_low_{order_id}")
+            InlineKeyboardButton(text="🟠 Yuqori", callback_data=f"priority_high_{order_id}"),
+            InlineKeyboardButton(text="🔴 Shoshilinch", callback_data=f"priority_urgent_{order_id}")
         ],
         [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_orders")
+            InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_orders")
         ]
     ])
 
 def back_to_controllers_menu():
-    """Mock back to controllers menu keyboard"""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    """Create back to controllers menu"""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_controllers")]
+        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_controllers")]
     ])
 
-# Mock states
 class ControllerOrdersStates:
     orders_control = "orders_control"
     viewing_orders = "viewing_orders"
@@ -129,12 +127,16 @@ class ControllerOrdersStates:
 
 def get_controller_orders_router():
     """Get controller orders router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["📋 Buyurtmalar nazorati"]))
     async def orders_control_menu_handler(message: Message, state: FSMContext):
-        """Buyurtmalar nazorati menyusi"""
+        """Handle orders control menu"""
         user_id = message.from_user.id
         
         try:
@@ -142,34 +144,34 @@ def get_controller_orders_router():
             if not user or user['role'] != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
-                
-            lang = user.get('language', 'uz')
-            await state.set_state(ControllerOrdersStates.orders_control)
-            orders = await get_all_orders(limit=50)
-            status_counts = {}
-            for order in orders:
-                status = order['status']
-                status_counts[status] = status_counts.get(status, 0) + 1
             
-            text = (
+            lang = user.get('language', 'uz')
+            
+            # Get orders statistics
+            all_orders = await get_all_orders()
+            new_orders = [o for o in all_orders if o['status'] == 'Yangi']
+            pending_orders = [o for o in all_orders if o['status'] == 'Jarayonda']
+            problem_orders = await get_unresolved_issues()
+            
+            stats_text = (
                 "📋 <b>Buyurtmalar nazorati</b>\n\n"
-                "📊 <b>Holat bo'yicha:</b>\n"
-                f"• Yangi: {status_counts.get('new', 0)}\n"
-                f"• Tayinlangan: {status_counts.get('assigned', 0)}\n"
-                f"• Jarayonda: {status_counts.get('in_progress', 0)}\n"
-                f"• Bajarilgan: {status_counts.get('completed', 0)}\n"
-                f"• Bekor qilingan: {status_counts.get('cancelled', 0)}\n\n"
-                "Kerakli amalni tanlang:"
+                "📊 <b>Statistika:</b>\n"
+                f"• Jami buyurtmalar: {len(all_orders)}\n"
+                f"• Yangi buyurtmalar: {len(new_orders)}\n"
+                f"• Kutilayotgan: {len(pending_orders)}\n"
+                f"• Muammoli: {len(problem_orders)}\n\n"
+                "Kerakli bo'limni tanlang:"
             )
             
             await message.answer(
-                text,
+                stats_text,
                 reply_markup=orders_control_menu(lang),
                 parse_mode='HTML'
             )
+            await state.set_state(ControllerOrdersStates.orders_control)
             
         except Exception as e:
-            print(f"Error in orders_control_menu_handler: {e}")
+            print(f"Error in orders_control_menu_handler: {str(e)}")
             error_text = "Xatolik yuz berdi"
             await message.answer(error_text)
 

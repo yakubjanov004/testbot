@@ -8,11 +8,16 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
+
+# Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
     get_client_search_menu, get_client_selection_keyboard, get_application_type_menu,
     get_application_priority_keyboard, get_application_confirmation_keyboard
 )
+
+# States imports
 from states.call_center_supervisor_states import CallCenterSupervisorApplicationStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 # Removed duplicate get_role_router - using centralized version from utils.role_system
@@ -224,9 +229,10 @@ def get_call_center_supervisor_application_management_router():
             await state.set_state(CallCenterSupervisorApplicationStates.selecting_client)
             
         except Exception as e:
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
-            await message.answer(error_text)
+            #lang = await get_user_lang(message.from_user.id)
+            #error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
+            #await message.answer(error_text)
+            pass
 
     @router.message(CallCenterSupervisorApplicationStates.client_search_name)
     async def handle_client_search_by_name(message: Message, state: FSMContext):
@@ -289,9 +295,10 @@ def get_call_center_supervisor_application_management_router():
             await state.set_state(CallCenterSupervisorApplicationStates.selecting_client)
             
         except Exception as e:
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
-            await message.answer(error_text)
+            #lang = await get_user_lang(message.from_user.id)
+            #error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
+            #await message.answer(error_text)
+            pass
 
     @router.message(CallCenterSupervisorApplicationStates.client_search_id)
     async def handle_client_search_by_id(message: Message, state: FSMContext):
@@ -330,9 +337,10 @@ def get_call_center_supervisor_application_management_router():
             await _proceed_with_selected_client(message, state, client, lang)
             
         except Exception as e:
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
-            await message.answer(error_text)
+            #lang = await get_user_lang(message.from_user.id)
+            #error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
+            #await message.answer(error_text)
+            pass
 
     @router.callback_query(F.data.startswith("ccs_select_client_"))
     async def handle_client_selection(callback: CallbackQuery, state: FSMContext):
@@ -358,7 +366,8 @@ def get_call_center_supervisor_application_management_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            # await callback.answer("Xatolik yuz berdi", show_alert=True)   
+            pass
 
     @router.message(CallCenterSupervisorApplicationStates.creating_new_client)
     async def handle_new_client_name(message: Message, state: FSMContext):
@@ -401,9 +410,10 @@ def get_call_center_supervisor_application_management_router():
                 # Stay in the same state to get phone number
             
         except Exception as e:
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
-            await message.answer(error_text)
+            #lang = await get_user_lang(message.from_user.id)
+            #error_text = "Xatolik yuz berди" if lang == 'uz' else "Произошла ошибка"
+            #await message.answer(error_text)
+            pass
 
     @router.callback_query(F.data == "ccs_create_new_client")
     async def handle_create_new_client_callback(callback: CallbackQuery, state: FSMContext):
@@ -465,9 +475,10 @@ def get_call_center_supervisor_application_management_router():
             await message.answer(text, reply_markup=get_application_priority_keyboard(lang))
             
         except Exception as e:
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
-            await message.answer(error_text)
+            #lang = await get_user_lang(message.from_user.id)
+            #error_text = "Xatolik yuz berди" if lang == 'uz' else "Произошла ошибка"
+            #await message.answer(error_text)
+            pass
 
     @router.callback_query(F.data.startswith("ccs_priority_"))
     async def handle_priority_selection(callback: CallbackQuery, state: FSMContext):
@@ -486,7 +497,8 @@ def get_call_center_supervisor_application_management_router():
             await _show_application_confirmation(callback, state, lang)
             
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            # await callback.answer("Xatolik yuz berdi", show_alert=True)
+            pass
 
     @router.callback_query(F.data == "ccs_confirm_application")
     async def handle_application_confirmation(callback: CallbackQuery, state: FSMContext):
@@ -549,7 +561,8 @@ def get_call_center_supervisor_application_management_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            # await callback.answer("Xatolik yuz berdi", show_alert=True)
+            pass
 
     return router
 
@@ -593,8 +606,9 @@ async def _proceed_with_selected_client(message: Message, state: FSMContext, cli
             await message.answer(text, reply_markup=get_application_type_menu(lang))
         
     except Exception as e:
-        error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
-        await message.answer(error_text)
+        # error_text = "Xatolik yuz berди" if lang == 'uz' else "Произошла ошибка"
+        #await message.answer(error_text)
+        pass
 
 
 async def _create_new_client_and_proceed(message: Message, state: FSMContext, lang: str):
@@ -705,4 +719,5 @@ async def _show_application_confirmation(callback: CallbackQuery, state: FSMCont
         await state.set_state(CallCenterSupervisorApplicationStates.confirming_application)
         
     except Exception as e:
-        await callback.answer("Xatolik yuz berdi", show_alert=True)
+        # await callback.answer("Xatolik yuz berdi", show_alert=True)
+        pass

@@ -9,8 +9,12 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List
 
+# Keyboard imports
 from keyboards.call_center_supervisor_buttons import get_feedback_keyboard
+
+# States imports
 from states.call_center_supervisor_states import CallCenterSupervisorFeedbackStates
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -31,8 +35,12 @@ async def get_user_lang(user_id: int) -> str:
 
 def get_call_center_supervisor_feedback_router():
     """Get router for call center supervisor feedback handlers"""
-    from utils.role_system import get_role_router
-    router = get_role_router("call_center_supervisor")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["⭐️ Fikr-mulohaza", "⭐️ Обратная связь"]))
     async def call_center_supervisor_feedback(message: Message, state: FSMContext):

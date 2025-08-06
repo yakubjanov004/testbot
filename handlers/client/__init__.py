@@ -15,7 +15,6 @@ This module provides core client functionality including:
 """
 
 from aiogram import Router
-from .start import get_client_start_router
 from .contact import get_client_contact_router
 from .feedback import get_client_feedback_router
 from .help import get_client_help_router
@@ -28,19 +27,19 @@ from .orders import get_orders_router
 
 def get_client_router():
     """Get the complete client router with all handlers"""
+    from aiogram import Router
     router = Router()
     
-    # Include all client routers
-    router.include_router(get_client_start_router())
-    router.include_router(get_client_contact_router())
-    router.include_router(get_client_feedback_router())
-    router.include_router(get_client_help_router())
-    router.include_router(get_client_language_router())
-    router.include_router(get_client_main_menu_router())
+    # Include handlers in priority order
+    router.include_router(get_client_main_menu_router())  
     router.include_router(get_connection_order_router())
     router.include_router(get_service_order_router())
-    router.include_router(get_client_profile_router())
     router.include_router(get_orders_router())
+    router.include_router(get_client_profile_router())
+    router.include_router(get_client_contact_router())
+    router.include_router(get_client_help_router())
+    router.include_router(get_client_feedback_router())
+    router.include_router(get_client_language_router())
     
     return router
 

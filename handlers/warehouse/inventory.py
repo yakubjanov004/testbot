@@ -1,10 +1,11 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from keyboards.warehouse_buttons import warehouse_inventory_menu, inventory_actions_keyboard, inventory_actions_inline, update_item_fields_inline
 from states.warehouse_states import WarehouseInventoryStates, WarehouseMainMenuStates
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from filters.role_filter import RoleFilter
 
 # Paginatsiya uchun yordamchi funksiya
 def build_pagination_keyboard(page: int, total_pages: int, lang: str) -> InlineKeyboardMarkup:
@@ -24,13 +25,20 @@ def chunked(lst, n):
 
 def get_warehouse_inventory_router():
     """Warehouse inventory router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("warehouse")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("warehouse")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text == "📦 Inventarizatsiya")
     async def inventory_management_handler(message: Message, state: FSMContext):
         """Inventory management handler"""
         try:
+            # Debug logging
+            print(f"Warehouse inventory handler called by user {message.from_user.id}")
+            
             # Mock user data (like other modules)
             user = {
                 'id': 1,
@@ -47,7 +55,10 @@ def get_warehouse_inventory_router():
             )
             await state.set_state(WarehouseInventoryStates.inventory_menu)
             
+            print(f"Warehouse inventory handler completed successfully")
+            
         except Exception as e:
+            print(f"Error in warehouse inventory handler: {str(e)}")
             await message.answer("Xatolik yuz berdi")
 
     @router.callback_query(F.data == "view_inventory_list")
@@ -117,6 +128,23 @@ def get_warehouse_inventory_router():
             
         except Exception as e:
             await callback.message.edit_text("Inventar ro'yxatini olishda xatolik")
+            await callback.answer()
+
+    @router.callback_query(F.data == "warehouse_inventory")
+    async def warehouse_inventory_callback(callback: CallbackQuery, state: FSMContext):
+        """Warehouse inventory callback handler"""
+        try:
+            await state.set_state(WarehouseInventoryStates.inventory_menu)
+            inventory_text = "📦 Inventarizatsiya boshqaruvi"
+            
+            await callback.message.edit_text(
+                inventory_text,
+                reply_markup=warehouse_inventory_menu('uz')
+            )
+            await callback.answer()
+            
+        except Exception as e:
+            await callback.message.edit_text("Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "add_inventory_item")
@@ -636,6 +664,40 @@ def get_warehouse_inventory_router():
         except ValueError:
             await message.answer("Faqat musbat raqam kiriting.")
 
+    @router.message(StateFilter(WarehouseInventoryStates.updating_item_info))
+    async def process_item_info_update(message: Message, state: FSMContext):
+        """Process item info update"""
+        try:
+            data = await state.get_data()
+            editing_field = data.get("editing_field")
+            item_id = data.get("editing_item_id")
+            
+            if editing_field == "name":
+                # Mock success response (like other modules)
+                await message.answer(f"✅ Mahsulot nomi yangilandi: {message.text}")
+            elif editing_field == "price":
+                try:
+                    price = float(message.text)
+                    await message.answer(f"✅ Mahsulot narxi yangilandi: {price:,} so'm")
+                except ValueError:
+                    await message.answer("❌ Noto'g'ri narx. Musbat raqam kiriting.")
+                    return
+            elif editing_field == "description":
+                await message.answer(f"✅ Mahsulot tavsifi yangilandi: {message.text}")
+            else:
+                await message.answer("❌ Noma'lum maydon")
+                return
+            
+            await state.set_state(WarehouseInventoryStates.inventory_menu)
+            await message.answer(
+                "📦 Inventarizatsiya menyusi:",
+                reply_markup=warehouse_inventory_menu('uz')
+            )
+            
+        except Exception as e:
+            await message.answer("Xatolik yuz berdi")
+            await state.set_state(WarehouseInventoryStates.inventory_menu)
+
     @router.callback_query(F.data.startswith("delete_"))
     async def delete_item_handler(callback: CallbackQuery, state: FSMContext):
         item_id = int(callback.data.split("_")[1])
@@ -644,14 +706,85 @@ def get_warehouse_inventory_router():
         await callback.message.answer("🗑️ Mahsulot o'chirildi.")
         await callback.answer()
 
+    @router.callback_query(F.data.startswith("update_name_"))
+    async def update_item_name_handler(callback: CallbackQuery, state: FSMContext):
+        """Update item name handler"""
+        try:
+            item_id = int(callback.data.split("_")[2])
+            await state.update_data(editing_item_id=item_id, editing_field="name")
+            await state.set_state(WarehouseInventoryStates.updating_item_info)
+            await callback.message.answer("📝 Yangi nomni kiriting:")
+            await callback.answer()
+        except Exception as e:
+            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.answer()
+
+    @router.callback_query(F.data.startswith("update_quantity_"))
+    async def update_item_quantity_handler(callback: CallbackQuery, state: FSMContext):
+        """Update item quantity handler"""
+        try:
+            item_id = int(callback.data.split("_")[2])
+            await state.update_data(editing_item_id=item_id, editing_field="quantity")
+            await state.set_state(WarehouseInventoryStates.updating_item_quantity)
+            await callback.message.answer("🔢 Yangi miqdorni kiriting:")
+            await callback.answer()
+        except Exception as e:
+            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.answer()
+
+    @router.callback_query(F.data.startswith("update_price_"))
+    async def update_item_price_handler(callback: CallbackQuery, state: FSMContext):
+        """Update item price handler"""
+        try:
+            item_id = int(callback.data.split("_")[2])
+            await state.update_data(editing_item_id=item_id, editing_field="price")
+            await state.set_state(WarehouseInventoryStates.updating_item_info)
+            await callback.message.answer("💰 Yangi narxni kiriting:")
+            await callback.answer()
+        except Exception as e:
+            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.answer()
+
+    @router.callback_query(F.data.startswith("update_description_"))
+    async def update_item_description_handler(callback: CallbackQuery, state: FSMContext):
+        """Update item description handler"""
+        try:
+            item_id = int(callback.data.split("_")[2])
+            await state.update_data(editing_item_id=item_id, editing_field="description")
+            await state.set_state(WarehouseInventoryStates.updating_item_info)
+            await callback.message.answer("📝 Yangi tavsifni kiriting:")
+            await callback.answer()
+        except Exception as e:
+            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.answer()
+
     @router.message(F.text == "◀️ Orqaga")
     async def back_to_main_menu_handler(message: Message, state: FSMContext):
-        from keyboards.warehouse_buttons import warehouse_main_menu
+        from keyboards.warehouse_buttons import get_warehouse_main_keyboard
         await state.set_state(WarehouseMainMenuStates.main_menu)
         await message.answer(
             "🏢 Ombor paneliga qaytdingiz.",
-            reply_markup=warehouse_main_menu('uz')
+            reply_markup=get_warehouse_main_keyboard('uz')
         )
+
+    @router.callback_query(F.data == "warehouse_back")
+    async def warehouse_back_callback(callback: CallbackQuery, state: FSMContext):
+        """Warehouse back callback handler"""
+        try:
+            from keyboards.warehouse_buttons import get_warehouse_main_keyboard
+            await state.set_state(WarehouseMainMenuStates.main_menu)
+            await callback.message.edit_text(
+                "🏢 Ombor paneliga qaytdingiz."
+            )
+            await callback.message.answer(
+                "🏢 Ombor paneli:",
+                reply_markup=get_warehouse_main_keyboard('uz')
+            )
+            await callback.answer()
+            
+        except Exception as e:
+            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.answer()
 
     @router.message(F.text == "✏️ Mahsulotni yangilash")
     async def update_item_handler(message: Message, state: FSMContext):

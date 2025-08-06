@@ -13,14 +13,20 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
 # Keyboard imports
-from keyboards.call_center_buttons import get_client_rating_keyboard
+from keyboards.call_center_buttons import rating_keyboard
 
 # States imports
-from states.call_center_states import CallCenterClientRatingStates, CallCenterMainMenuStates
+from states.call_center_states import CallCenterMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_client_rating_router():
     """Get call center client rating router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(CallCenterMainMenuStates.main_menu), F.text.in_(["⭐ Reyting", "⭐ Рейтинг"]))
     async def client_rating_menu(message: Message, state: FSMContext):
@@ -29,9 +35,9 @@ def get_call_center_client_rating_router():
         
         sent_message = await message.answer(
             text,
-            reply_markup=get_client_rating_keyboard('uz')
+            reply_markup=rating_keyboard('uz')
         )
-        await state.set_state(CallCenterClientRatingStates.client_rating)
+        await state.set_state(CallCenterMainMenuStates.main_menu)
 
     @router.message(F.text.in_(["📊 Reyting statistikasi", "📊 Статистика рейтинга"]))
     async def rating_statistics(message: Message):

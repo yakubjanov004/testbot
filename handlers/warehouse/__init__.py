@@ -14,7 +14,7 @@ This module provides complete warehouse functionality including:
 """
 
 from aiogram import Router
-from .main_menu import get_warehouse_main_menu_router
+from .main_menu import get_get_warehouse_main_keyboard_router
 from .orders import get_warehouse_orders_router
 from .inventory import get_warehouse_inventory_router
 from .export import get_warehouse_export_router
@@ -28,13 +28,14 @@ def get_warehouse_router():
     router = Router()
     
     # Include all warehouse routers
-    router.include_router(get_warehouse_main_menu_router())
+    router.include_router(get_get_warehouse_main_keyboard_router())
     router.include_router(get_warehouse_orders_router())
     router.include_router(get_warehouse_inventory_router())
     router.include_router(get_warehouse_export_router())
     router.include_router(get_warehouse_statistics_router())
     router.include_router(get_warehouse_inbox_router())
     router.include_router(get_warehouse_workflow_router())
+    router.include_router(get_warehouse_role_integration_router())
     
     return router
 

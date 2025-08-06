@@ -13,10 +13,16 @@ from keyboards.call_center_buttons import get_inbox_menu, get_message_actions_me
 
 # States imports
 from states.call_center import CallCenterInboxStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_inbox_router():
     """Get call center inbox router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
     
     @router.callback_query(F.data.startswith("open_inbox_"))
     async def handle_inbox_notification(callback: CallbackQuery, state: FSMContext):

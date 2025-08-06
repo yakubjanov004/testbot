@@ -1,7 +1,6 @@
 """
-Controller Technical Service - Simplified Implementation
-
-This module handles controller technical service functionality.
+Controller Technical Service Handler
+Manages technical service for controller
 """
 
 from aiogram import F, Router
@@ -10,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.controllers_buttons import get_technical_service_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -23,7 +23,7 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def get_user_lang(telegram_id: int):
+async def get_user_lang(user_id: int):
     """Mock get user language"""
     return 'uz'
 
@@ -69,40 +69,41 @@ async def get_technical_services():
     ]
 
 def get_technical_service_router():
-    """Router for technical service functionality"""
+    """Get controller technical service router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🔧 Texnik xizmat", "🔧 Техническое обслуживание"]))
     async def view_technical_service(message: Message, state: FSMContext):
-        """Controller view technical service handler"""
+        """Handle technical service view"""
+        user_id = message.from_user.id
+        
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
-            
-            # Get technical services
             services = await get_technical_services()
             
             if not services:
-                no_services_text = (
-                    "📭 Hozircha texnik xizmat arizalari yo'q."
-                    if lang == 'uz' else
-                    "📭 Пока нет заявок на техническое обслуживание."
-                )
-                
-                await message.answer(
-                    text=no_services_text,
-                    reply_markup=get_controller_back_keyboard(lang)
-                )
+                no_services_text = "🔧 Hozircha texnik xizmatlar mavjud emas."
+                await message.answer(no_services_text)
                 return
             
             # Show first service
+            await state.update_data(technical_services=services, current_index=0)
             await show_service_details(message, services[0], services, 0)
             
         except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            print(f"Error in view_technical_service: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     async def show_service_details(message_or_callback, service, services, index):
         """Show service details with navigation"""

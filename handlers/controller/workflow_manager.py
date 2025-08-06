@@ -1,15 +1,13 @@
 """
-Controller Workflow Manager - Simplified Implementation
-
-This module handles controller workflow management functionality.
+Controller Workflow Manager Handler
+Manages workflow management for controller
 """
 
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import get_workflow_manager_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -23,100 +21,117 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def get_user_lang(telegram_id: int):
+async def get_user_lang(user_id: int):
     """Mock get user language"""
     return 'uz'
 
 async def get_workflow_statistics():
     """Mock get workflow statistics"""
     return {
-        'total_applications': 150,
-        'pending': 25,
-        'in_progress': 45,
-        'completed': 70,
-        'cancelled': 10,
-        'avg_processing_time': '2.5 kun',
-        'success_rate': '85%'
+        'total_workflows': 25,
+        'active_workflows': 8,
+        'completed_workflows': 15,
+        'pending_workflows': 2,
+        'avg_completion_time': '3.2 soat',
+        'success_rate': 92,
+        'efficiency_score': 4.6
     }
 
 async def get_active_workflows():
     """Mock get active workflows"""
     return [
         {
-            'id': 'wf_001',
-            'name': 'Ulanish jarayoni',
+            'id': 1,
+            'workflow_name': 'Internet ulanish jarayoni',
+            'workflow_type': 'connection',
             'status': 'active',
-            'applications_count': 15,
-            'avg_time': '1.5 kun',
-            'success_rate': '90%'
+            'current_step': 'Texnik tayinlash',
+            'progress': 60,
+            'assigned_to': 'Aziz Karimov',
+            'created_at': '2024-01-15 10:30',
+            'estimated_completion': '2024-01-15 16:30'
         },
         {
-            'id': 'wf_002',
-            'name': 'Texnik xizmat',
+            'id': 2,
+            'workflow_name': 'TV xizmati sozlash',
+            'workflow_type': 'tv_service',
             'status': 'active',
-            'applications_count': 8,
-            'avg_time': '3.2 kun',
-            'success_rate': '75%'
+            'current_step': 'Xizmatni sinab ko\'rish',
+            'progress': 80,
+            'assigned_to': 'Malika Yusupova',
+            'created_at': '2024-01-15 09:15',
+            'estimated_completion': '2024-01-15 14:15'
         },
         {
-            'id': 'wf_003',
-            'name': 'Call Center',
+            'id': 3,
+            'workflow_name': 'Texnik xizmat',
+            'workflow_type': 'maintenance',
             'status': 'active',
-            'applications_count': 22,
-            'avg_time': '0.5 kun',
-            'success_rate': '95%'
+            'current_step': 'Muammoni hal qilish',
+            'progress': 40,
+            'assigned_to': 'Bekzod Toirov',
+            'created_at': '2024-01-15 08:45',
+            'estimated_completion': '2024-01-15 17:45'
         }
     ]
 
 def get_workflow_manager_router():
-    """Router for workflow manager functionality"""
+    """Get controller workflow manager router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("controller")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["⚙️ Workflow boshqaruvi", "⚙️ Управление процессами"]))
     async def view_workflow_manager(message: Message, state: FSMContext):
-        """Controller view workflow manager handler"""
+        """Handle workflow manager view"""
+        user_id = message.from_user.id
+        
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
-            
-            # Get workflow statistics
-            stats = await get_workflow_statistics()
+            workflow_stats = await get_workflow_statistics()
             
             workflow_text = (
-                "⚙️ <b>Workflow boshqaruvi - To'liq ma'lumot</b>\n\n"
+                "⚙️ <b>Workflow boshqaruvi</b>\n\n"
                 "📊 <b>Umumiy statistika:</b>\n"
-                f"• Jami arizalar: {stats['total_applications']}\n"
-                f"• Kutilmoqda: {stats['pending']}\n"
-                f"• Jarayonda: {stats['in_progress']}\n"
-                f"• Bajarilgan: {stats['completed']}\n"
-                f"• Bekor qilingan: {stats['cancelled']}\n"
-                f"• O'rtacha vaqt: {stats['avg_processing_time']}\n"
-                f"• Muvaffaqiyat darajasi: {stats['success_rate']}\n\n"
-                "Quyidagi bo'limlardan birini tanlang:"
-                if lang == 'uz' else
-                "⚙️ <b>Управление процессами - Полная информация</b>\n\n"
-                "📊 <b>Общая статистика:</b>\n"
-                f"• Всего заявок: {stats['total_applications']}\n"
-                f"• Ожидающие: {stats['pending']}\n"
-                f"• В процессе: {stats['in_progress']}\n"
-                f"• Завершенные: {stats['completed']}\n"
-                f"• Отмененные: {stats['cancelled']}\n"
-                f"• Среднее время: {stats['avg_processing_time']}\n"
-                f"• Уровень успеха: {stats['success_rate']}\n\n"
-                "Выберите один из разделов ниже:"
+                f"• Jami workflow: {workflow_stats['total_workflows']}\n"
+                f"• Faol workflow: {workflow_stats['active_workflows']}\n"
+                f"• Bajarilgan: {workflow_stats['completed_workflows']}\n"
+                f"• Kutilayotgan: {workflow_stats['pending_workflows']}\n"
+                f"• O'rtacha bajarish vaqti: {workflow_stats['avg_completion_time']}\n"
+                f"• Muvaffaqiyat darajasi: {workflow_stats['success_rate']}%\n"
+                f"• Samaradorlik balli: {workflow_stats['efficiency_score']}/5\n\n"
+                "Kerakli bo'limni tanlang:"
             )
             
-            sent_message = await message.answer(
-                text=workflow_text,
-                reply_markup=get_workflow_manager_keyboard(lang),
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="📊 Workflow statistika", callback_data="view_workflow_statistics"),
+                    InlineKeyboardButton(text="🔄 Faol workflow", callback_data="view_active_workflows")
+                ],
+                [
+                    InlineKeyboardButton(text="➕ Yangi workflow", callback_data="create_workflow"),
+                    InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_workflow")
+                ]
+            ])
+            
+            await message.answer(
+                workflow_text,
+                reply_markup=keyboard,
                 parse_mode='HTML'
             )
             
         except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            print(f"Error in view_workflow_manager: {str(e)}")
+            error_text = "Xatolik yuz berdi"
+            await message.answer(error_text)
 
     @router.callback_query(F.data == "view_workflow_statistics")
     async def view_workflow_statistics(callback: CallbackQuery, state: FSMContext):

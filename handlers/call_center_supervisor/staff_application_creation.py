@@ -1,9 +1,9 @@
 """
 Call Center Supervisor Staff Application Creation Handler
 
-This module implements application creation handlers for Call Center Supervisor role,
+This module implements staff application creation handlers for Call Center Supervisor role,
 allowing call center supervisors to create both connection requests and technical service
-applications on behalf of clients with full supervisor permissions.
+applications on behalf of clients during phone calls.
 """
 
 from aiogram import F, Router
@@ -16,11 +16,17 @@ from keyboards.call_center_supervisor_buttons import get_call_center_supervisor_
 
 # States imports
 from states.staff_application_states import StaffApplicationStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_supervisor_staff_application_creation_router():
     """Get router for call center supervisor staff application creation handlers"""
     router = Router()
     
+    # Apply role filter
+    role_filter = RoleFilter("call_center_supervisor")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
+
     @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish", "🔌 Создать заявку на подключение"]))
     async def call_center_supervisor_create_connection_request(message: Message, state: FSMContext):
         """Handle call center supervisor creating connection request for client"""
@@ -34,12 +40,12 @@ def get_call_center_supervisor_staff_application_creation_router():
         
         prompt_text = (
             "📞 Call Center Supervisor: Ulanish arizasi yaratish\n\n"
-            "Supervisor sifatida mijoz uchun ariza yaratish.\n\n"
+            "Mijoz bilan telefon orqali gaplashayotgan vaqtda ariza yaratish.\n\n"
             "Mijozni qanday qidirishni xohlaysiz?\n\n"
             "📱 Telefon raqami bo'yicha\n"
             "👤 Ism bo'yicha\n"
             "🆔 Mijoz ID bo'yicha\n"
-            "➕ Yangi mijoz yaratish"
+            "➕ Yangi mijoz qo'shish"
         )
         
         # Create inline keyboard for client search options
@@ -88,12 +94,12 @@ def get_call_center_supervisor_staff_application_creation_router():
         
         prompt_text = (
             "📞 Call Center Supervisor: Texnik xizmat arizasi yaratish\n\n"
-            "Supervisor sifatida mijoz uchun texnik xizmat arizasi yaratish.\n\n"
+            "Mijoz bilan telefon orqali gaplashayotgan vaqtda texnik xizmat arizasi yaratish.\n\n"
             "Mijozni qanday qidirishni xohlaysiz?\n\n"
             "📱 Telefon raqami bo'yicha\n"
             "👤 Ism bo'yicha\n"
             "🆔 Mijoz ID bo'yicha\n"
-            "➕ Yangi mijoz yaratish"
+            "➕ Yangi mijoz qo'shish"
         )
         
         # Create inline keyboard for client search options

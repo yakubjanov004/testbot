@@ -14,10 +14,16 @@ from keyboards.call_center_buttons import get_chat_keyboard
 
 # States imports
 from states.call_center_states import CallCenterChatStates, CallCenterMainMenuStates
+from filters.role_filter import RoleFilter
 
 def get_call_center_chat_router():
     """Get call center chat router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("call_center")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(StateFilter(CallCenterMainMenuStates.main_menu), F.text.in_(["💬 Chat", "💬 Чат"]))
     async def chat_menu(message: Message, state: FSMContext):

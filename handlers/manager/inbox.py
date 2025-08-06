@@ -4,10 +4,11 @@ Manager Inbox Handler - Soddalashtirilgan versiya
 Bu modul manager uchun inbox funksionalligini o'z ichiga oladi.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -377,9 +378,13 @@ class MockWordDocumentQueries:
 
 def get_manager_inbox_router():
     """Get manager inbox router"""
-    from aiogram import Router
     router = Router()
     
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
+
     @router.callback_query(F.data.startswith("open_inbox_"))
     async def handle_inbox_notification(callback: CallbackQuery, state: FSMContext):
         """Handle inbox notification button click"""

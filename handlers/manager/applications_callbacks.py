@@ -11,6 +11,7 @@ from states.manager_states import ManagerApplicationStates
 from keyboards.manager_buttons import get_manager_main_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -109,6 +110,11 @@ class MockWordGenerator:
 def get_manager_applications_callbacks_router():
     """Router for applications callback functionality"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.callback_query(F.data == "back_to_applications")
     async def back_to_applications(callback: CallbackQuery, state: FSMContext):

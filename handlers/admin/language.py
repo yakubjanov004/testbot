@@ -11,10 +11,16 @@ from typing import Optional, Dict, Any
 
 # Keyboard imports
 from keyboards.admin_buttons import language_keyboard, get_admin_main_menu
+from filters.role_filter import RoleFilter
 
 def get_admin_language_router():
     """Get admin language router"""
     router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("admin")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.message(F.text.in_(["🌐 Til sozlamalari", "🌐 Языковые настройки"]))
     async def admin_language_settings(message: Message):

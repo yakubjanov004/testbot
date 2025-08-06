@@ -10,7 +10,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-from utils.role_system import get_role_router
+from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -65,7 +65,12 @@ class JuniorManagerDetailsInputStates(StatesGroup):
 
 def get_junior_manager_details_input_router():
     """Get router for junior manager details input handlers"""
-    router = get_role_router("junior_manager")
+    router = Router()
+    
+    # Apply role filter
+    role_filter = RoleFilter("junior_manager")
+    router.message.filter(role_filter)
+    router.callback_query.filter(role_filter)
 
     @router.callback_query(F.data.startswith("jm_details_input_"))
     async def handle_details_input_start(callback: CallbackQuery, state: FSMContext):
