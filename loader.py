@@ -1,5 +1,5 @@
 """
-Bot Loader - Complete Implementation
+Bot Loader - Simplified Implementation
 
 This module sets up the Telegram bot with environment variables
 and role-based routing system.
@@ -7,34 +7,9 @@ and role-based routing system.
 
 import os
 import asyncio
-import traceback
-import sys
-import logging
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import Message, CallbackQuery
-from aiogram.fsm.context import FSMContext
-
-# Logger sozlash - batafsil
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),  # Terminal uchun
-        logging.FileHandler('testbot_errors.log', encoding='utf-8'),  # Xatoliklar uchun
-        logging.FileHandler('testbot_activity.log', encoding='utf-8')  # Faollik uchun
-    ]
-)
-logger = logging.getLogger(__name__)
-
-# Qo'shimcha logger'lar
-activity_logger = logging.getLogger('activity')
-activity_logger.setLevel(logging.INFO)
-activity_handler = logging.FileHandler('testbot_activity.log', encoding='utf-8')
-activity_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-activity_handler.setFormatter(activity_formatter)
-activity_logger.addHandler(activity_handler)
 
 # Load environment variables
 load_dotenv()
@@ -44,13 +19,6 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if id.strip()]
 BOT_ID = int(os.getenv('BOT_ID', 0))
 ZAYAVKA_GROUP_ID = int(os.getenv('ZAYAVKA_GROUP_ID', 0))
-
-# Database configuration (for future use)
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = int(os.getenv('DB_PORT', 5432))
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', '')
-DB_NAME = os.getenv('DB_NAME', 'alfaconnect_db')
 
 # Role IDs
 MANAGER_ID = int(os.getenv('MANAGER_ID', 0)) if os.getenv('MANAGER_ID') else None
@@ -66,15 +34,6 @@ CALL_CENTER_ID = int(os.getenv('CALL_CENTER_ID', 0)) if os.getenv('CALL_CENTER_I
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
-
-# Middleware'larni qo'shish
-from middlewares.logger_middleware import LoggerMiddleware
-from middlewares.error_middleware import ErrorMiddleware
-
-dp.message.middleware(LoggerMiddleware())
-dp.callback_query.middleware(LoggerMiddleware())
-dp.message.middleware(ErrorMiddleware())
-dp.callback_query.middleware(ErrorMiddleware())
 
 # Role mapping
 ROLE_MAPPING = {
@@ -119,27 +78,8 @@ async def setup_bot():
         print(f"👥 Admin IDs: {ADMIN_IDS}")
         print(f"📋 Role mapping: {ROLE_MAPPING}")
         
-    except ImportError as e:
-        logger.error(f"Import Error in setup_bot: {e}", exc_info=True)
-        print(f"❌ Import Error in setup_bot: {e}")
-        print(f"📁 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"🔍 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
-        raise
-    except NameError as e:
-        logger.error(f"Name Error in setup_bot: {e}", exc_info=True)
-        print(f"❌ Name Error in setup_bot: {e}")
-        print(f"📁 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"🔍 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
-        raise
     except Exception as e:
-        logger.error(f"Error setting up bot: {e}", exc_info=True)
         print(f"❌ Error setting up bot: {e}")
-        print(f"📁 Error type: {type(e).__name__}")
-        print(f"🔍 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"📄 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
         raise
 
 async def start_bot():
@@ -148,27 +88,8 @@ async def start_bot():
         await setup_bot()
         print("🚀 Starting bot...")
         await dp.start_polling(bot)
-    except ImportError as e:
-        logger.error(f"Import Error in start_bot: {e}", exc_info=True)
-        print(f"❌ Import Error in start_bot: {e}")
-        print(f"📁 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"🔍 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
-        raise
-    except NameError as e:
-        logger.error(f"Name Error in start_bot: {e}", exc_info=True)
-        print(f"❌ Name Error in start_bot: {e}")
-        print(f"📁 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"🔍 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
-        raise
     except Exception as e:
-        logger.error(f"Error starting bot: {e}", exc_info=True)
         print(f"❌ Error starting bot: {e}")
-        print(f"📁 Error type: {type(e).__name__}")
-        print(f"🔍 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"📄 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
         raise
 
 if __name__ == "__main__":

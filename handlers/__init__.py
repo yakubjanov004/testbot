@@ -61,9 +61,3 @@ def setup_handlers(dp: Dispatcher):
     except Exception as e:
         print(f"❌ Error setting up handlers: {e}")
         raise
-
-def get_global_instances():
-    """Get global instances for use in handlers (simplified)"""
-    return {
-        'mock_data': True  # Indicate mock data usage
-    }

@@ -1,7 +1,7 @@
 """
-Admin Module - Complete Implementation
+Admin Module - Simplified Implementation
 
-This module provides complete admin functionality including:
+This module provides core admin functionality including:
 - Main menu and navigation
 - User management
 - Order management

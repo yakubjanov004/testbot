@@ -1,61 +1,34 @@
 """
-Manager Main Menu Handler - Soddalashtirilgan versiya
+Manager Main Menu Handler - Simplified Implementation
 
-Bu modul manager uchun asosiy menyu funksionalligini o'z ichiga oladi.
+This module handles the main menu for managers.
 """
 
-from aiogram import F
+from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-from aiogram.filters.state import StateFilter
-
 from keyboards.manager_buttons import get_manager_main_keyboard
 from states.manager_states import ManagerMainMenuStates
 
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'manager',
-        'language': 'uz',
-        'full_name': 'Test Manager',
-        'phone_number': '+998901234567'
-    }
-
-async def get_user_lang(telegram_id: int):
-    """Mock get user language"""
-    return 'uz'
-
 def get_manager_main_menu_router():
     """Get manager main menu router"""
-    from aiogram import Router
     router = Router()
 
     @router.message(F.text.in_(["/start", "🏠 Asosiy menyu"]))
     async def manager_main_menu_handler(message: Message, state: FSMContext):
         """Manager main menu handler"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'manager':
-                return
-            
-            lang = user.get('language', 'uz')
             main_menu_text = "Menejer paneliga xush kelibsiz! Quyidagi menyudan kerakli bo'limni tanlang."
             
             sent_message = await message.answer(
                 text=main_menu_text,
-                reply_markup=get_manager_main_keyboard(lang)
+                reply_markup=get_manager_main_keyboard('uz')
             )
             
             await state.update_data(last_message_id=sent_message.message_id)
             await state.set_state(ManagerMainMenuStates.main_menu)
             
         except Exception as e:
-            print(f"Error in manager_main_menu_handler: {str(e)}")
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     return router

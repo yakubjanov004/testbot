@@ -1,26 +1,21 @@
 """
-Role System - Complete Implementation
+Role System - Simplified Implementation
 
 This module handles role-based routing and user role detection
 for the Alfa Connect bot.
 """
 
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
-from aiogram.fsm.context import FSMContext
-from loader import get_user_role, get_bot
+from aiogram import Router
+from aiogram.types import Message
+from loader import get_user_role
 
 def get_role_router(role: str):
     """Get router for specific role"""
     router = Router()
-    
-    # No role filtering - allow all handlers to work normally
     return router
 
 async def show_role_menu(message: Message, user_role: str):
     """Show appropriate menu based on user role"""
-    user_id = message.from_user.id
-    
     if user_role == 'admin':
         await show_admin_menu(message)
     elif user_role == 'manager':

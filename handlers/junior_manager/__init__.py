@@ -1,4 +1,21 @@
-from utils.role_system import get_role_router
+"""
+Junior Manager Module - Simplified Implementation
+
+This module provides core junior manager functionality including:
+- Main menu and navigation
+- Language settings
+- Order management
+- Statistics and reports
+- Inbox viewing
+- Application management
+- Staff application creation
+- Workflow management
+- Client search
+- Application creation and viewing
+- Details input
+"""
+
+from aiogram import Router
 from .main_menu import get_junior_manager_main_menu_router
 from .language import get_junior_manager_language_router
 from .orders import get_junior_manager_orders_router
@@ -12,20 +29,21 @@ from .application_creation import get_junior_manager_application_creation_router
 from .application_viewing import get_junior_manager_application_viewing_router
 from .details_input import get_junior_manager_details_input_router
 
-junior_manager_router = get_role_router("junior_manager")
-
-junior_manager_router.include_router(get_junior_manager_main_menu_router())
-junior_manager_router.include_router(get_junior_manager_language_router())
-junior_manager_router.include_router(get_junior_manager_orders_router())
-junior_manager_router.include_router(get_junior_manager_statistics_router())
-junior_manager_router.include_router(get_junior_manager_inbox_viewing_router())
-junior_manager_router.include_router(get_applications_router())
-junior_manager_router.include_router(get_junior_manager_staff_application_router())
-junior_manager_router.include_router(get_junior_manager_workflow_router())
-junior_manager_router.include_router(get_junior_manager_client_search_router())
-junior_manager_router.include_router(get_junior_manager_application_creation_router())
-junior_manager_router.include_router(get_junior_manager_application_viewing_router())
-junior_manager_router.include_router(get_junior_manager_details_input_router())
-
 def get_junior_manager_router():
-    return junior_manager_router
+    """Get the complete junior manager router with all handlers"""
+    router = Router()
+    
+    router.include_router(get_junior_manager_main_menu_router())
+    router.include_router(get_junior_manager_language_router())
+    router.include_router(get_junior_manager_orders_router())
+    router.include_router(get_junior_manager_statistics_router())
+    router.include_router(get_junior_manager_inbox_viewing_router())
+    router.include_router(get_applications_router())
+    router.include_router(get_junior_manager_staff_application_router())
+    router.include_router(get_junior_manager_workflow_router())
+    router.include_router(get_junior_manager_client_search_router())
+    router.include_router(get_junior_manager_application_creation_router())
+    router.include_router(get_junior_manager_application_viewing_router())
+    router.include_router(get_junior_manager_details_input_router())
+    
+    return router

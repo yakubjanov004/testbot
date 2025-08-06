@@ -1,7 +1,7 @@
 """
-Call Center Module - Complete Implementation
+Call Center Module - Simplified Implementation
 
-This module provides complete call center functionality including:
+This module provides core call center functionality including:
 - Main menu and navigation
 - Chat management
 - Client management

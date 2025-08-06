@@ -1,6 +1,17 @@
 """
-Call Center Supervisor Handlers Module
-Manages all call center supervisor-related handlers
+Call Center Supervisor Module - Simplified Implementation
+
+This module provides core call center supervisor functionality including:
+- Main menu and navigation
+- Application management
+- Feedback management
+- Inbox management
+- Language settings
+- Notification management
+- Order management
+- Staff application creation
+- Statistics and reports
+- Workflow management
 """
 
 from .application_management import get_call_center_supervisor_application_management_router

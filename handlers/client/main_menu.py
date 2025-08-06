@@ -4,52 +4,24 @@ Client Main Menu Handler - Simplified Implementation
 This module handles the main menu for clients.
 """
 
-from aiogram import F
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from keyboards.client_buttons import get_main_menu_keyboard
 from states.client_states import MainMenuStates
-from utils.role_system import get_role_router
-
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'client',
-        'language': 'uz',
-        'full_name': 'Test Client',
-        'phone_number': '+998901234567'
-    }
-
-async def get_user_lang(user_id: int) -> str:
-    """Mock get user language"""
-    return 'uz'
-
-async def get_user_role(user_id: int) -> str:
-    """Mock get user role"""
-    return 'client'
 
 def get_client_main_menu_router():
-    router = get_role_router("client")
+    router = Router()
 
     @router.message(F.text.in_(["🏠 Asosiy menyu", "🏠 Главное меню"]))
     async def main_menu_handler(message: Message, state: FSMContext):
         """Client main menu handler"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            main_menu_text = (
-                "Quyidagi menyudan kerakli bo'limni tanlang."
-                if lang == 'uz' else
-                "Выберите нужный раздел из меню ниже."
-            )
+            main_menu_text = "Quyidagi menyudan kerakli bo'limni tanlang."
             
             sent_message = await message.answer(
                 text=main_menu_text,
-                reply_markup=get_main_menu_keyboard(lang)
+                reply_markup=get_main_menu_keyboard('uz')
             )
             
             await state.update_data(last_message_id=sent_message.message_id)
@@ -64,18 +36,11 @@ def get_client_main_menu_router():
         try:
             await callback.answer()
             
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            main_menu_text = (
-                "Quyidagi menyudan kerakli bo'limni tanlang."
-                if lang == 'uz' else
-                "Выберите нужный раздел из меню ниже."
-            )
+            main_menu_text = "Quyidagi menyudan kerakli bo'limni tanlang."
             
             await callback.message.edit_text(
                 text=main_menu_text,
-                reply_markup=get_main_menu_keyboard(lang)
+                reply_markup=get_main_menu_keyboard('uz')
             )
             
             await state.set_state(MainMenuStates.main_menu)
