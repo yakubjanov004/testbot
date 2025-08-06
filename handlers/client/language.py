@@ -1,15 +1,19 @@
 """
-Client Language Handler - Simplified Implementation
+Client Language Handler - Optimized Implementation
 
-This module handles client language selection functionality.
+This module handles language selection and switching for clients.
 """
 
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+from aiogram import F, Router
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.client_buttons import get_language_keyboard, get_main_menu_keyboard
-from states.client_states import LanguageStates
+from keyboards.client_buttons import get_main_menu_keyboard
+from states.client_states import LanguageStates, MainMenuStates
 from utils.role_system import get_role_router
+import logging
+
+# Logger setup
+logger = logging.getLogger(__name__)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -27,99 +31,140 @@ async def get_user_lang(user_id: int) -> str:
     """Mock get user language"""
     return 'uz'
 
-async def update_user_language(user_id: int, language: str):
+async def update_user_language(user_id: int, language: str) -> bool:
     """Mock update user language"""
     return True
 
 def get_client_language_router():
+    """Get client language router with optimized handlers"""
     router = get_role_router("client")
 
-    @router.message(F.text.in_(["🌐 Til", "🌐 Язык"]))
-    async def client_language_handler(message: Message, state: FSMContext):
-        """Client language handler"""
+    @router.message(F.text.in_(["🌐 Til o'zgartirish", "🌐 Изменить язык"]))
+    async def language_menu_handler(message: Message, state: FSMContext):
+        """Handle language change request"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user:
-                await message.answer("Foydalanuvchi topilmadi.")
-                return
+            # Get current language from state or database
+            state_data = await state.get_data()
+            current_lang = state_data.get('user_lang')
             
-            lang = user.get('language', 'uz')
+            if not current_lang:
+                user = await get_user_by_telegram_id(message.from_user.id)
+                current_lang = user.get('language', 'uz') if user else 'uz'
             
-            language_text = (
-                "Tilni tanlang:"
-                if lang == 'uz' else
-                "Выберите язык:"
+            # Prepare language selection text
+            lang_text = (
+                "🌐 Tilni tanlang:\n\n"
+                f"Hozirgi til: {'🇺🇿 O\'zbek' if current_lang == 'uz' else '🇷🇺 Русский'}"
+                if current_lang == 'uz' else
+                "🌐 Выберите язык:\n\n"
+                f"Текущий язык: {'🇺🇿 O\'zbek' if current_lang == 'uz' else '🇷🇺 Русский'}"
             )
             
-            sent_message = await message.answer(
-                text=language_text,
-                reply_markup=get_language_keyboard()
+            # Create language selection keyboard
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🇺🇿 O'zbek tili",
+                        callback_data="set_lang_uz"
+                    ),
+                    InlineKeyboardButton(
+                        text="🇷🇺 Русский язык",
+                        callback_data="set_lang_ru"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="◀️ Orqaga" if current_lang == 'uz' else "◀️ Назад",
+                        callback_data="back_to_main_menu"
+                    )
+                ]
+            ])
+            
+            await message.answer(
+                text=lang_text,
+                reply_markup=keyboard
             )
             
             await state.set_state(LanguageStates.selecting_language)
             
         except Exception as e:
+            logger.error(f"Error in language_menu_handler: {str(e)}", exc_info=True)
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @router.callback_query(F.data.startswith("lang_"))
-    async def handle_language_selection(callback: CallbackQuery, state: FSMContext):
+    @router.callback_query(F.data.in_(["set_lang_uz", "set_lang_ru"]))
+    async def set_language_handler(callback: CallbackQuery, state: FSMContext):
         """Handle language selection"""
         try:
             await callback.answer()
             
-            selected_lang = callback.data.split("_")[1]
+            # Get new language
+            new_lang = 'uz' if callback.data == "set_lang_uz" else 'ru'
             
-            # Update user language
-            success = await update_user_language(callback.from_user.id, selected_lang)
+            # Get user data
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user:
+                await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+                return
+            
+            # Update language in database (mock)
+            success = await update_user_language(user['id'], new_lang)
             
             if success:
+                # Update language in state
+                await state.update_data(user_lang=new_lang)
+                
+                # Success message
                 success_text = (
-                    f"✅ Til muvaffaqiyatli o'zgartirildi: {'O\'zbekcha' if selected_lang == 'uz' else 'Русский'}"
-                    if selected_lang == 'uz' else
-                    f"✅ Язык успешно изменен: {'O\'zbekcha' if selected_lang == 'uz' else 'Русский'}"
+                    "✅ Til muvaffaqiyatli o'zgartirildi!\n\n"
+                    "Yangi til: 🇺🇿 O'zbek"
+                    if new_lang == 'uz' else
+                    "✅ Язык успешно изменен!\n\n"
+                    "Новый язык: 🇷🇺 Русский"
                 )
                 
-                await callback.message.edit_text(
-                    text=success_text,
-                    reply_markup=get_main_menu_keyboard(selected_lang)
+                await callback.message.edit_text(success_text)
+                
+                # Send main menu with new language
+                await callback.message.answer(
+                    "🏠 Asosiy menyu" if new_lang == 'uz' else "🏠 Главное меню",
+                    reply_markup=get_main_menu_keyboard(new_lang)
                 )
                 
-                await state.clear()
+                await state.set_state(MainMenuStates.main_menu)
+                
+                logger.info(f"Language changed for user {user['telegram_id']}: {new_lang}")
+                
             else:
                 error_text = (
-                    "❌ Til o'zgartirishda xatolik yuz berdi."
-                    if selected_lang == 'uz' else
-                    "❌ Ошибка при изменении языка."
+                    "❌ Tilni o'zgartirishda xatolik yuz berdi"
+                    if new_lang == 'uz' else
+                    "❌ Ошибка при изменении языка"
                 )
-                
                 await callback.message.edit_text(error_text)
                 
         except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
+            logger.error(f"Error in set_language_handler: {str(e)}", exc_info=True)
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data == "cancel_language")
-    async def cancel_language_selection(callback: CallbackQuery, state: FSMContext):
-        """Cancel language selection"""
-        try:
-            await callback.answer()
-            
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            cancel_text = (
-                "❌ Til o'zgartirish bekor qilindi."
-                if lang == 'uz' else
-                "❌ Изменение языка отменено."
-            )
-            
-            await callback.message.edit_text(
-                text=cancel_text,
-                reply_markup=get_main_menu_keyboard(lang)
-            )
-            
-            await state.clear()
-            
-        except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
+    # Quick language switch handlers
+    @router.message(F.text == "🇺🇿 O'zbek")
+    async def quick_switch_uz(message: Message, state: FSMContext):
+        """Quick switch to Uzbek"""
+        await state.update_data(user_lang='uz')
+        await message.answer(
+            "✅ Til o'zgartirildi: 🇺🇿 O'zbek",
+            reply_markup=get_main_menu_keyboard('uz')
+        )
+        await state.set_state(MainMenuStates.main_menu)
+
+    @router.message(F.text == "🇷🇺 Русский")
+    async def quick_switch_ru(message: Message, state: FSMContext):
+        """Quick switch to Russian"""
+        await state.update_data(user_lang='ru')
+        await message.answer(
+            "✅ Язык изменен: 🇷🇺 Русский",
+            reply_markup=get_main_menu_keyboard('ru')
+        )
+        await state.set_state(MainMenuStates.main_menu)
 
     return router

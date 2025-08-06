@@ -43,6 +43,7 @@ class ProfileStates(StatesGroup):
     viewing_profile = State()
     editing_name = State()
     editing_address = State()
+    editing_email = State()
 
 
 class OrderStates(StatesGroup):

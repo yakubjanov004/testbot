@@ -1,15 +1,20 @@
 """
-Client Profile Handler - Simplified Implementation
+Client Profile Handler - Optimized Implementation
 
-This module handles client profile functionality.
+This module handles client profile viewing and editing functionality.
 """
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.client_buttons import get_client_profile_menu, get_edit_profile_keyboard
-from states.client_states import ProfileStates
+from aiogram.filters import StateFilter
+from keyboards.client_buttons import get_main_menu_keyboard, get_profile_keyboard, get_back_keyboard
+from states.client_states import ProfileStates, MainMenuStates
 from utils.role_system import get_role_router
+import logging
+
+# Logger setup
+logger = logging.getLogger(__name__)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -21,220 +26,347 @@ async def get_user_by_telegram_id(telegram_id: int):
         'language': 'uz',
         'full_name': 'Test Client',
         'phone_number': '+998901234567',
-        'address': 'Toshkent shahri, Chilanzar tumani, 15-uy',
-        'region': 'Toshkent shahri',
-        'created_at': '2024-01-01 10:00:00'
+        'address': 'Toshkent, Chilonzor tumani',
+        'email': 'client@example.com',
+        'created_at': '2024-01-01'
     }
 
 async def get_user_lang(telegram_id: int):
     """Mock get user language"""
-    return 'uz'
+    user = await get_user_by_telegram_id(telegram_id)
+    return user.get('language', 'uz') if user else 'uz'
 
-def client_only(func):
-    """Decorator to ensure only clients can access"""
-    async def wrapper(*args, **kwargs):
-        return await func(*args, **kwargs)
-    return wrapper
+async def update_user_profile(user_id: int, field: str, value: str) -> bool:
+    """Mock update user profile"""
+    return True
 
 def get_client_profile_router():
+    """Get client profile router with optimized handlers"""
     router = get_role_router("client")
 
-    @client_only
-    @router.message(F.text.in_(['👤 Profil']))
-    async def client_profile_handler(message: Message, state: FSMContext):
-        """Mijoz profili bilan ishlash"""
+    @router.message(F.text.in_(["👤 Profil", "👤 Профиль"]))
+    async def profile_menu_handler(message: Message, state: FSMContext):
+        """Handle profile menu request"""
         try:
+            # Get user data
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user:
-                await message.answer("Foydalanuvchi topilmadi.")
+                logger.error(f"User not found: {message.from_user.id}")
+                await message.answer("❌ Foydalanuvchi topilmadi.")
                 return
             
-            profile_text = "Profil menyusi. Kerakli amalni tanlang."
+            # Get language from state or user data
+            state_data = await state.get_data()
+            lang = state_data.get('user_lang', user.get('language', 'uz'))
             
-            sent_message = await message.answer(
-                text=profile_text,
-                reply_markup=get_client_profile_menu('uz')
+            # Prepare profile text
+            profile_text = (
+                f"👤 <b>Sizning profilingiz</b>\n\n"
+                f"📱 <b>Telefon:</b> {user['phone_number']}\n"
+                f"👤 <b>To'liq ism:</b> {user['full_name']}\n"
+                f"📍 <b>Manzil:</b> {user.get('address', 'Kiritilmagan')}\n"
+                f"📧 <b>Email:</b> {user.get('email', 'Kiritilmagan')}\n"
+                f"📅 <b>Ro'yxatdan o'tgan:</b> {user.get('created_at', 'N/A')}\n"
+                f"🆔 <b>Telegram ID:</b> {user['telegram_id']}"
+                if lang == 'uz' else
+                f"👤 <b>Ваш профиль</b>\n\n"
+                f"📱 <b>Телефон:</b> {user['phone_number']}\n"
+                f"👤 <b>Полное имя:</b> {user['full_name']}\n"
+                f"📍 <b>Адрес:</b> {user.get('address', 'Не указан')}\n"
+                f"📧 <b>Email:</b> {user.get('email', 'Не указан')}\n"
+                f"📅 <b>Зарегистрирован:</b> {user.get('created_at', 'N/A')}\n"
+                f"🆔 <b>Telegram ID:</b> {user['telegram_id']}"
             )
             
-            await state.set_state(ProfileStates.profile_menu)
+            # Create profile keyboard
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="✏️ Ismni tahrirlash" if lang == 'uz' else "✏️ Изменить имя",
+                        callback_data="edit_profile_name"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="📍 Manzilni tahrirlash" if lang == 'uz' else "📍 Изменить адрес",
+                        callback_data="edit_profile_address"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="📧 Emailni tahrirlash" if lang == 'uz' else "📧 Изменить email",
+                        callback_data="edit_profile_email"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
+                        callback_data="back_to_main_menu"
+                    )
+                ]
+            ])
+            
+            await message.answer(
+                text=profile_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+            await state.set_state(ProfileStates.viewing_profile)
+            
+            logger.info(f"User viewing profile: {user['telegram_id']}")
             
         except Exception as e:
+            logger.error(f"Error in profile_menu_handler: {str(e)}", exc_info=True)
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @client_only
-    @router.callback_query(F.data == "client_view_info")
-    async def handle_view_info(callback: CallbackQuery):
-        """View client information"""
+    @router.callback_query(F.data == "edit_profile_name", StateFilter(ProfileStates.viewing_profile))
+    async def edit_name_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle name editing"""
         try:
             await callback.answer()
             
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user:
-                await callback.message.edit_text("Foydalanuvchi topilmadi.")
-                return
+            # Get language from state
+            state_data = await state.get_data()
+            lang = state_data.get('user_lang', 'uz')
             
-            # To'liq ma'lumot
-            info_text = (
-                f"👤 <b>Profil ma'lumotlari - To'liq ma'lumot</b>\n\n"
-                f"🆔 <b>ID:</b> {user['id']}\n"
-                f"📱 <b>Telegram ID:</b> {user['telegram_id']}\n"
-                f"👤 <b>To'liq ism:</b> {user['full_name']}\n"
-                f"📞 <b>Telefon raqam:</b> {user['phone_number']}\n"
-                f"🏛️ <b>Hudud:</b> {user['region']}\n"
-                f"🏠 <b>Manzil:</b> {user['address']}\n"
-                f"🎭 <b>Rol:</b> {user['role'].upper()}\n"
-                f"🌐 <b>Til:</b> {user['language'].upper()}\n"
-                f"📅 <b>Ro'yxatdan o'tgan:</b> {user['created_at']}\n\n"
-                f"📊 <b>Statistika:</b>\n"
-                f"• Jami arizalar: 5 ta\n"
-                f"• Faol arizalar: 2 ta\n"
-                f"• Bajarilgan: 3 ta\n"
-                f"• O'rtacha baho: ⭐⭐⭐⭐⭐"
+            edit_text = (
+                "✏️ Yangi ismingizni kiriting:"
+                if lang == 'uz' else
+                "✏️ Введите новое имя:"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="client_profile_back")]
-            ])
-            
-            await callback.message.edit_text(info_text, reply_markup=keyboard, parse_mode='HTML')
-            
-        except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
-
-    @client_only
-    @router.callback_query(F.data == "client_order_stats")
-    async def handle_order_stats(callback: CallbackQuery):
-        """View order statistics"""
-        try:
-            await callback.answer()
-            
-            # To'liq statistika
-            stats_text = (
-                f"📊 <b>Buyurtmalar statistikasi - To'liq ma'lumot</b>\n\n"
-                f"📋 <b>Jami buyurtmalar:</b> 5 ta\n\n"
-                f"🔧 <b>Texnik xizmatlar:</b> 3 ta\n"
-                f"• Faol: 1 ta\n"
-                f"• Bajarilgan: 2 ta\n\n"
-                f"🔌 <b>Ulanishlar:</b> 2 ta\n"
-                f"• Faol: 1 ta\n"
-                f"• Bajarilgan: 1 ta\n\n"
-                f"📈 <b>O'rtacha baho:</b> ⭐⭐⭐⭐⭐\n"
-                f"⏰ <b>O'rtacha bajarilish vaqti:</b> 2.5 kun\n"
-                f"💰 <b>Jami xizmat narxi:</b> 1,250,000 so'm\n\n"
-                f"📅 <b>So'nggi faoliyat:</b> 2024-01-15"
-            )
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="client_profile_back")]
-            ])
-            
-            await callback.message.edit_text(stats_text, reply_markup=keyboard, parse_mode='HTML')
-            
-        except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
-
-    @client_only
-    @router.callback_query(F.data == "client_profile_back")
-    async def handle_back_to_profile(callback: CallbackQuery):
-        """Back to profile menu"""
-        try:
-            await callback.answer()
-            
-            profile_text = "Profil menyusi. Kerakli amalni tanlang."
-            
-            await callback.message.edit_text(
-                text=profile_text,
-                reply_markup=get_client_profile_menu('uz')
-            )
-            
-        except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
-
-    @client_only
-    @router.callback_query(F.data == "client_edit_profile")
-    async def handle_edit_profile(callback: CallbackQuery):
-        """Edit profile menu"""
-        try:
-            await callback.answer()
-            
-            edit_text = "Qaysi ma'lumotni o'zgartirmoqchisiz?"
-            
-            await callback.message.edit_text(
+            await callback.message.answer(
                 text=edit_text,
-                reply_markup=get_edit_profile_keyboard('uz')
+                reply_markup=get_back_keyboard(lang)
             )
             
-        except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
-
-    @client_only
-    @router.callback_query(F.data == "client_edit_name")
-    async def handle_edit_name(callback: CallbackQuery, state: FSMContext):
-        """Edit name"""
-        try:
-            await callback.answer()
-            
-            edit_text = "Yangi to'liq ismingizni kiriting:"
-            
-            await callback.message.edit_text(edit_text)
             await state.set_state(ProfileStates.editing_name)
             
         except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
+            logger.error(f"Error in edit_name_handler: {str(e)}", exc_info=True)
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @client_only
-    @router.message(ProfileStates.editing_name)
-    async def handle_name_input(message: Message, state: FSMContext):
-        """Handle name input"""
-        try:
-            new_name = message.text.strip()
-            
-            if len(new_name) < 3:
-                await message.answer("Ism juda qisqa. Kamida 3 ta belgi kiriting.")
-                return
-            
-            # Mock update
-            success_text = f"✅ Ism muvaffaqiyatli o'zgartirildi: {new_name}"
-            
-            await message.answer(success_text, reply_markup=get_client_profile_menu('uz'))
-            await state.clear()
-            
-        except Exception as e:
-            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
-
-    @client_only
-    @router.callback_query(F.data == "client_edit_address")
-    async def handle_edit_address(callback: CallbackQuery, state: FSMContext):
-        """Edit address"""
+    @router.callback_query(F.data == "edit_profile_address", StateFilter(ProfileStates.viewing_profile))
+    async def edit_address_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle address editing"""
         try:
             await callback.answer()
             
-            edit_text = "Yangi manzilingizni kiriting:"
+            # Get language from state
+            state_data = await state.get_data()
+            lang = state_data.get('user_lang', 'uz')
             
-            await callback.message.edit_text(edit_text)
+            edit_text = (
+                "📍 Yangi manzilingizni kiriting:"
+                if lang == 'uz' else
+                "📍 Введите новый адрес:"
+            )
+            
+            await callback.message.answer(
+                text=edit_text,
+                reply_markup=get_back_keyboard(lang)
+            )
+            
             await state.set_state(ProfileStates.editing_address)
             
         except Exception as e:
-            await callback.answer("❌ Xatolik yuz berdi")
+            logger.error(f"Error in edit_address_handler: {str(e)}", exc_info=True)
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @client_only
-    @router.message(ProfileStates.editing_address)
-    async def handle_address_input(message: Message, state: FSMContext):
-        """Handle address input"""
+    @router.callback_query(F.data == "edit_profile_email", StateFilter(ProfileStates.viewing_profile))
+    async def edit_email_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle email editing"""
         try:
-            new_address = message.text.strip()
+            await callback.answer()
             
-            if len(new_address) < 10:
-                await message.answer("Manzil juda qisqa. Kamida 10 ta belgi kiriting.")
-                return
+            # Get language from state
+            state_data = await state.get_data()
+            lang = state_data.get('user_lang', 'uz')
             
-            # Mock update
-            success_text = f"✅ Manzil muvaffaqiyatli o'zgartirildi: {new_address}"
+            edit_text = (
+                "📧 Yangi email manzilingizni kiriting:"
+                if lang == 'uz' else
+                "📧 Введите новый email адрес:"
+            )
             
-            await message.answer(success_text, reply_markup=get_client_profile_menu('uz'))
-            await state.clear()
+            await callback.message.answer(
+                text=edit_text,
+                reply_markup=get_back_keyboard(lang)
+            )
+            
+            await state.set_state(ProfileStates.editing_email)
             
         except Exception as e:
+            logger.error(f"Error in edit_email_handler: {str(e)}", exc_info=True)
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.message(StateFilter(ProfileStates.editing_name))
+    async def process_name_edit(message: Message, state: FSMContext):
+        """Process name editing"""
+        try:
+            # Check if it's a back button
+            if message.text in ["🏠 Asosiy menyu", "🏠 Главное меню"]:
+                await state.clear()
+                await message.answer(
+                    "🏠 Asosiy menyu",
+                    reply_markup=get_main_menu_keyboard('uz')
+                )
+                await state.set_state(MainMenuStates.main_menu)
+                return
+            
+            # Validate name
+            new_name = message.text.strip()
+            if len(new_name) < 3:
+                await message.answer("⚠️ Ism kamida 3 ta belgidan iborat bo'lishi kerak!")
+                return
+            
+            # Get user data
+            user = await get_user_by_telegram_id(message.from_user.id)
+            if not user:
+                await message.answer("❌ Xatolik yuz berdi.")
+                return
+            
+            # Update name (mock)
+            success = await update_user_profile(user['id'], 'full_name', new_name)
+            
+            if success:
+                # Get language
+                state_data = await state.get_data()
+                lang = state_data.get('user_lang', 'uz')
+                
+                success_text = (
+                    f"✅ Ismingiz muvaffaqiyatli o'zgartirildi!\n\n"
+                    f"Yangi ism: {new_name}"
+                    if lang == 'uz' else
+                    f"✅ Ваше имя успешно изменено!\n\n"
+                    f"Новое имя: {new_name}"
+                )
+                
+                await message.answer(
+                    text=success_text,
+                    reply_markup=get_main_menu_keyboard(lang)
+                )
+                
+                await state.set_state(MainMenuStates.main_menu)
+                
+            else:
+                await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+                
+        except Exception as e:
+            logger.error(f"Error in process_name_edit: {str(e)}", exc_info=True)
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.message(StateFilter(ProfileStates.editing_address))
+    async def process_address_edit(message: Message, state: FSMContext):
+        """Process address editing"""
+        try:
+            # Check if it's a back button
+            if message.text in ["🏠 Asosiy menyu", "🏠 Главное меню"]:
+                await state.clear()
+                await message.answer(
+                    "🏠 Asosiy menyu",
+                    reply_markup=get_main_menu_keyboard('uz')
+                )
+                await state.set_state(MainMenuStates.main_menu)
+                return
+            
+            # Validate address
+            new_address = message.text.strip()
+            if len(new_address) < 5:
+                await message.answer("⚠️ Manzil kamida 5 ta belgidan iborat bo'lishi kerak!")
+                return
+            
+            # Get user data
+            user = await get_user_by_telegram_id(message.from_user.id)
+            if not user:
+                await message.answer("❌ Xatolik yuz berdi.")
+                return
+            
+            # Update address (mock)
+            success = await update_user_profile(user['id'], 'address', new_address)
+            
+            if success:
+                # Get language
+                state_data = await state.get_data()
+                lang = state_data.get('user_lang', 'uz')
+                
+                success_text = (
+                    f"✅ Manzilingiz muvaffaqiyatli o'zgartirildi!\n\n"
+                    f"Yangi manzil: {new_address}"
+                    if lang == 'uz' else
+                    f"✅ Ваш адрес успешно изменен!\n\n"
+                    f"Новый адрес: {new_address}"
+                )
+                
+                await message.answer(
+                    text=success_text,
+                    reply_markup=get_main_menu_keyboard(lang)
+                )
+                
+                await state.set_state(MainMenuStates.main_menu)
+                
+            else:
+                await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+                
+        except Exception as e:
+            logger.error(f"Error in process_address_edit: {str(e)}", exc_info=True)
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.message(StateFilter(ProfileStates.editing_email))
+    async def process_email_edit(message: Message, state: FSMContext):
+        """Process email editing"""
+        try:
+            # Check if it's a back button
+            if message.text in ["🏠 Asosiy menyu", "🏠 Главное меню"]:
+                await state.clear()
+                await message.answer(
+                    "🏠 Asosiy menyu",
+                    reply_markup=get_main_menu_keyboard('uz')
+                )
+                await state.set_state(MainMenuStates.main_menu)
+                return
+            
+            # Validate email
+            new_email = message.text.strip()
+            if '@' not in new_email or '.' not in new_email:
+                await message.answer("⚠️ Iltimos, to'g'ri email manzilini kiriting!")
+                return
+            
+            # Get user data
+            user = await get_user_by_telegram_id(message.from_user.id)
+            if not user:
+                await message.answer("❌ Xatolik yuz berdi.")
+                return
+            
+            # Update email (mock)
+            success = await update_user_profile(user['id'], 'email', new_email)
+            
+            if success:
+                # Get language
+                state_data = await state.get_data()
+                lang = state_data.get('user_lang', 'uz')
+                
+                success_text = (
+                    f"✅ Email manzilingiz muvaffaqiyatli o'zgartirildi!\n\n"
+                    f"Yangi email: {new_email}"
+                    if lang == 'uz' else
+                    f"✅ Ваш email успешно изменен!\n\n"
+                    f"Новый email: {new_email}"
+                )
+                
+                await message.answer(
+                    text=success_text,
+                    reply_markup=get_main_menu_keyboard(lang)
+                )
+                
+                await state.set_state(MainMenuStates.main_menu)
+                
+            else:
+                await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+                
+        except Exception as e:
+            logger.error(f"Error in process_email_edit: {str(e)}", exc_info=True)
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     return router
