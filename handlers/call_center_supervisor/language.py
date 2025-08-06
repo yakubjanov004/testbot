@@ -1,65 +1,44 @@
 """
-Call Center Supervisor Language Handler
-Manages language settings for call center supervisor
+Call Center Supervisor Language Handler - Simplified Implementation
+
+This module handles language settings for call center supervisors.
 """
 
-from aiogram import F, Router
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from typing import Optional, Dict, Any
-
-# Keyboard imports
-from keyboards.call_center_supervisor_buttons import get_language_selection_inline_menu, get_call_center_supervisor_main_menu
-
-# States imports
-from states.call_center_supervisor_states import CallCenterSupervisorLanguageStates
+from keyboards.call_center_supervisor_buttons import get_language_keyboard
+from states.call_center_supervisor_states import LanguageStates
 
 def get_call_center_supervisor_language_router():
-    """Get call center supervisor language router"""
     router = Router()
 
-    @router.message(F.text.in_(['🌐 Tilni o\'zgartirish', '🌐 Изменить язык']))
-    async def call_center_supervisor_language_settings(message: Message, state: FSMContext):
-        """Call center supervisor language settings"""
-        lang = 'uz'  # Default language
-        
-        text = (
-            "🌐 <b>Tilni o'zgartirish</b>\n\n"
-            "Qaysi tilni tanlaysiz?\n\n"
-            "🇺🇿 O'zbekcha\n"
-            "🇷🇺 Русский"
-        )
-        
-        await message.answer(
-            text,
-            reply_markup=get_language_selection_inline_menu()
-        )
-        await state.set_state(CallCenterSupervisorLanguageStates.selecting_language)
+    @router.message(F.text.in_(["🌐 Til", "🌐 Язык"]))
+    async def language_menu(message: Message, state: FSMContext):
+        """Show language selection menu"""
+        try:
+            await message.answer(
+                "Tilni tanlang / Выберите язык:",
+                reply_markup=get_language_keyboard()
+            )
+            await state.set_state(LanguageStates.selecting_language)
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @router.callback_query(F.data.startswith("set_lang_"))
-    async def call_center_supervisor_set_language(callback: CallbackQuery, state: FSMContext):
-        """Set call center supervisor language"""
-        await callback.answer()
-        
-        selected_lang = callback.data.replace("set_lang_", "")
-        
-        # Mock language setting
-        success_text = (
-            f"✅ Til muvaffaqiyatli o'zgartirildi!\n\n"
-            f"🌐 Yangi til: {'O\'zbekcha' if selected_lang == 'uz' else 'Русский'}"
-        )
-        
-        await callback.message.edit_text(success_text)
-        await state.clear()
-
-    @router.callback_query(F.data == "cancel_language")
-    async def call_center_supervisor_cancel_language(callback: CallbackQuery, state: FSMContext):
-        """Cancel language selection"""
-        await callback.answer()
-        
-        cancel_text = "❌ Til o'zgartirish bekor qilindi."
-        
-        await callback.message.edit_text(cancel_text)
-        await state.clear()
+    @router.callback_query(F.data.startswith("lang_"))
+    async def select_language(callback: CallbackQuery, state: FSMContext):
+        """Handle language selection"""
+        try:
+            await callback.answer()
+            language = callback.data.split("_")[1]
+            
+            # Update user language (mock)
+            await state.update_data(language=language)
+            
+            success_text = "✅ Til muvaffaqiyatli o'zgartirildi!" if language == "uz" else "✅ Язык успешно изменен!"
+            await callback.message.edit_text(success_text)
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router 

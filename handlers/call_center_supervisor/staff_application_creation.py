@@ -1,399 +1,232 @@
 """
-Call Center Supervisor Staff Application Creation Handler
+Call Center Supervisor Staff Application Creation Handler - Simplified Implementation
 
-This module implements application creation handlers for Call Center Supervisor role,
-allowing call center supervisors to create both connection requests and technical service
-applications on behalf of clients with full supervisor permissions.
+This module handles staff application creation for call center supervisors.
 """
 
-from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from typing import Dict, Any, Optional
-
-# Keyboard imports
-from keyboards.call_center_supervisor_buttons import get_call_center_supervisor_main_menu
-
-# States imports
-from states.staff_application_states import StaffApplicationStates
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.filters import StateFilter
+from datetime import datetime
+from keyboards.call_center_supervisor_buttons import get_staff_application_keyboard
+from states.call_center_supervisor_states import StaffApplicationStates
 
 def get_call_center_supervisor_staff_application_creation_router():
-    """Get router for call center supervisor staff application creation handlers"""
     router = Router()
-    
-    @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish", "🔌 Создать заявку на подключение"]))
-    async def call_center_supervisor_create_connection_request(message: Message, state: FSMContext):
-        """Handle call center supervisor creating connection request for client"""
-        lang = 'uz'  # Default language
-        
-        # Mock application creation start
-        await state.update_data(
-            creator_context={'role': 'call_center_supervisor', 'id': 123},
-            application_type='connection_request'
-        )
-        
-        prompt_text = (
-            "📞 Call Center Supervisor: Ulanish arizasi yaratish\n\n"
-            "Supervisor sifatida mijoz uchun ariza yaratish.\n\n"
-            "Mijozni qanday qidirishni xohlaysiz?\n\n"
-            "📱 Telefon raqami bo'yicha\n"
-            "👤 Ism bo'yicha\n"
-            "🆔 Mijoz ID bo'yicha\n"
-            "➕ Yangi mijoz yaratish"
-        )
-        
-        # Create inline keyboard for client search options
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📱 Telefon",
-                    callback_data="ccs_client_search_phone"
-                ),
-                InlineKeyboardButton(
-                    text="👤 Ism",
-                    callback_data="ccs_client_search_name"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🆔 ID",
-                    callback_data="ccs_client_search_id"
-                ),
-                InlineKeyboardButton(
-                    text="➕ Yangi",
-                    callback_data="ccs_client_search_new"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="ccs_cancel_application_creation"
-                )
-            ]
-        ])
-        
-        await message.answer(prompt_text, reply_markup=keyboard)
-        await state.set_state(StaffApplicationStates.selecting_client_search_method)
-    
-    @router.message(F.text.in_(["🔧 Texnik xizmat yaratish", "🔧 Создать техническую заявку"]))
-    async def call_center_supervisor_create_technical_service(message: Message, state: FSMContext):
-        """Handle call center supervisor creating technical service request for client"""
-        lang = 'uz'  # Default language
-        
-        # Mock application creation start
-        await state.update_data(
-            creator_context={'role': 'call_center_supervisor', 'id': 123},
-            application_type='technical_service'
-        )
-        
-        prompt_text = (
-            "📞 Call Center Supervisor: Texnik xizmat arizasi yaratish\n\n"
-            "Supervisor sifatida mijoz uchun texnik xizmat arizasi yaratish.\n\n"
-            "Mijozni qanday qidirishni xohlaysiz?\n\n"
-            "📱 Telefon raqami bo'yicha\n"
-            "👤 Ism bo'yicha\n"
-            "🆔 Mijoz ID bo'yicha\n"
-            "➕ Yangi mijoz yaratish"
-        )
-        
-        # Create inline keyboard for client search options
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📱 Telefon",
-                    callback_data="ccs_client_search_phone"
-                ),
-                InlineKeyboardButton(
-                    text="👤 Ism",
-                    callback_data="ccs_client_search_name"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🆔 ID",
-                    callback_data="ccs_client_search_id"
-                ),
-                InlineKeyboardButton(
-                    text="➕ Yangi",
-                    callback_data="ccs_client_search_new"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="ccs_cancel_application_creation"
-                )
-            ]
-        ])
-        
-        await message.answer(prompt_text, reply_markup=keyboard)
-        await state.set_state(StaffApplicationStates.selecting_client_search_method)
-    
-    @router.callback_query(F.data.startswith("ccs_client_search_"))
-    async def handle_call_center_supervisor_client_search_method(callback: CallbackQuery, state: FSMContext):
-        """Handle client search method selection for call center supervisor"""
-        await callback.answer()
-        
-        lang = 'uz'  # Default language
-        search_method = callback.data.split("_")[-1]  # phone, name, id, new
-        
-        # Update FSM data with search method
-        await state.update_data(client_search_method=search_method)
-        
-        if search_method == "phone":
-            await state.set_state(StaffApplicationStates.entering_client_phone)
-            prompt_text = (
-                "📱 Mijoz telefon raqamini kiriting:\n\n"
-                "Masalan: +998901234567\n\n"
-                "💡 Supervisor sifatida mijoz ma'lumotlarini aniq kiriting."
+
+    @router.message(F.text.in_(["👥 Xodim arizasi yaratish", "👥 Создать заявку сотрудника"]))
+    async def start_staff_application(message: Message, state: FSMContext):
+        """Start staff application creation"""
+        try:
+            welcome_text = (
+                "👥 **Xodim arizasi yaratish**\n\n"
+                "Yangi xodim arizasini yaratish jarayonini boshlaymiz.\n\n"
+                "Quyidagi ma'lumotlarni to'ldiring:"
             )
             
-        elif search_method == "name":
-            await state.set_state(StaffApplicationStates.entering_client_name)
-            prompt_text = (
-                "👤 Mijoz ismini kiriting:\n\n"
-                "To'liq ism va familiyani kiriting\n\n"
-                "💡 Supervisor sifatida to'liq ma'lumot kiriting."
+            keyboard = get_staff_application_keyboard()
+            await message.answer(
+                text=welcome_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
             )
             
-        elif search_method == "id":
-            await state.set_state(StaffApplicationStates.entering_client_id)
-            prompt_text = (
-                "🆔 Mijoz ID raqamini kiriting:\n\n"
-                "💡 Supervisor sifatida aniq ID raqamini kiriting."
+            await state.set_state(StaffApplicationStates.selecting_application_type)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.callback_query(F.data.startswith("app_type_"))
+    async def select_application_type(callback: CallbackQuery, state: FSMContext):
+        """Select application type"""
+        try:
+            await callback.answer()
+            app_type = callback.data.split("_")[-1]
+            await state.update_data(application_type=app_type)
+            
+            type_names = {
+                'operator': 'Operator',
+                'technician': 'Texnik',
+                'supervisor': 'Supervisor',
+                'manager': 'Menejer'
+            }
+            
+            text = (
+                f"✅ **Ariza turi tanlandi:** {type_names.get(app_type, 'N/A')}\n\n"
+                "Endi xodim ma'lumotlarini kiriting.\n\n"
+                "📝 **To'liq ism va familiya:**"
             )
             
-        elif search_method == "new":
-            await state.set_state(StaffApplicationStates.creating_new_client)
-            prompt_text = (
-                "➕ Yangi mijoz yaratish\n\n"
-                "Supervisor sifatida yangi mijoz ma'lumotlarini kiritishni boshlaymiz.\n\n"
-                "Birinchi navbatda, mijoz ismini kiriting:"
+            await callback.message.edit_text(
+                text=text,
+                parse_mode="Markdown"
             )
-            await state.set_state(StaffApplicationStates.entering_new_client_name)
-        
-        await callback.message.edit_text(prompt_text)
-    
-    @router.callback_query(F.data == "ccs_cancel_application_creation")
-    async def call_center_supervisor_cancel_application_creation(callback: CallbackQuery, state: FSMContext):
-        """Cancel application creation and return to main menu for call center supervisor"""
-        await callback.answer()
-        
-        lang = 'uz'  # Default language
-        await state.clear()
-        
-        cancel_text = (
-            "❌ Ariza yaratish bekor qilindi.\n\n"
-            "Bosh menyuga qaytdingiz."
-        )
-        
-        await callback.message.edit_text(cancel_text, reply_markup=None)
-        
-        # Send main menu
-        main_menu_text = "Call Center Supervisor - Bosh menyu"
-        await callback.message.answer(
-            main_menu_text,
-            reply_markup=get_call_center_supervisor_main_menu(lang)
-        )
-    
-    @router.message(StaffApplicationStates.entering_new_client_name)
-    async def handle_new_client_name(message: Message, state: FSMContext):
-        """Handle new client name input"""
-        lang = 'uz'  # Default language
-        client_name = message.text.strip()
-        
-        if len(client_name) < 3:
-            error_text = "❌ Ism juda qisqa. Kamida 3 ta belgi kiriting."
-            await message.answer(error_text)
-            return
-        
-        await state.update_data(new_client_name=client_name)
-        
-        prompt_text = (
-            f"✅ Mijoz ismi: {client_name}\n\n"
-            "📱 Endi mijozning telefon raqamini kiriting:\n"
-            "(Masalan: +998901234567)"
-        )
-        
-        await message.answer(prompt_text)
-        await state.set_state(StaffApplicationStates.entering_new_client_phone)
-    
-    @router.message(StaffApplicationStates.entering_new_client_phone)
-    async def handle_new_client_phone(message: Message, state: FSMContext):
-        """Handle new client phone input and create client"""
-        lang = 'uz'  # Default language
-        phone = message.text.strip()
-        
-        # Basic phone validation
-        import re
-        phone_pattern = re.compile(r'^\+?998[0-9]{9}$')
-        clean_phone = phone.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
-        
-        if not phone_pattern.match(clean_phone):
-            error_text = (
-                "❌ Noto'g'ri telefon raqam formati.\n"
-                "To'g'ri format: +998901234567"
+            
+            await state.set_state(StaffApplicationStates.entering_full_name)
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.message(StateFilter(StaffApplicationStates.entering_full_name))
+    async def get_full_name(message: Message, state: FSMContext):
+        """Get full name"""
+        try:
+            full_name = message.text
+            await state.update_data(full_name=full_name)
+            
+            await message.answer(
+                "📱 **Telefon raqamini kiriting:**\n"
+                "Masalan: +998901234567"
             )
-            await message.answer(error_text)
-            return
-        
-        # Normalize phone number
-        if not clean_phone.startswith('+'):
-            clean_phone = '+' + clean_phone
-        
-        data = await state.get_data()
-        client_name = data.get('new_client_name')
-        
-        # Mock client creation
-        client_id = 123  # Mock client ID
-        client = {
-            'id': client_id,
-            'full_name': client_name,
-            'phone': clean_phone,
-            'role': 'client',
-            'language': 'uz',
-            'is_active': True
-        }
-        
-        await state.update_data(selected_client_id=client_id, selected_client=client)
-        
-        success_text = (
-            f"✅ Yangi mijoz muvaffaqiyatli yaratildi!\n\n"
-            f"👤 Ism: {client_name}\n"
-            f"📱 Telefon: {clean_phone}\n\n"
-            "Endi ariza turini tanlang:"
-        )
-        
-        # Show application type selection
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🔌 Ulanish arizasi",
-                    callback_data="ccs_app_type_connection"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔧 Texnik xizmat",
-                    callback_data="ccs_app_type_technical"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="ccs_cancel_application_creation"
-                )
+            
+            await state.set_state(StaffApplicationStates.entering_phone)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.message(StateFilter(StaffApplicationStates.entering_phone))
+    async def get_phone(message: Message, state: FSMContext):
+        """Get phone number"""
+        try:
+            phone = message.text
+            await state.update_data(phone=phone)
+            
+            await message.answer(
+                "📧 **Email manzilini kiriting:**\n"
+                "Masalan: xodim@example.com"
+            )
+            
+            await state.set_state(StaffApplicationStates.entering_email)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.message(StateFilter(StaffApplicationStates.entering_email))
+    async def get_email(message: Message, state: FSMContext):
+        """Get email"""
+        try:
+            email = message.text
+            await state.update_data(email=email)
+            
+            await message.answer(
+                "🎓 **Tajriba yillarini kiriting:**\n"
+                "Masalan: 3 yil"
+            )
+            
+            await state.set_state(StaffApplicationStates.entering_experience)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.message(StateFilter(StaffApplicationStates.entering_experience))
+    async def get_experience(message: Message, state: FSMContext):
+        """Get experience"""
+        try:
+            experience = message.text
+            await state.update_data(experience=experience)
+            
+            await message.answer(
+                "📝 **Qo'shimcha ma'lumotlar:**\n"
+                "Xodim haqida qo'shimcha ma'lumotlar (ixtiyoriy)"
+            )
+            
+            await state.set_state(StaffApplicationStates.entering_notes)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.message(StateFilter(StaffApplicationStates.entering_notes))
+    async def get_notes(message: Message, state: FSMContext):
+        """Get notes"""
+        try:
+            notes = message.text
+            await state.update_data(notes=notes)
+            
+            # Show confirmation
+            data = await state.get_data()
+            
+            type_names = {
+                'operator': 'Operator',
+                'technician': 'Texnik',
+                'supervisor': 'Supervisor',
+                'manager': 'Menejer'
+            }
+            
+            confirmation_text = (
+                f"📋 **Xodim arizasi tasdiqlash**\n\n"
+                f"👤 **To'liq ism:** {data.get('full_name', 'N/A')}\n"
+                f"📱 **Telefon:** {data.get('phone', 'N/A')}\n"
+                f"📧 **Email:** {data.get('email', 'N/A')}\n"
+                f"🎓 **Tajriba:** {data.get('experience', 'N/A')}\n"
+                f"👥 **Lavozim:** {type_names.get(data.get('application_type', 'N/A'), 'N/A')}\n"
+                f"📝 **Izoh:** {data.get('notes', 'Izoh yo\'q')}\n\n"
+                f"📅 **Sana:** {datetime.now().strftime('%d.%m.%Y %H:%M')}\n"
+                f"👨‍💼 **Yaratuvchi:** {message.from_user.full_name}\n\n"
+                f"Arizani tasdiqlaysizmi?"
+            )
+            
+            keyboard = [
+                [
+                    InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="confirm_staff_app"),
+                    InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_staff_app")
+                ]
             ]
-        ])
-        
-        await message.answer(success_text, reply_markup=keyboard)
-        await state.set_state(StaffApplicationStates.selecting_application_type)
-    
-    @router.callback_query(F.data.startswith("ccs_app_type_"))
-    async def handle_application_type_selection(callback: CallbackQuery, state: FSMContext):
-        """Handle application type selection"""
-        await callback.answer()
-        
-        app_type = callback.data.split("_")[-1]  # connection or technical
-        
-        if app_type == "connection":
-            await state.update_data(application_type='connection_request')
-            prompt_text = (
-                "🔌 Ulanish arizasi yaratish\n\n"
-                "Mijoz ma'lumotlari:\n"
-                "👤 Ism: {client_name}\n"
-                "📱 Telefon: {client_phone}\n\n"
-                "Ariza tavsifini kiriting:"
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await message.answer(
+                text=confirmation_text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
             )
-        else:
-            await state.update_data(application_type='technical_service')
-            prompt_text = (
-                "🔧 Texnik xizmat arizasi yaratish\n\n"
-                "Mijoz ma'lumotlari:\n"
-                "👤 Ism: {client_name}\n"
-                "📱 Telefon: {client_phone}\n\n"
-                "Muammo tavsifini kiriting:"
+            
+            await state.set_state(StaffApplicationStates.confirming)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.callback_query(F.data == "confirm_staff_app")
+    async def confirm_staff_application(callback: CallbackQuery, state: FSMContext):
+        """Confirm staff application"""
+        try:
+            await callback.answer()
+            
+            data = await state.get_data()
+            app_id = f"STAFF_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            
+            success_text = (
+                f"✅ **Xodim arizasi qabul qilindi!**\n\n"
+                f"🆔 **Ariza ID:** {app_id}\n"
+                f"👤 **Xodim:** {data.get('full_name', 'N/A')}\n"
+                f"📅 **Sana:** {datetime.now().strftime('%d.%m.%Y %H:%M')}\n\n"
+                f"Ariza muvaffaqiyatli yaratildi va guruhga yuborildi."
             )
-        
-        await callback.message.edit_text(prompt_text)
-        await state.set_state(StaffApplicationStates.entering_application_description)
-    
-    @router.message(StaffApplicationStates.entering_application_description)
-    async def handle_application_description(message: Message, state: FSMContext):
-        """Handle application description input"""
-        lang = 'uz'  # Default language
-        description = message.text.strip()
-        
-        if len(description) < 10:
-            error_text = "❌ Tavsif juda qisqa. Kamida 10 ta belgi kiriting."
-            await message.answer(error_text)
-            return
-        
-        await state.update_data(application_description=description)
-        
-        # Mock application creation
-        data = await state.get_data()
-        client = data.get('selected_client', {})
-        app_type = data.get('application_type', 'unknown')
-        
-        success_text = (
-            f"✅ Ariza muvaffaqiyatli yaratildi!\n\n"
-            f"📋 Ariza turi: {app_type}\n"
-            f"👤 Mijoz: {client.get('full_name', 'N/A')}\n"
-            f"📱 Telefon: {client.get('phone', 'N/A')}\n"
-            f"📝 Tavsif: {description}\n\n"
-            f"🎯 Ariza raqami: APP-{123:03d}\n"
-            f"📅 Yaratilgan: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        )
-        
-        await message.answer(success_text)
-        await state.clear()
-    
-    @router.callback_query(F.data == "ccs_create_new_client_btn")
-    async def handle_create_new_client_button(callback: CallbackQuery, state: FSMContext):
-        """Handle create new client button from search results"""
-        await callback.answer()
-        
-        lang = 'uz'  # Default language
-        
-        prompt_text = (
-            "➕ Yangi mijoz yaratish\n\n"
-            "Mijoz ismini kiriting:"
-        )
-        
-        await callback.message.edit_text(prompt_text)
-        await state.set_state(StaffApplicationStates.entering_new_client_name)
-    
-    @router.callback_query(F.data == "ccs_confirm_client_selection")
-    async def handle_confirm_client_selection(callback: CallbackQuery, state: FSMContext):
-        """Handle client selection confirmation"""
-        await callback.answer()
-        
-        lang = 'uz'  # Default language
-        
-        # Get client data from state
-        data = await state.get_data()
-        client = data.get('selected_client', {})
-        app_type = data.get('application_type', 'unknown')
-        
-        prompt_text = (
-            f"✅ Mijoz tanlandi!\n\n"
-            f"👤 Ism: {client.get('full_name', 'N/A')}\n"
-            f"📱 Telefon: {client.get('phone', 'N/A')}\n"
-            f"📋 Ariza turi: {app_type}\n\n"
-            f"Ariza tavsifini kiriting:"
-        )
-        
-        await callback.message.edit_text(prompt_text)
-        await state.set_state(StaffApplicationStates.entering_application_description)
-    
-    @router.callback_query(F.data.in_(["back", "orqaga", "назад"]))
-    async def supervisor_back(call: CallbackQuery, state: FSMContext):
-        """Go back to supervisor main menu"""
-        await call.answer()
-        
-        text = "Call Center Supervisor paneliga xush kelibsiz!"
-        await call.message.edit_text(text)
-        await state.clear()
+            
+            await callback.message.edit_text(
+                text=success_text,
+                parse_mode="Markdown"
+            )
+            
+            await state.clear()
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "cancel_staff_app")
+    async def cancel_staff_application(callback: CallbackQuery, state: FSMContext):
+        """Cancel staff application"""
+        try:
+            await callback.answer()
+            
+            await callback.message.edit_text(
+                "❌ **Ariza bekor qilindi**\n\n"
+                "Xodim arizasi yaratish bekor qilindi."
+            )
+            
+            await state.clear()
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router

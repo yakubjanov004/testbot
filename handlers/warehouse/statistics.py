@@ -1,476 +1,209 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+"""
+Warehouse Statistics Handler - Simplified Implementation
+
+This module handles statistics functionality for warehouse.
+"""
+
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.warehouse_buttons import warehouse_main_menu, warehouse_statistics_menu, statistics_period_menu
-from states.warehouse_states import WarehouseStatisticsStates
+from keyboards.warehouse_buttons import get_statistics_keyboard
+from states.warehouse_states import StatisticsStates
 
 def get_warehouse_statistics_router():
-    """Warehouse statistics router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("warehouse")
+    router = Router()
 
-    @router.message(F.text == "📊 Statistikalar")
-    async def statistics_handler(message: Message, state: FSMContext):
-        """Handle statistics and reports"""
+    @router.message(F.text.in_(["📊 Statistika", "📊 Статистика"]))
+    async def statistics_menu(message: Message, state: FSMContext):
+        """Show statistics menu"""
         try:
-            stats_text = "📊 Statistika va hisobotlar"
-            
-            await message.answer(
-                stats_text,
-                reply_markup=warehouse_statistics_menu('uz')
+            stats_text = (
+                "📊 **Statistika va hisobotlar**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
             )
-            await state.set_state(WarehouseStatisticsStates.statistics_menu)
+            
+            keyboard = get_statistics_keyboard()
+            await message.answer(
+                text=stats_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data == "daily_statistics")
-    async def daily_statistics_handler(callback: CallbackQuery, state: FSMContext):
+    async def daily_statistics(callback: CallbackQuery, state: FSMContext):
         """Show daily statistics"""
         try:
-            # Mock daily statistics data (like other modules)
-            stats = {
-                'items_added': 25,
-                'items_issued': 18,
-                'total_value': 1500000,
-                'low_stock_count': 3,
-                'turnover_rate': 85
+            await callback.answer()
+            
+            # Mock daily statistics
+            daily_stats = {
+                'total_items': 150,
+                'new_items': 5,
+                'issued_items': 8,
+                'low_stock_items': 3,
+                'out_of_stock_items': 1,
+                'total_value': 25000000,
+                'issued_value': 2000000
             }
             
-            text = "📊 Bugungi statistika:\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
+            text = (
+                f"📊 **Kunlik statistika**\n\n"
+                f"📦 **Inventar:**\n"
+                f"• Jami elementlar: {daily_stats['total_items']}\n"
+                f"• Yangi elementlar: {daily_stats['new_items']}\n"
+                f"• Chiqarilgan: {daily_stats['issued_items']}\n"
+                f"• Kam miqdordagi: {daily_stats['low_stock_items']}\n"
+                f"• Tugagan: {daily_stats['out_of_stock_items']}\n\n"
+                f"💰 **Moliyaviy:**\n"
+                f"• Jami qiymat: {daily_stats['total_value']:,} so'm\n"
+                f"• Chiqarilgan qiymat: {daily_stats['issued_value']:,} so'm"
+            )
             
-            await callback.message.edit_text(text)
-            await callback.answer()
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_stats_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "weekly_statistics")
-    async def weekly_statistics_handler(callback: CallbackQuery, state: FSMContext):
+    async def weekly_statistics(callback: CallbackQuery, state: FSMContext):
         """Show weekly statistics"""
         try:
-            # Mock weekly statistics data (like other modules)
-            stats = {
-                'items_added': 150,
-                'items_issued': 120,
-                'total_value': 8500000,
-                'low_stock_count': 8,
-                'turnover_rate': 78
-            }
-            
-            text = "📊 Haftalik statistika:\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
-            
-            await callback.message.edit_text(text)
             await callback.answer()
             
-        except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data == "monthly_statistics")
-    async def monthly_statistics_handler(callback: CallbackQuery, state: FSMContext):
-        """Show monthly statistics"""
-        try:
-            # Mock monthly statistics data (like other modules)
-            stats = {
-                'items_added': 650,
-                'items_issued': 580,
-                'total_value': 35000000,
-                'low_stock_count': 15,
-                'turnover_rate': 82
-            }
-            
-            text = "📊 Oylik statistika:\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
-            
-            await callback.message.edit_text(text)
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data == "turnover_statistics")
-    async def turnover_statistics_handler(callback: CallbackQuery, state: FSMContext):
-        """Show inventory turnover statistics"""
-        try:
-            # Mock turnover statistics data (like other modules)
-            stats = {
-                'turnover_rate': 75,
-                'top_turnover_items': [
-                    {'name': 'Cable', 'current_stock': 50, 'issued_quantity': 45, 'turnover_rate': 90},
-                    {'name': 'Connector', 'current_stock': 100, 'issued_quantity': 85, 'turnover_rate': 85},
-                    {'name': 'Router', 'current_stock': 10, 'issued_quantity': 8, 'turnover_rate': 80}
+            # Mock weekly statistics
+            weekly_stats = {
+                'total_items': 150,
+                'issued_items': 45,
+                'returned_items': 3,
+                'total_value': 25000000,
+                'issued_value': 5000000,
+                'popular_items': [
+                    {'name': 'Router TP-Link', 'issued': 15},
+                    {'name': 'Kabel UTP', 'issued': 25},
+                    {'name': 'TV antena', 'issued': 8}
                 ]
             }
             
-            text = "🔄 Aylanma statistikasi:\n\n"
-            text += f"📊 O'rtacha aylanma: {stats.get('turnover_rate', 0)}%\n\n"
-            text += f"🔝 Eng ko'p aylangan mahsulotlar:\n"
-            
-            for i, item in enumerate(stats['top_turnover_items'][:5], 1):
-                text += f"{i}. **{item['name']}**\n"
-                text += f"   📦 Zaxira: {item['current_stock']}\n"
-                text += f"   📤 Chiqarilgan: {item['issued_quantity']}\n"
-                text += f"   🔄 Aylanma: {item['turnover_rate']}%\n\n"
-            
-            await callback.message.edit_text(text, parse_mode="Markdown")
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("Statistikani olishda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data == "performance_report")
-    async def performance_report_handler(callback: CallbackQuery, state: FSMContext):
-        """Show performance report"""
-        try:
-            # Mock performance data (like other modules)
-            daily_stats = {'items_added': 25, 'items_issued': 18, 'turnover_rate': 85}
-            weekly_stats = {'items_added': 150, 'items_issued': 120, 'turnover_rate': 78}
-            monthly_stats = {'items_added': 650, 'items_issued': 580, 'turnover_rate': 82, 'total_value': 35000000, 'low_stock_count': 15}
-            
-            text = "📈 Samaradorlik hisoboti:\n\n"
-            
-            # Daily performance
-            text += f"📅 **Bugun:**\n"
-            text += f"   📦 Qo'shilgan: {daily_stats.get('items_added', 0)}\n"
-            text += f"   📤 Chiqarilgan: {daily_stats.get('items_issued', 0)}\n"
-            text += f"   🔄 Aylanma: {daily_stats.get('turnover_rate', 0)}%\n\n"
-            
-            # Weekly performance
-            text += f"📅 **Bu hafta:**\n"
-            text += f"   📦 Qo'shilgan: {weekly_stats.get('items_added', 0)}\n"
-            text += f"   📤 Chiqarilgan: {weekly_stats.get('items_issued', 0)}\n"
-            text += f"   🔄 Aylanma: {weekly_stats.get('turnover_rate', 0)}%\n\n"
-            
-            # Monthly performance
-            text += f"📅 **Bu oy:**\n"
-            text += f"   📦 Qo'shilgan: {monthly_stats.get('items_added', 0)}\n"
-            text += f"   📤 Chiqarilgan: {monthly_stats.get('items_issued', 0)}\n"
-            text += f"   🔄 Aylanma: {monthly_stats.get('turnover_rate', 0)}%\n\n"
-            
-            # Overall status
-            total_value = monthly_stats.get('total_value', 0)
-            low_stock = monthly_stats.get('low_stock_count', 0)
-            
-            text += f"💰 **Umumiy qiymat:** {total_value:,.0f} so'm\n"
-            text += f"⚠️ **Kam zaxira:** {low_stock} ta mahsulot\n"
-            
-            await callback.message.edit_text(text, parse_mode="Markdown")
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("Hisobotni olishda xatolik")
-            await callback.answer()
-
-    @router.message(F.text == "📦 Inventarizatsiya statistikasi")
-    async def inventory_stats_reply_handler(message: Message, state: FSMContext):
-        """Show inventory statistics"""
-        try:
-            # Mock inventory data (like other modules)
-            stats = {
-                'items_added': 25,
-                'items_issued': 18,
-                'total_value': 1500000,
-                'low_stock_count': 3,
-                'turnover_rate': 85
-            }
-            
-            text = "📦 Inventarizatsiya statistikasi (bugun):\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
-            
-            await message.answer(text, reply_markup=warehouse_statistics_menu('uz'))
-            await state.set_state(WarehouseStatisticsStates.statistics_menu)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.message(F.text == "📋 Buyurtmalar statistikasi")
-    async def orders_stats_reply_handler(message: Message, state: FSMContext):
-        """Show orders statistics"""
-        try:
-            # Mock orders data (like other modules)
-            stats = {
-                'items_added': 150,
-                'items_issued': 120,
-                'total_value': 8500000,
-                'low_stock_count': 8,
-                'turnover_rate': 78
-            }
-            
-            text = "📋 Buyurtmalar statistikasi (hafta):\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
-            
-            await message.answer(text, reply_markup=warehouse_statistics_menu('uz'))
-            await state.set_state(WarehouseStatisticsStates.statistics_menu)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.message(F.text == "⚠️ Kam zaxira statistikasi")
-    async def low_stock_stats_reply_handler(message: Message, state: FSMContext):
-        """Show low stock statistics"""
-        try:
-            # Mock low stock data (like other modules)
-            items = [
-                {'name': 'Cable', 'quantity': 5, 'min_quantity': 10},
-                {'name': 'Connector', 'quantity': 8, 'min_quantity': 15},
-                {'name': 'Router', 'quantity': 2, 'min_quantity': 5}
-            ]
-            
-            if items:
-                text = "⚠️ Kam zaxira statistikasi:\n\n"
-                for i, item in enumerate(items, 1):
-                    text += f"{i}. {item['name']} — {item['quantity']} dona (min: {item['min_quantity']})\n"
-            else:
-                text = "📦 Barcha mahsulotlar zaxirasi yetarli"
-            
-            await message.answer(text, reply_markup=warehouse_statistics_menu('uz'))
-            await state.set_state(WarehouseStatisticsStates.statistics_menu)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.message(F.text == "💰 Moliyaviy hisobot")
-    async def financial_stats_reply_handler(message: Message, state: FSMContext):
-        """Show financial report"""
-        try:
-            # Mock financial data (like other modules)
-            stats = {
-                'items_added': 650,
-                'items_issued': 580,
-                'total_value': 35000000
-            }
-            
-            text = "💰 Moliyaviy hisobot (oy):\n\n"
-            text += f"📦 Omborga kiritilgan mahsulotlar: {stats.get('items_added', 0)} dona\n"
-            text += f"📤 Ombordan chiqarilgan mahsulotlar: {stats.get('items_issued', 0)} dona\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            
-            await message.answer(text, reply_markup=warehouse_statistics_menu('uz'))
-            await state.set_state(WarehouseStatisticsStates.statistics_menu)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.message(F.text == "📆 Vaqt oralig'idagi statistika")
-    async def period_stats_reply_handler(message: Message, state: FSMContext):
-        """Show period statistics menu"""
-        try:
-            await message.answer(
-                "Qaysi davr uchun statistikani ko'rmoqchisiz?",
-                reply_markup=statistics_period_menu('uz')
+            text = (
+                f"📊 **Haftalik statistika**\n\n"
+                f"📦 **Inventar:**\n"
+                f"• Jami elementlar: {weekly_stats['total_items']}\n"
+                f"• Chiqarilgan: {weekly_stats['issued_items']}\n"
+                f"• Qaytarilgan: {weekly_stats['returned_items']}\n\n"
+                f"💰 **Moliyaviy:**\n"
+                f"• Jami qiymat: {weekly_stats['total_value']:,} so'm\n"
+                f"• Chiqarilgan qiymat: {weekly_stats['issued_value']:,} so'm\n\n"
+                f"🏆 **Eng ko'p chiqariladigan elementlar:**\n"
             )
-            await state.set_state(WarehouseStatisticsStates.period_menu)
+            
+            for item in weekly_stats['popular_items']:
+                text += f"• {item['name']}: {item['issued']} dona\n"
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_stats_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.message(F.text == "📈 Oylik statistika")
-    async def monthly_stats_reply_handler(message: Message, state: FSMContext):
-        """Show monthly statistics"""
+    @router.callback_query(F.data == "inventory_report")
+    async def inventory_report(callback: CallbackQuery, state: FSMContext):
+        """Show inventory report"""
         try:
-            # Mock monthly data (like other modules)
-            stats = {
-                'items_added': 650,
-                'items_issued': 580,
-                'total_value': 35000000,
-                'low_stock_count': 15,
-                'turnover_rate': 82
+            await callback.answer()
+            
+            # Mock inventory report data
+            inventory_report = {
+                'categories': [
+                    {'name': 'Internet jihozlari', 'count': 25, 'value': 10000000},
+                    {'name': 'TV jihozlari', 'count': 15, 'value': 5000000},
+                    {'name': 'Kabellar', 'count': 50, 'value': 2000000},
+                    {'name': 'Qo\'shimcha jihozlari', 'count': 30, 'value': 3000000}
+                ],
+                'low_stock_items': [
+                    {'name': 'TV antena', 'quantity': 8, 'min_quantity': 10},
+                    {'name': 'Modem', 'quantity': 2, 'min_quantity': 5}
+                ],
+                'out_of_stock_items': [
+                    {'name': 'Eski router', 'quantity': 0, 'min_quantity': 2}
+                ]
             }
             
-            text = "📈 Oylik statistika:\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
+            text = (
+                "📊 **Inventar hisoboti**\n\n"
+                "📋 **Kategoriyalar bo'yicha:**\n"
+            )
             
-            await message.answer(text)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.message(F.text == "📅 Kunlik statistika")
-    async def daily_stats_reply_handler(message: Message, state: FSMContext):
-        """Show daily statistics"""
-        try:
-            # Mock daily data (like other modules)
-            stats = {
-                'items_added': 25,
-                'items_issued': 18,
-                'total_value': 1500000,
-                'low_stock_count': 3,
-                'turnover_rate': 85
-            }
-            
-            text = "📅 Kunlik statistika:\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
-            
-            await message.answer(text)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.message(F.text == "📊 Haftalik statistika")
-    async def weekly_stats_reply_handler(message: Message, state: FSMContext):
-        """Show weekly statistics"""
-        try:
-            # Mock weekly data (like other modules)
-            stats = {
-                'items_added': 150,
-                'items_issued': 120,
-                'total_value': 8500000,
-                'low_stock_count': 8,
-                'turnover_rate': 78
-            }
-            
-            text = "📊 Haftalik statistika:\n\n"
-            text += f"📦 Qo'shilgan mahsulotlar: {stats.get('items_added', 0)}\n"
-            text += f"📤 Chiqarilgan mahsulotlar: {stats.get('items_issued', 0)}\n"
-            text += f"💰 Umumiy qiymat: {stats.get('total_value', 0):,.0f} so'm\n"
-            text += f"⚠️ Kam zaxira: {stats.get('low_stock_count', 0)} ta\n"
-            text += f"🔄 Aylanma tezligi: {stats.get('turnover_rate', 0)}%\n"
-            
-            await message.answer(text)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.message(F.text == "🗓 Yillik statistika")
-    async def yearly_stats_reply_handler(message: Message, state: FSMContext):
-        """Show yearly statistics"""
-        try:
-            text = "🗓 Yillik statistika: tez orada to'liq statistikalar qo'shiladi."
-            await message.answer(text)
-            
-        except Exception as e:
-            await message.answer("Statistikani olishda xatolik")
-
-    @router.callback_query(F.data == "back")
-    async def statistics_back_reply_handler(callback: CallbackQuery, state: FSMContext):
-        """Handle back navigation"""
-        try:
-            current_state = await state.get_state()
-
-            if current_state == WarehouseStatisticsStates.viewing_stats:
-                # Go back to period menu
-                await callback.message.edit_text(
-                    "Qaysi davr uchun statistikani ko'rmoqchisiz?",
-                    reply_markup=statistics_period_menu('uz')
+            for category in inventory_report['categories']:
+                text += (
+                    f"• {category['name']}: {category['count']} dona, "
+                    f"{category['value']:,} so'm\n"
                 )
-                await state.set_state(WarehouseStatisticsStates.period_menu)
-
-            elif current_state == WarehouseStatisticsStates.period_menu:
-                # Go back to statistics menu
-                await callback.message.edit_text(
-                    "Statistikalar menyusi",
-                    reply_markup=warehouse_statistics_menu('uz')
+            
+            text += f"\n⚠️ **Kam miqdordagi elementlar:**\n"
+            for item in inventory_report['low_stock_items']:
+                text += (
+                    f"• {item['name']}: {item['quantity']}/{item['min_quantity']} dona\n"
                 )
-                await state.set_state(WarehouseStatisticsStates.statistics_menu)
-
-            elif current_state == WarehouseStatisticsStates.statistics_menu:
-                # Go back to main menu
-                await callback.message.edit_text(
-                    "Ombor bosh menyusi",
-                    reply_markup=warehouse_main_menu('uz')
+            
+            text += f"\n❌ **Tugagan elementlar:**\n"
+            for item in inventory_report['out_of_stock_items']:
+                text += (
+                    f"• {item['name']}: {item['quantity']}/{item['min_quantity']} dona\n"
                 )
-                await state.set_state(WarehouseStatisticsStates.main_menu)
-
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_stats_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+            
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "back_to_stats_menu")
+    async def back_to_statistics_menu(callback: CallbackQuery, state: FSMContext):
+        """Back to statistics menu"""
+        try:
+            await callback.answer()
+            
+            stats_text = (
+                "📊 **Statistika va hisobotlar**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+            )
+            
+            keyboard = get_statistics_keyboard()
+            await callback.message.edit_text(
+                text=stats_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router
-
-# Mock functions (like other modules)
-async def get_warehouse_daily_statistics():
-    """Get daily warehouse statistics (mock function like other modules)"""
-    try:
-        return {
-            'items_added': 25,
-            'items_issued': 18,
-            'total_value': 1500000,
-            'low_stock_count': 3,
-            'turnover_rate': 85
-        }
-    except Exception as e:
-        return None
-
-async def get_warehouse_weekly_statistics():
-    """Get weekly warehouse statistics (mock function like other modules)"""
-    try:
-        return {
-            'items_added': 150,
-            'items_issued': 120,
-            'total_value': 8500000,
-            'low_stock_count': 8,
-            'turnover_rate': 78
-        }
-    except Exception as e:
-        return None
-
-async def get_warehouse_monthly_statistics():
-    """Get monthly warehouse statistics (mock function like other modules)"""
-    try:
-        return {
-            'items_added': 650,
-            'items_issued': 580,
-            'total_value': 35000000,
-            'low_stock_count': 15,
-            'turnover_rate': 82
-        }
-    except Exception as e:
-        return None
-
-async def get_inventory_turnover_statistics():
-    """Get inventory turnover statistics (mock function like other modules)"""
-    try:
-        return {
-            'turnover_rate': 75,
-            'top_turnover_items': [
-                {'name': 'Cable', 'current_stock': 50, 'issued_quantity': 45, 'turnover_rate': 90},
-                {'name': 'Connector', 'current_stock': 100, 'issued_quantity': 85, 'turnover_rate': 85},
-                {'name': 'Router', 'current_stock': 10, 'issued_quantity': 8, 'turnover_rate': 80}
-            ]
-        }
-    except Exception as e:
-        return None
-
-async def get_low_stock_inventory_items():
-    """Get low stock inventory items (mock function like other modules)"""
-    try:
-        return [
-            {'name': 'Cable', 'quantity': 5, 'min_quantity': 10},
-            {'name': 'Connector', 'quantity': 8, 'min_quantity': 15},
-            {'name': 'Router', 'quantity': 2, 'min_quantity': 5}
-        ]
-    except Exception as e:
-        return []

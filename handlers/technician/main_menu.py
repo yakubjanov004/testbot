@@ -1,35 +1,23 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
-from datetime import datetime
-from keyboards.technician_buttons import get_technician_main_menu_keyboard, get_back_technician_keyboard, get_language_keyboard, get_reports_keyboard, get_help_request_types_keyboard
 from states.technician_states import TechnicianMainMenuStates
 
 def get_technician_main_menu_router():
-    """Technician main menu router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("technician")
+    """Technician main menu router - Simplified Implementation"""
+    router = Router()
 
     @router.message(F.text.in_(["🔧 Technician", "🔧 Texnik", "/start"]))
     async def technician_start(message: Message, state: FSMContext):
         """Technician start handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
             await state.set_state(TechnicianMainMenuStates.main_menu)
-            lang = user.get('language', 'uz')
             
-            welcome_text = f"""
+            welcome_text = """
 🔧 <b>Technician Panel</b>
 
-👋 Xush kelibsiz, {user.get('full_name', 'Texnik xodimi')}!
+👋 Xush kelibsiz, Texnik xodimi!
 
 📋 <b>Sizning vazifalaringiz:</b>
 • 📥 Controllerdan kelgan zayavkalarni qabul qilish
@@ -39,11 +27,15 @@ def get_technician_main_menu_router():
 • ✅ Zayavkalarni yakunlash va mijozga xabar berish
             """
             
-            await message.answer(
-                welcome_text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_technician_main_menu_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📥 Inbox", callback_data="tech_inbox")],
+                [InlineKeyboardButton(text="📋 Vazifalarim", callback_data="tech_tasks")],
+                [InlineKeyboardButton(text="📊 Hisobotlar", callback_data="tech_reports")],
+                [InlineKeyboardButton(text="🆘 Yordam", callback_data="tech_help")],
+                [InlineKeyboardButton(text="🌐 Tilni o'zgartirish", callback_data="tech_language")]
+            ])
+            
+            await message.answer(welcome_text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -52,31 +44,26 @@ def get_technician_main_menu_router():
     async def tech_back_to_main_menu(callback: CallbackQuery, state: FSMContext):
         """Back to main menu handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
             await state.set_state(TechnicianMainMenuStates.main_menu)
-            lang = user.get('language', 'uz')
             
-            welcome_text = f"""
+            welcome_text = """
 🔧 <b>Technician Panel</b>
 
-👤 {user.get('full_name', 'Texnik xodimi')}
+👤 Texnik xodimi
 📊 Asosiy menyu
 
 Kerakli bo'limni tanlang:
             """
             
-            await callback.message.edit_text(
-                welcome_text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_technician_main_menu_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📥 Inbox", callback_data="tech_inbox")],
+                [InlineKeyboardButton(text="📋 Vazifalarim", callback_data="tech_tasks")],
+                [InlineKeyboardButton(text="📊 Hisobotlar", callback_data="tech_reports")],
+                [InlineKeyboardButton(text="🆘 Yordam", callback_data="tech_help")],
+                [InlineKeyboardButton(text="🌐 Tilni o'zgartirish", callback_data="tech_language")]
+            ])
+            
+            await callback.message.edit_text(welcome_text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
@@ -93,21 +80,15 @@ Kerakli bo'limni tanlang:
     async def change_language_handler(message: Message, state: FSMContext):
         """Change language handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
             text = "🌐 Tilni tanlang:"
             
-            await message.answer(
-                text,
-                reply_markup=get_language_keyboard()
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="tech_lang_uz")],
+                [InlineKeyboardButton(text="🇷🇺 Русский", callback_data="tech_lang_ru")],
+                [InlineKeyboardButton(text="🇬🇧 English", callback_data="tech_lang_en")]
+            ])
+            
+            await message.answer(text, reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -117,14 +98,6 @@ Kerakli bo'limni tanlang:
         """Set language callback"""
         try:
             new_lang = callback.data.replace("tech_lang_", "")
-            
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': new_lang,
-                'role': 'technician'
-            }
             
             text = "✅ Til muvaffaqiyatli o'zgartirildi!"
             await callback.answer(text, show_alert=True)
@@ -138,17 +111,7 @@ Kerakli bo'limni tanlang:
     async def my_tasks_handler(message: Message, state: FSMContext):
         """My tasks handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 📋 <b>Vazifalarim</b>
 
 🔧 Texnik xizmat arizalari
@@ -159,11 +122,14 @@ Kerakli bo'limni tanlang:
 Kerakli bo'limni tanlang:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_technician_main_menu_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📥 Inbox", callback_data="tech_inbox")],
+                [InlineKeyboardButton(text="📊 Hisobotlar", callback_data="tech_reports")],
+                [InlineKeyboardButton(text="🆘 Yordam", callback_data="tech_help")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -172,17 +138,7 @@ Kerakli bo'limni tanlang:
     async def reports_handler(message: Message, state: FSMContext):
         """Reports handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 📊 <b>Hisobotlar</b>
 
 📈 Kunlik hisobot
@@ -193,11 +149,14 @@ Kerakli bo'limni tanlang:
 Kerakli hisobotni tanlang:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_reports_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📈 Kunlik hisobot", callback_data="tech_daily_report")],
+                [InlineKeyboardButton(text="📊 Haftalik hisobot", callback_data="tech_weekly_report")],
+                [InlineKeyboardButton(text="📋 Oylik hisobot", callback_data="tech_monthly_report")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -206,17 +165,7 @@ Kerakli hisobotni tanlang:
     async def help_handler(message: Message, state: FSMContext):
         """Help handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 🆘 <b>Yordam</b>
 
 📞 Manager bilan bog'lanish
@@ -227,11 +176,15 @@ Kerakli hisobotni tanlang:
 Kerakli yordam turini tanlang:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_help_request_types_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📞 Manager bilan bog'lanish", callback_data="tech_contact_manager")],
+                [InlineKeyboardButton(text="🔧 Texnik yordam", callback_data="tech_technical_help")],
+                [InlineKeyboardButton(text="📦 Ombor bilan bog'lanish", callback_data="tech_warehouse_help")],
+                [InlineKeyboardButton(text="🚨 Shoshilinch holatlar", callback_data="tech_emergency_help")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -240,17 +193,7 @@ Kerakli yordam turini tanlang:
     async def inbox_handler(message: Message, state: FSMContext):
         """Inbox handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 📥 <b>Inbox</b>
 
 📋 Tayinlangan arizalar
@@ -260,11 +203,14 @@ Kerakli yordam turini tanlang:
 Kerakli bo'limni tanlang:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_technician_main_menu_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Tayinlangan arizalar", callback_data="tech_assigned_applications")],
+                [InlineKeyboardButton(text="📊 Holatlar", callback_data="tech_status_overview")],
+                [InlineKeyboardButton(text="📈 Statistika", callback_data="tech_inbox_stats")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -273,17 +219,7 @@ Kerakli bo'limni tanlang:
     async def technical_service_handler(message: Message, state: FSMContext):
         """Technical service handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 🔧 <b>Texnik xizmat</b>
 
 🛠️ Muammolarni hal qilish
@@ -294,11 +230,15 @@ Kerakli bo'limni tanlang:
 Kerakli bo'limni tanlang:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_technician_main_menu_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🛠️ Muammolarni hal qilish", callback_data="tech_solve_issues")],
+                [InlineKeyboardButton(text="🔍 Diagnostika", callback_data="tech_diagnostics")],
+                [InlineKeyboardButton(text="📦 Materiallar", callback_data="tech_materials")],
+                [InlineKeyboardButton(text="✅ Yakunlash", callback_data="tech_completion")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -307,17 +247,7 @@ Kerakli bo'limni tanlang:
     async def contact_manager_handler(message: Message, state: FSMContext):
         """Contact manager handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 📞 <b>Manager bilan bog'lanish</b>
 
 👤 Manager: +998901234567
@@ -327,11 +257,12 @@ Kerakli bo'limni tanlang:
 Xabar yuborish uchun tugmani bosing:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_back_technician_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📞 Xabar yuborish", callback_data="tech_send_message_manager")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -340,17 +271,7 @@ Xabar yuborish uchun tugmani bosing:
     async def technical_help_handler(message: Message, state: FSMContext):
         """Technical help handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 🔧 <b>Texnik yordam</b>
 
 📞 Texnik yordam: +998901234568
@@ -360,11 +281,12 @@ Xabar yuborish uchun tugmani bosing:
 Muammo bo'lsa bog'laning:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_back_technician_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📞 Bog'lanish", callback_data="tech_contact_support")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -373,17 +295,7 @@ Muammo bo'lsa bog'laning:
     async def contact_warehouse_handler(message: Message, state: FSMContext):
         """Contact warehouse handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 📦 <b>Ombor bilan bog'lanish</b>
 
 👤 Ombor: +998901234569
@@ -393,11 +305,12 @@ Muammo bo'lsa bog'laning:
 Material kerak bo'lsa bog'laning:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_back_technician_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📦 Material so'rash", callback_data="tech_request_materials")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -406,17 +319,7 @@ Material kerak bo'lsa bog'laning:
     async def emergency_handler(message: Message, state: FSMContext):
         """Emergency handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 🚨 <b>Shoshilinch holatlar</b>
 
 📞 Shoshilinch: +998901234570
@@ -427,34 +330,14 @@ Material kerak bo'lsa bog'laning:
 Shoshilinch holatda darhol bog'laning!
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_back_technician_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🚨 Shoshilinch chaqirish", callback_data="tech_emergency_call")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_main_menu")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
 
     return router
-
-# Mock functions (like other modules)
-async def get_technician_by_telegram_id(telegram_id: int):
-    """Get technician by telegram id (mock function like other modules)"""
-    try:
-        return {
-            'id': 1,
-            'full_name': 'Technician xodimi',
-            'language': 'uz',
-            'role': 'technician',
-            'telegram_id': telegram_id
-        }
-    except Exception as e:
-        return None
-
-async def update_technician_language(technician_id: int, new_language: str):
-    """Update technician language (mock function like other modules)"""
-    try:
-        return True
-    except Exception as e:
-        return False

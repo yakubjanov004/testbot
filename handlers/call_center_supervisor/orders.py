@@ -1,328 +1,208 @@
 """
-Call Center Supervisor Orders Handler
-Manages orders for call center supervisor
+Call Center Supervisor Orders Handler - Simplified Implementation
+
+This module handles order management for call center supervisors.
 """
 
-from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from typing import Optional, Dict, Any
-
-# Keyboard imports
-from keyboards.call_center_supervisor_buttons import get_orders_menu, get_order_actions_menu
-
-# States imports
-from states.call_center_supervisor_states import CallCenterSupervisorOrdersStates
+from keyboards.call_center_supervisor_buttons import get_orders_keyboard
+from states.call_center_supervisor_states import OrdersStates
 
 def get_call_center_supervisor_orders_router():
-    """Get call center supervisor orders router"""
     router = Router()
 
-    @router.message(F.text.in_(['📋 Buyurtmalar', '📋 Заказы']))
-    async def call_center_supervisor_orders(message: Message, state: FSMContext):
-        """Handle orders"""
-        lang = 'uz'  # Default language
-        
-        # Mock orders data
-        orders = [
-            {
-                'id': 1,
-                'order_number': 'ORD-001',
-                'client_name': 'Ahmad Karimov',
-                'service_type': 'Internet xizmati',
-                'status': 'Yangi',
-                'assigned_to': 'Aziz Karimov',
-                'created_at': '2024-01-15 10:30'
-            },
-            {
-                'id': 2,
-                'order_number': 'ORD-002',
-                'client_name': 'Malika Yusupova',
-                'service_type': 'TV xizmati',
-                'status': 'Jarayonda',
-                'assigned_to': 'Malika Yusupova',
-                'created_at': '2024-01-15 09:15'
-            }
-        ]
-        
-        if not orders:
-            text = "📋 Yangi buyurtmalar yo'q."
-            await message.answer(text)
-            await state.clear()
-        else:
-            text = f"📋 <b>Buyurtmalar ({len(orders)})</b>\n\n"
-            for i, order in enumerate(orders[:10], 1):
-                text += f"{i}. {order.get('order_number', 'N/A')}\n"
-                text += f"   👤 {order.get('client_name', 'N/A')}\n"
-                text += f"   📝 {order.get('service_type', 'N/A')}\n"
-                text += f"   📊 {order.get('status', 'N/A')}\n"
-                text += f"   👨‍💼 {order.get('assigned_to', 'N/A')}\n"
-                text += f"   ⏰ {order.get('created_at', 'N/A')}\n\n"
-            
-            await message.answer(
-                text,
-                reply_markup=get_orders_menu(lang)
-            )
-            await state.set_state(CallCenterSupervisorOrdersStates.viewing_orders)
-
-    @router.message(CallCenterSupervisorOrdersStates.viewing_orders, F.text.in_(['📖 Ko\'rish', '📖 Просмотр']))
-    async def call_center_supervisor_view_order(message: Message, state: FSMContext):
-        """Handle view order"""
-        lang = 'uz'  # Default language
-        
-        text = "📖 Qaysi buyurtmani ko'rmoqchisiz?\nBuyurtma raqamini kiriting:"
-        
-        await message.answer(text)
-        await state.set_state(CallCenterSupervisorOrdersStates.entering_order_number)
-
-    @router.message(CallCenterSupervisorOrdersStates.entering_order_number)
-    async def call_center_supervisor_process_order_number(message: Message, state: FSMContext):
-        """Process order number"""
-        lang = 'uz'  # Default language
-        
-        # Validate order number
+    @router.message(F.text.in_(["📋 Buyurtmalar", "📋 Заказы"]))
+    async def orders_menu(message: Message, state: FSMContext):
+        """Show orders menu"""
         try:
-            order_number = int(message.text)
-            if order_number < 1 or order_number > 10:
-                raise ValueError("Invalid number")
-        except ValueError:
-            text = "❌ Noto'g'ri raqam. 1-10 oralig'ida kiriting."
-            await message.answer(text)
-            await state.clear()
-            return
-        
-        # Mock order details
-        order_details = {
-            'id': order_number,
-            'order_number': f'ORD-{order_number:03d}',
-            'client_name': 'Test Client',
-            'service_type': 'Internet xizmati',
-            'status': 'Yangi',
-            'assigned_to': 'Aziz Karimov',
-            'created_at': '2024-01-15 10:30',
-            'description': f'Bu {order_number} raqamli buyurtma tafsilotlari'
-        }
-        
-        text = (
-            f"📋 <b>Buyurtma #{order_number}</b>\n\n"
-            f"🔢 <b>Buyurtma raqami:</b> {order_details.get('order_number', 'N/A')}\n"
-            f"👤 <b>Mijoz:</b> {order_details.get('client_name', 'N/A')}\n"
-            f"📝 <b>Xizmat turi:</b> {order_details.get('service_type', 'N/A')}\n"
-            f"📊 <b>Status:</b> {order_details.get('status', 'N/A')}\n"
-            f"👨‍💼 <b>Tayinlangan:</b> {order_details.get('assigned_to', 'N/A')}\n"
-            f"⏰ <b>Sana:</b> {order_details.get('created_at', 'N/A')}\n\n"
-            f"📄 <b>Tavsif:</b>\n{order_details.get('description', 'Tavsif yo\'q')}"
-        )
-        
-        await message.answer(
-            text,
-            reply_markup=get_order_actions_menu(lang)
-        )
-        await state.update_data(current_order_id=order_details.get('id'))
-        await state.set_state(CallCenterSupervisorOrdersStates.viewing_order_details)
+            orders_text = (
+                "📋 **Buyurtmalar boshqaruvi**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+            )
+            
+            keyboard = get_orders_keyboard()
+            await message.answer(
+                text=orders_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @router.message(CallCenterSupervisorOrdersStates.viewing_order_details, F.text.in_(['✅ Tasdiqlash', '✅ Подтверждение']))
-    async def call_center_supervisor_confirm_order(message: Message, state: FSMContext):
-        """Confirm order"""
-        lang = 'uz'  # Default language
-        
-        success_text = "✅ Buyurtma tasdiqlandi!"
-        
-        await message.answer(success_text)
-        await state.clear()
-
-    @router.message(CallCenterSupervisorOrdersStates.viewing_orders, F.text.in_(['⬅️ Orqaga', '⬅️ Назад']))
-    async def call_center_supervisor_orders_back(message: Message, state: FSMContext):
-        """Handle back to main menu"""
-        lang = 'uz'  # Default language
-        
-        await message.answer("🏠 Bosh sahifaga qaytdingiz")
-        await state.clear()
-
-    # Callback handlers for inline buttons
-    @router.callback_query(F.data.startswith("order_details_"))
-    async def show_order_details(call: CallbackQuery):
-        """Show detailed order information"""
-        await call.answer()
-        
-        order_id = int(call.data.split("_")[-1])
-        
-        text = (
-            f"📋 <b>Buyurtma #{order_id}</b>\n\n"
-            f"👤 <b>Mijoz:</b> Bekzod Toirov\n"
-            f"📱 <b>Telefon:</b> +998 90 123 45 67\n"
-            f"📍 <b>Manzil:</b> Toshkent shahri, Chilonzor-5, 23-uy\n"
-            f"📝 <b>Tavsif:</b> Internet uzulib qolgan, routerda signal bor lekin chiqmayapti\n"
-            f"📅 <b>Sana:</b> 2025-08-05 10:24\n"
-            f"📊 <b>Status:</b> Jarayonda\n"
-            f"👨‍💼 <b>Mas\'ul:</b> Aziz Karimov\n\n"
-            f"Amalni tanlang:"
-        )
-        
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="👨‍💼 Mas'ul tayinlash",
-                    callback_data=f"assign_supervisor_{order_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📊 Status o'zgartirish",
-                    callback_data=f"change_status_{order_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📞 Call Center ga yuborish",
-                    callback_data=f"transfer_to_call_center_{order_id}"
-                )
+    @router.callback_query(F.data == "view_all_orders")
+    async def view_all_orders(callback: CallbackQuery, state: FSMContext):
+        """View all orders"""
+        try:
+            await callback.answer()
+            
+            # Mock orders data
+            orders = [
+                {
+                    'id': 'ORD001',
+                    'client': 'Ahmad Karimov',
+                    'type': 'Ulanish',
+                    'status': 'Faol',
+                    'priority': 'Yuqori',
+                    'created': '2024-01-15 10:30',
+                    'assigned_to': 'Aziz Karimov'
+                },
+                {
+                    'id': 'ORD002',
+                    'client': 'Malika Yusupova',
+                    'type': 'Texnik xizmat',
+                    'status': 'Kutilmoqda',
+                    'priority': 'O\'rta',
+                    'created': '2024-01-15 11:45',
+                    'assigned_to': 'Malika Yusupova'
+                },
+                {
+                    'id': 'ORD003',
+                    'client': 'Bekzod Toirov',
+                    'type': 'Ulanish',
+                    'status': 'Bajarilgan',
+                    'priority': 'Past',
+                    'created': '2024-01-15 09:15',
+                    'assigned_to': 'Bekzod Toirov'
+                }
             ]
-        ])
-        
-        await call.message.edit_text(text, reply_markup=keyboard)
+            
+            text = "📋 **Barcha buyurtmalar**\n\n"
+            for order in orders:
+                status_emoji = {
+                    'Faol': '🟡',
+                    'Kutilmoqda': '🟠',
+                    'Bajarilgan': '🟢'
+                }.get(order['status'], '⚪')
+                
+                priority_emoji = {
+                    'Yuqori': '🔴',
+                    'O\'rta': '🟡',
+                    'Past': '🟢'
+                }.get(order['priority'], '⚪')
+                
+                text += (
+                    f"{status_emoji} **{order['id']}** - {order['client']}\n"
+                    f"📋 Tur: {order['type']}\n"
+                    f"{priority_emoji} Daraja: {order['priority']}\n"
+                    f"👤 Bajaruvchi: {order['assigned_to']}\n"
+                    f"📅 Sana: {order['created']}\n\n"
+                )
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_orders_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data.startswith("assign_supervisor_"))
-    async def assign_supervisor(call: CallbackQuery):
-        """Assign supervisor to order"""
-        await call.answer()
-        
-        order_id = int(call.data.split("_")[-1])
-        text = "Mas'ulni tanlang:"
-        
-        supervisors = [
-            {"id": 1, "full_name": "Aziz Karimov", "active_orders": 2},
-            {"id": 2, "full_name": "Bekzod Toirov", "active_orders": 1},
-            {"id": 3, "full_name": "Davron Alimov", "active_orders": 0}
-        ]
-        
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(
-                text=f"👨‍💼 {sup['full_name']} ({sup['active_orders']} buyurtma)",
-                callback_data=f"confirm_assign_supervisor_{order_id}_{sup['id']}"
-            )] for sup in supervisors
-        ])
-        await call.message.edit_text(text, reply_markup=keyboard)
+    @router.callback_query(F.data == "view_pending_orders")
+    async def view_pending_orders(callback: CallbackQuery, state: FSMContext):
+        """View pending orders"""
+        try:
+            await callback.answer()
+            
+            # Mock pending orders
+            pending_orders = [
+                {
+                    'id': 'ORD002',
+                    'client': 'Malika Yusupova',
+                    'type': 'Texnik xizmat',
+                    'priority': 'O\'rta',
+                    'created': '2024-01-15 11:45',
+                    'description': 'Internet tezligi sekin'
+                }
+            ]
+            
+            text = "⏳ **Kutilayotgan buyurtmalar**\n\n"
+            for order in pending_orders:
+                priority_emoji = {
+                    'Yuqori': '🔴',
+                    'O\'rta': '🟡',
+                    'Past': '🟢'
+                }.get(order['priority'], '⚪')
+                
+                text += (
+                    f"📋 **{order['id']}** - {order['client']}\n"
+                    f"🔧 Tur: {order['type']}\n"
+                    f"{priority_emoji} Daraja: {order['priority']}\n"
+                    f"📝 Tavsif: {order['description']}\n"
+                    f"📅 Sana: {order['created']}\n\n"
+                )
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_orders_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data.startswith("confirm_assign_supervisor_"))
-    async def confirm_assign_supervisor(call: CallbackQuery):
-        """Confirm supervisor assignment"""
-        await call.answer()
-        
-        parts = call.data.split("_")
-        order_id, supervisor_id = int(parts[3]), int(parts[4])
+    @router.callback_query(F.data == "assign_orders")
+    async def assign_orders(callback: CallbackQuery, state: FSMContext):
+        """Assign orders to staff"""
+        try:
+            await callback.answer()
+            
+            text = (
+                "👥 **Buyurtma berish**\n\n"
+                "Buyurtmalarni xodimlarga berish funksiyasi.\n\n"
+                "📋 Mavjud buyurtmalar:\n"
+                "• ORD002 - Malika Yusupova (Texnik xizmat)\n\n"
+                "👤 Mavjud xodimlar:\n"
+                "• Aziz Karimov (Operator)\n"
+                "• Malika Yusupova (Operator)\n"
+                "• Bekzod Toirov (Texnik)"
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_orders_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-        text = f"✅ Buyurtma #{order_id} mas'ulga tayinlandi."
-        await call.answer("Tayinlandi!")
-        await call.message.edit_text(text)
-
-    @router.callback_query(F.data.startswith("change_status_"))
-    async def change_order_status(call: CallbackQuery):
-        """Change order status"""
-        await call.answer()
-        
-        order_id = int(call.data.split("_")[-1])
-        
-        text = "Yangi statusni tanlang:"
-        statuses = [
-            ("new", "🆕 Yangi"),
-            ("pending", "⏳ Kutilmoqda"),
-            ("assigned", "👨‍💼 Tayinlangan"),
-            ("in_progress", "🔄 Jarayonda"),
-            ("completed", "✅ Bajarilgan"),
-            ("cancelled", "❌ Bekor qilingan")
-        ]
-        
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=status_name, callback_data=f"set_status:{status}:{order_id}")]
-            for status, status_name in statuses
-        ])
-        
-        await call.message.edit_text(text, reply_markup=keyboard)
-
-    @router.callback_query(F.data.startswith("set_status:"))
-    async def set_order_status(call: CallbackQuery):
-        """Set order status"""
-        await call.answer()
-        
-        _, new_status, order_id_str = call.data.split(":")
-        order_id = int(order_id_str)
-
-        status_names = {
-            'new': 'Yangi',
-            'pending': 'Kutilmoqda',
-            'assigned': 'Tayinlangan',
-            'in_progress': 'Jarayonda',
-            'completed': 'Bajarilgan',
-            'cancelled': 'Bekor qilingan'
-        }
-        
-        text = f"✅ Buyurtma #{order_id} statusi '{status_names.get(new_status, new_status)}' ga o'zgartirildi."
-        await call.answer("Status o'zgartirildi!")
-        await call.message.edit_text(text)
-
-    @router.callback_query(F.data.startswith("transfer_to_call_center_"))
-    async def transfer_to_call_center(call: CallbackQuery):
-        """Transfer order to call center"""
-        await call.answer()
-        
-        order_id = int(call.data.split("_")[-1])
-        
-        text = f"✅ Buyurtma #{order_id} Call Center ga yuborildi."
-        await call.answer("Yuborildi!")
-        await call.message.edit_text(text)
-
-    @router.callback_query(F.data.in_(["back", "orqaga", "назад"]))
-    async def supervisor_back(call: CallbackQuery, state: FSMContext):
-        """Go back to supervisor main menu"""
-        await call.answer()
-        
-        text = "Call Center Supervisor paneliga xush kelibsiz!"
-        await call.message.edit_text(text)
-        await state.clear()
+    @router.callback_query(F.data == "back_to_orders_menu")
+    async def back_to_orders_menu(callback: CallbackQuery, state: FSMContext):
+        """Back to orders menu"""
+        try:
+            await callback.answer()
+            
+            orders_text = (
+                "📋 **Buyurtmalar boshqaruvi**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+            )
+            
+            keyboard = get_orders_keyboard()
+            await callback.message.edit_text(
+                text=orders_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router
-
-async def show_call_center_supervisor_orders(message: Message):
-    """Show call center supervisor orders"""
-    lang = 'uz'  # Default language
-    
-    # Mock orders data
-    orders = [
-        {
-            'id': 1,
-            'order_number': 'ORD-001',
-            'client_name': 'Ahmad Karimov',
-            'service_type': 'Internet xizmati',
-            'status': 'Yangi',
-            'assigned_to': 'Aziz Karimov',
-            'created_at': '2024-01-15 10:30'
-        },
-        {
-            'id': 2,
-            'order_number': 'ORD-002',
-            'client_name': 'Malika Yusupova',
-            'service_type': 'TV xizmati',
-            'status': 'Jarayonda',
-            'assigned_to': 'Malika Yusupova',
-            'created_at': '2024-01-15 09:15'
-        }
-    ]
-    
-    if not orders:
-        text = "📋 Yangi buyurtmalar yo'q."
-        await message.answer(text)
-    else:
-        text = f"📋 <b>Buyurtmalar ({len(orders)})</b>\n\n"
-        for i, order in enumerate(orders[:10], 1):
-            text += f"{i}. {order.get('order_number', 'N/A')}\n"
-            text += f"   👤 {order.get('client_name', 'N/A')}\n"
-            text += f"   📝 {order.get('service_type', 'N/A')}\n"
-            text += f"   📊 {order.get('status', 'N/A')}\n"
-            text += f"   👨‍💼 {order.get('assigned_to', 'N/A')}\n"
-            text += f"   ⏰ {order.get('created_at', 'N/A')}\n\n"
-        
-        await message.answer(
-            text,
-            reply_markup=get_orders_menu(lang)
-        )

@@ -1,5 +1,5 @@
 """
-Junior Manager Main Menu Handler - Soddalashtirilgan versiya
+Junior Manager Main Menu Handler - Simplified Implementation
 
 Bu modul junior manager uchun asosiy menyu funksionalligini o'z ichiga oladi.
 """
@@ -7,70 +7,82 @@ Bu modul junior manager uchun asosiy menyu funksionalligini o'z ichiga oladi.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_junior_manager_main_keyboard
-
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'junior_manager',
-        'language': 'uz',
-        'full_name': 'Test Junior Manager',
-        'phone_number': '+998901234567'
-    }
-
-async def get_user_lang(telegram_id: int):
-    """Mock get user language"""
-    return 'uz'
-
+from states.junior_manager_states import JuniorManagerMainMenuStates
 
 def get_junior_manager_main_menu_router():
-    """Get router for junior manager main menu handlers"""
+    """Get router for junior manager main menu handlers - Simplified Implementation"""
     router = Router()
 
     @router.message(F.text.in_(["/start", "🏠 Asosiy menyu"]))
     async def show_main_menu(message: Message, state: FSMContext):
         """Show main menu for junior manager"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await message.answer(
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
-                return
-
-            lang = user.get('language', 'uz')
+            await state.set_state(JuniorManagerMainMenuStates.main_menu)
             
-            # Build main menu text
-            text = f"""🏠 **Asosiy menyu**
+            welcome_text = """
+🏠 <b>Junior Manager Panel</b>
 
-            👤 **Foydalanuvchi:** {user.get('full_name', 'N/A')}
-            📱 **Telefon:** {user.get('phone_number', 'N/A')}
-            🎯 **Rol:** Kichik menejer
+👋 Xush kelibsiz, Junior Manager!
 
-            Quyidagi bo'limlardan birini tanlang:"""
+📋 <b>Sizning vazifalaringiz:</b>
+• 📋 Arizalarni ko'rish va boshqarish
+• 👥 Xodimlarni boshqarish
+• 📊 Statistikalarni ko'rish
+• 📞 Mijozlar bilan bog'lanish
+• ⚙️ Sozlamalarni boshqarish
+            """
             
-            # Create keyboard
-            keyboard = get_junior_manager_main_keyboard(lang)
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Arizalar", callback_data="junior_manager_applications")],
+                [InlineKeyboardButton(text="👥 Xodimlar", callback_data="junior_manager_staff")],
+                [InlineKeyboardButton(text="📊 Statistika", callback_data="junior_manager_stats")],
+                [InlineKeyboardButton(text="📞 Mijozlar", callback_data="junior_manager_clients")],
+                [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="junior_manager_settings")],
+                [InlineKeyboardButton(text="🌐 Tilni o'zgartirish", callback_data="junior_manager_language")]
+            ])
             
-            # Send message
-            await message.answer(
-                text,
-                message.from_user.id,
-                reply_markup=keyboard,
-                parse_mode="Markdown"
-            )
+            await message.answer(welcome_text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
-            print(f"Error in show_main_menu: {e}")
-            await message.answer(
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("❌ Xatolik yuz berdi")
 
-    
+    @router.callback_query(F.data == "junior_manager_main_menu")
+    async def junior_manager_main_menu_callback(callback: CallbackQuery, state: FSMContext):
+        """Return to junior manager main menu"""
+        try:
+            await state.set_state(JuniorManagerMainMenuStates.main_menu)
+            
+            welcome_text = """
+🏠 <b>Junior Manager Panel</b>
+
+👤 Junior Manager
+📊 Asosiy menyu
+
+Kerakli bo'limni tanlang:
+            """
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Arizalar", callback_data="junior_manager_applications")],
+                [InlineKeyboardButton(text="👥 Xodimlar", callback_data="junior_manager_staff")],
+                [InlineKeyboardButton(text="📊 Statistika", callback_data="junior_manager_stats")],
+                [InlineKeyboardButton(text="📞 Mijozlar", callback_data="junior_manager_clients")],
+                [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="junior_manager_settings")],
+                [InlineKeyboardButton(text="🌐 Tilni o'zgartirish", callback_data="junior_manager_language")]
+            ])
+            
+            await callback.message.edit_text(welcome_text.strip(), parse_mode='HTML', reply_markup=keyboard)
+            await callback.answer()
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "junior_manager_back")
+    async def junior_manager_back_handler(callback: CallbackQuery, state: FSMContext):
+        """Back to junior manager main menu"""
+        try:
+            await junior_manager_main_menu_callback(callback, state)
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router

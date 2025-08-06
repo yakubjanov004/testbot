@@ -1,28 +1,22 @@
-from aiogram import F
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 
 def get_warehouse_role_integration_router():
-    """Router for warehouse integration with other roles"""
-    from utils.role_system import get_role_router
-    router = get_role_router("all")  # Available for all roles
+    """Router for warehouse integration with other roles - Simplified Implementation"""
+    router = Router()
 
     @router.message(F.text == "📦 Ombor bilan ishlash")
     async def warehouse_integration_menu(message: Message, state: FSMContext):
         """Warehouse integration menu for other roles"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'role': 'manager',
-                'language': 'uz'
-            }
-            
-            role = user.get('role')
+            # Mock user role
+            role = 'manager'
             
             # Check if user has warehouse access
             allowed_roles = ['manager', 'junior_manager', 'controller', 'call_center', 'technician']
             if role not in allowed_roles:
-                text = "Sizda ombor bilan ishlash huquqi yo'q"
+                text = "❌ Sizda ombor bilan ishlash huquqi yo'q"
                 await message.answer(text)
                 return
             
@@ -31,91 +25,52 @@ def get_warehouse_role_integration_router():
             # Different options based on role
             if role == 'manager':
                 keyboard.inline_keyboard.extend([
-                    [InlineKeyboardButton(
-                        text="📋 Inventar ko'rish",
-                        callback_data="view_warehouse_inventory"
-                    )],
-                    [InlineKeyboardButton(
-                        text="📊 Ombor hisoboti",
-                        callback_data="warehouse_report"
-                    )],
-                    [InlineKeyboardButton(
-                        text="➕ Mahsulot qo'shish",
-                        callback_data="add_material_manager"
-                    )]
+                    [InlineKeyboardButton(text="📋 Inventar ko'rish", callback_data="view_warehouse_inventory")],
+                    [InlineKeyboardButton(text="📊 Ombor hisoboti", callback_data="warehouse_report")],
+                    [InlineKeyboardButton(text="➕ Mahsulot qo'shish", callback_data="add_material_manager")]
                 ])
             
             elif role == 'junior_manager':
                 keyboard.inline_keyboard.extend([
-                    [InlineKeyboardButton(
-                        text="📋 Inventar ko'rish",
-                        callback_data="view_warehouse_inventory"
-                    )],
-                    [InlineKeyboardButton(
-                        text="📊 Ombor holati",
-                        callback_data="warehouse_status"
-                    )]
+                    [InlineKeyboardButton(text="📋 Inventar ko'rish", callback_data="view_warehouse_inventory")],
+                    [InlineKeyboardButton(text="📊 Ombor holati", callback_data="warehouse_status")]
                 ])
             
             elif role == 'controller':
                 keyboard.inline_keyboard.extend([
-                    [InlineKeyboardButton(
-                        text="📋 Inventar ko'rish",
-                        callback_data="view_warehouse_inventory"
-                    )],
-                    [InlineKeyboardButton(
-                        text="🔄 Buyurtma uchun mahsulot",
-                        callback_data="materials_for_order"
-                    )],
-                    [InlineKeyboardButton(
-                        text="📊 Ombor hisoboti",
-                        callback_data="warehouse_report"
-                    )]
+                    [InlineKeyboardButton(text="📋 Inventar ko'rish", callback_data="view_warehouse_inventory")],
+                    [InlineKeyboardButton(text="🔄 Buyurtma uchun mahsulot", callback_data="materials_for_order")],
+                    [InlineKeyboardButton(text="📊 Ombor hisoboti", callback_data="warehouse_report")]
                 ])
             
             elif role == 'call_center':
                 keyboard.inline_keyboard.extend([
-                    [InlineKeyboardButton(
-                        text="📋 Inventar ko'rish",
-                        callback_data="view_warehouse_inventory"
-                    )],
-                    [InlineKeyboardButton(
-                        text="❓ Mahsulot mavjudligi",
-                        callback_data="check_material_availability"
-                    )]
+                    [InlineKeyboardButton(text="📋 Inventar ko'rish", callback_data="view_warehouse_inventory")],
+                    [InlineKeyboardButton(text="❓ Mahsulot mavjudligi", callback_data="check_material_availability")]
                 ])
             
             elif role == 'technician':
                 keyboard.inline_keyboard.extend([
-                    [InlineKeyboardButton(
-                        text="📋 Kerakli mahsulotlar",
-                        callback_data="required_materials"
-                    )],
-                    [InlineKeyboardButton(
-                        text="✅ Ishlatilgan mahsulotlar",
-                        callback_data="used_materials"
-                    )]
+                    [InlineKeyboardButton(text="📋 Kerakli mahsulotlar", callback_data="required_materials")],
+                    [InlineKeyboardButton(text="✅ Ishlatilgan mahsulotlar", callback_data="used_materials")]
                 ])
             
             # Common back button
             keyboard.inline_keyboard.append([
-                InlineKeyboardButton(
-                    text="◀️ Orqaga",
-                    callback_data="back_to_main"
-                )
+                InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
             ])
             
             text = f"📦 Ombor bilan ishlash ({role}):"
             await message.answer(text, reply_markup=keyboard)
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+            await message.answer("❌ Xatolik yuz berdi")
 
     @router.callback_query(F.data == "view_warehouse_inventory")
-    async def view_inventory_for_roles(callback: CallbackQuery, state: FSMContext):
+    async def view_inventory_for_roles(callback: CallbackQuery):
         """View inventory for other roles"""
         try:
-            # Mock inventory data (like other modules)
+            # Mock inventory data
             items = [
                 {'name': 'Cable', 'quantity': 50, 'unit': 'dona', 'min_quantity': 10, 'price': 15000},
                 {'name': 'Connector', 'quantity': 100, 'unit': 'dona', 'min_quantity': 15, 'price': 5000},
@@ -153,14 +108,14 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "warehouse_report")
-    async def warehouse_report_for_roles(callback: CallbackQuery, state: FSMContext):
+    async def warehouse_report_for_roles(callback: CallbackQuery):
         """Warehouse report for managers and controllers"""
         try:
-            # Mock inventory data (like other modules)
+            # Mock inventory data
             items = [
                 {'name': 'Cable', 'quantity': 50, 'unit': 'dona', 'min_quantity': 10, 'price': 15000},
                 {'name': 'Connector', 'quantity': 100, 'unit': 'dona', 'min_quantity': 15, 'price': 5000},
@@ -201,14 +156,14 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "check_material_availability")
-    async def check_material_availability(callback: CallbackQuery, state: FSMContext):
+    async def check_material_availability(callback: CallbackQuery):
         """Check material availability for call center"""
         try:
-            # Mock inventory data (like other modules)
+            # Mock inventory data
             items = [
                 {'name': 'Cable', 'quantity': 50, 'unit': 'dona'},
                 {'name': 'Connector', 'quantity': 100, 'unit': 'dona'},
@@ -234,14 +189,14 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "materials_for_order")
-    async def materials_for_order(callback: CallbackQuery, state: FSMContext):
+    async def materials_for_order(callback: CallbackQuery):
         """Show materials needed for orders - for controllers"""
         try:
-            # Mock inventory data (like other modules)
+            # Mock inventory data
             items = [
                 {'name': 'Cable', 'quantity': 50, 'unit': 'dona', 'category': 'cables'},
                 {'name': 'Connector', 'quantity': 100, 'unit': 'dona', 'category': 'equipment'},
@@ -270,14 +225,14 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "required_materials")
-    async def required_materials_for_technician(callback: CallbackQuery, state: FSMContext):
+    async def required_materials_for_technician(callback: CallbackQuery):
         """Show required materials for technician"""
         try:
-            # Mock inventory data (like other modules)
+            # Mock inventory data
             items = [
                 {'name': 'Cable', 'quantity': 50, 'unit': 'dona', 'category': 'cables'},
                 {'name': 'Connector', 'quantity': 100, 'unit': 'dona', 'category': 'equipment'},
@@ -310,14 +265,14 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "warehouse_status")
-    async def warehouse_status_for_junior_manager(callback: CallbackQuery, state: FSMContext):
+    async def warehouse_status_for_junior_manager(callback: CallbackQuery):
         """Show warehouse status for junior manager"""
         try:
-            # Mock warehouse status data (like other modules)
+            # Mock warehouse status data
             status_data = {
                 'total_items': 25,
                 'available_items': 20,
@@ -337,14 +292,14 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "used_materials")
-    async def used_materials_for_technician(callback: CallbackQuery, state: FSMContext):
+    async def used_materials_for_technician(callback: CallbackQuery):
         """Show used materials for technician"""
         try:
-            # Mock used materials data (like other modules)
+            # Mock used materials data
             used_materials = [
                 {'name': 'Cable', 'quantity_used': 5, 'date': '2024-01-15'},
                 {'name': 'Connector', 'quantity_used': 8, 'date': '2024-01-15'},
@@ -364,11 +319,11 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "add_material_manager")
-    async def add_material_manager(callback: CallbackQuery, state: FSMContext):
+    async def add_material_manager(callback: CallbackQuery):
         """Add material for manager"""
         try:
             text = "➕ Mahsulot qo'shish:\n\n"
@@ -379,11 +334,11 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
+            await callback.message.edit_text("❌ Xatolik yuz berdi")
             await callback.answer()
 
     @router.callback_query(F.data == "back_to_main")
-    async def back_to_main_menu(callback: CallbackQuery, state: FSMContext):
+    async def back_to_main_menu(callback: CallbackQuery):
         """Back to main menu"""
         try:
             text = "🏠 Bosh menyuga qaytildi"
@@ -391,49 +346,6 @@ def get_warehouse_role_integration_router():
             await callback.answer()
             
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi")
 
     return router
-
-# Mock functions (like other modules)
-async def get_all_inventory_items():
-    """Get all inventory items (mock function like other modules)"""
-    try:
-        return [
-            {'name': 'Cable', 'quantity': 50, 'unit': 'dona', 'min_quantity': 10, 'price': 15000},
-            {'name': 'Connector', 'quantity': 100, 'unit': 'dona', 'min_quantity': 15, 'price': 5000},
-            {'name': 'Router', 'quantity': 10, 'unit': 'dona', 'min_quantity': 5, 'price': 500000},
-            {'name': 'Switch', 'quantity': 5, 'unit': 'dona', 'min_quantity': 3, 'price': 300000},
-            {'name': 'Cable Tester', 'quantity': 2, 'unit': 'dona', 'min_quantity': 1, 'price': 25000}
-        ]
-    except Exception as e:
-        return []
-
-async def update_inventory_quantity(item_id: int, quantity: int):
-    """Update inventory quantity (mock function like other modules)"""
-    try:
-        # Mock update (like other modules)
-        return True
-    except Exception as e:
-        return False
-
-async def log_warehouse_activity(user_id: int, action: str, details: dict):
-    """Log warehouse activity (mock function like other modules)"""
-    try:
-        # Mock logging (like other modules)
-        pass
-    except Exception as e:
-        pass
-
-async def get_warehouse_user_by_telegram_id(telegram_id: int):
-    """Get warehouse user by telegram id (mock function like other modules)"""
-    try:
-        # Mock user data (like other modules)
-        return {
-            'id': 1,
-            'telegram_id': telegram_id,
-            'role': 'warehouse',
-            'language': 'uz'
-        }
-    except Exception as e:
-        return None

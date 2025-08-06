@@ -1,29 +1,17 @@
-from aiogram import F
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from datetime import datetime, timedelta
-from keyboards.technician_buttons import get_reports_keyboard
+from datetime import datetime
 
 def get_reports_router():
-    """Technician reports router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("technician")
+    """Technician reports router - Simplified Implementation"""
+    router = Router()
 
     @router.message(F.text == "📊 Hisobotlar")
     async def show_reports_menu(message: Message, state: FSMContext):
         """Show reports menu handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 📊 <b>Hisobotlar</b>
 
 📈 Kunlik hisobot
@@ -34,29 +22,23 @@ def get_reports_router():
 Kerakli hisobotni tanlang:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_reports_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📈 Kunlik hisobot", callback_data="tech_daily_report")],
+                [InlineKeyboardButton(text="📊 Haftalik hisobot", callback_data="tech_weekly_report")],
+                [InlineKeyboardButton(text="📋 Oylik hisobot", callback_data="tech_monthly_report")],
+                [InlineKeyboardButton(text="📋 Ish natijalari", callback_data="tech_performance_report")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
 
     @router.callback_query(F.data == "tech_daily_report")
-    async def daily_report(callback: CallbackQuery, state: FSMContext):
+    async def daily_report(callback: CallbackQuery):
         """Daily report handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            lang = user.get('language', 'uz')
-            
-            # Mock stats data (like other modules)
+            # Mock stats data
             stats = {
                 'total': 15,
                 'completed': 12,
@@ -81,37 +63,20 @@ Kerakli hisobotni tanlang:
 • O'rtacha vaqt: {stats.get('avg_time', 0)} soat
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_reports"
-                )
-            ]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_back_to_reports")]
+            ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            await callback.message.edit_text(
-                text.strip(),
-                reply_markup=keyboard,
-                parse_mode='HTML'
-            )
+            await callback.message.edit_text(text.strip(), reply_markup=keyboard, parse_mode='HTML')
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "tech_weekly_report")
-    async def weekly_report(callback: CallbackQuery, state: FSMContext):
+    async def weekly_report(callback: CallbackQuery):
         """Weekly report handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            lang = user.get('language', 'uz')
-            
-            # Mock stats data (like other modules)
+            # Mock stats data
             stats = {
                 'total': 85,
                 'completed': 72,
@@ -136,37 +101,20 @@ Kerakli hisobotni tanlang:
 • O'rtacha vaqt: {stats.get('avg_time', 0)} soat
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_reports"
-                )
-            ]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_back_to_reports")]
+            ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            await callback.message.edit_text(
-                text.strip(),
-                reply_markup=keyboard,
-                parse_mode='HTML'
-            )
+            await callback.message.edit_text(text.strip(), reply_markup=keyboard, parse_mode='HTML')
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "tech_monthly_report")
-    async def monthly_report(callback: CallbackQuery, state: FSMContext):
+    async def monthly_report(callback: CallbackQuery):
         """Monthly report handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            lang = user.get('language', 'uz')
-            
-            # Mock stats data (like other modules)
+            # Mock stats data
             stats = {
                 'total': 320,
                 'completed': 285,
@@ -191,37 +139,20 @@ Kerakli hisobotni tanlang:
 • O'rtacha vaqt: {stats.get('avg_time', 0)} soat
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_reports"
-                )
-            ]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_back_to_reports")]
+            ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            await callback.message.edit_text(
-                text.strip(),
-                reply_markup=keyboard,
-                parse_mode='HTML'
-            )
+            await callback.message.edit_text(text.strip(), reply_markup=keyboard, parse_mode='HTML')
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "tech_performance_report")
-    async def performance_report(callback: CallbackQuery, state: FSMContext):
+    async def performance_report(callback: CallbackQuery):
         """Performance report handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            lang = user.get('language', 'uz')
-            
-            # Mock performance data (like other modules)
+            # Mock performance data
             performance = {
                 'total_orders': 150,
                 'completed_orders': 135,
@@ -246,37 +177,20 @@ Kerakli hisobotni tanlang:
 • Samaradorlik: {performance.get('efficiency_rating', 0)}%
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_reports"
-                )
-            ]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_back_to_reports")]
+            ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            await callback.message.edit_text(
-                text.strip(),
-                reply_markup=keyboard,
-                parse_mode='HTML'
-            )
+            await callback.message.edit_text(text.strip(), reply_markup=keyboard, parse_mode='HTML')
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "tech_back_to_reports")
-    async def back_to_reports(callback: CallbackQuery, state: FSMContext):
+    async def back_to_reports(callback: CallbackQuery):
         """Back to reports handler"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': 1,
-                'full_name': 'Technician xodimi',
-                'language': 'uz',
-                'role': 'technician'
-            }
-            lang = user.get('language', 'uz')
-            
-            text = f"""
+            text = """
 📊 <b>Hisobotlar</b>
 
 📈 Kunlik hisobot
@@ -287,84 +201,16 @@ Kerakli hisobotni tanlang:
 Kerakli hisobotni tanlang:
             """
             
-            await callback.message.edit_text(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_reports_keyboard(lang)
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📈 Kunlik hisobot", callback_data="tech_daily_report")],
+                [InlineKeyboardButton(text="📊 Haftalik hisobot", callback_data="tech_weekly_report")],
+                [InlineKeyboardButton(text="📋 Oylik hisobot", callback_data="tech_monthly_report")],
+                [InlineKeyboardButton(text="📋 Ish natijalari", callback_data="tech_performance_report")]
+            ])
+            
+            await callback.message.edit_text(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router
-
-# Mock functions (like other modules)
-async def get_technician_stats(technician_id: int, period: str):
-    """Get technician stats (mock function like other modules)"""
-    try:
-        if period == 'daily':
-            return {
-                'total': 15,
-                'completed': 12,
-                'in_progress': 2,
-                'new': 1,
-                'completion_rate': 80,
-                'avg_time': 2.5
-            }
-        elif period == 'weekly':
-            return {
-                'total': 85,
-                'completed': 72,
-                'in_progress': 8,
-                'new': 5,
-                'completion_rate': 85,
-                'avg_time': 2.3
-            }
-        elif period == 'monthly':
-            return {
-                'total': 320,
-                'completed': 285,
-                'in_progress': 25,
-                'new': 10,
-                'completion_rate': 89,
-                'avg_time': 2.1
-            }
-        else:
-            return {
-                'total': 0,
-                'completed': 0,
-                'in_progress': 0,
-                'new': 0,
-                'completion_rate': 0,
-                'avg_time': 0
-            }
-    except Exception as e:
-        return {
-            'total': 0,
-            'completed': 0,
-            'in_progress': 0,
-            'new': 0,
-            'completion_rate': 0,
-            'avg_time': 0
-        }
-
-async def get_technician_performance(technician_id: int):
-    """Get technician performance (mock function like other modules)"""
-    try:
-        return {
-            'total_orders': 150,
-            'completed_orders': 135,
-            'avg_completion_time': 2.5,
-            'customer_satisfaction': 4.8,
-            'quality_score': 95,
-            'efficiency_rating': 92
-        }
-    except Exception as e:
-        return {
-            'total_orders': 0,
-            'completed_orders': 0,
-            'avg_completion_time': 0,
-            'customer_satisfaction': 0,
-            'quality_score': 0,
-            'efficiency_rating': 0
-        }

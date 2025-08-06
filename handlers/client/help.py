@@ -1,222 +1,168 @@
-from aiogram import F
+"""
+Client Help Handler - Simplified Implementation
+
+This module handles help and support for clients.
+"""
+
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.client_buttons import get_help_menu_keyboard, get_back_to_help_menu_keyboard
+from keyboards.client_buttons import get_help_keyboard
 from states.client_states import HelpStates
-from utils.role_system import get_role_router
-
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'client',
-        'language': 'uz',
-        'full_name': 'Test Client',
-        'phone_number': '+998901234567'
-    }
-
-async def get_user_lang(user_id: int) -> str:
-    """Mock get user language"""
-    return 'uz'
-
-async def answer_and_cleanup(callback, cleanup_after=True):
-    """Mock answer and cleanup"""
-    await callback.answer()
 
 def get_client_help_router():
-    router = get_role_router("client")
+    router = Router()
 
-    @router.message(F.text.in_(["❓ Yordam"]))
-    async def client_help_handler(message: Message, state: FSMContext):
-        """Client help handler (inline version)"""
+    @router.message(F.text.in_(["❓ Yordam", "❓ Помощь"]))
+    async def help_menu(message: Message, state: FSMContext):
+        """Show help menu"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user:
-                await message.answer("Foydalanuvchi topilmadi.")
-                return
-
-            help_text = "Yordam menyusi. Kerakli bo'limni tanlang."
-
-            sent_message = await message.answer(
-                help_text,
-                reply_markup=get_help_menu_keyboard('uz')
+            help_text = (
+                "❓ **Yordam va qo'llab-quvvatlash**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
             )
-            # Save last message id for inline cleanup
-            await state.update_data(last_message_id=sent_message.message_id)
-            await state.set_state(HelpStates.help_menu)
-
+            
+            keyboard = get_help_keyboard()
+            await message.answer(
+                text=help_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    # Foydalanuvchi matn yuborganida inline tugmalarni o'chirish
-    @router.message(HelpStates.help_menu, F.text)
-    async def clear_inline_on_text(message: Message, state: FSMContext):
-        """Inline tugmalarni o'chirish va holatni tiklash (inline version)"""
+    @router.callback_query(F.data == "faq")
+    async def show_faq(callback: CallbackQuery, state: FSMContext):
+        """Show frequently asked questions"""
         try:
-            data = await state.get_data()
-            last_message_id = data.get('last_message_id')
-
-            if last_message_id:
-                try:
-                    await message.bot.edit_message_reply_markup(
-                        chat_id=message.from_user.id,
-                        message_id=last_message_id,
-                        reply_markup=None
-                    )
-                except Exception:
-                    pass
-
-            await state.set_state(HelpStates.main_menu)
-
-        except Exception as e:
-            await state.set_state(HelpStates.main_menu)
-
-    @router.callback_query(F.data == "client_faq")
-    async def client_faq_handler(callback: CallbackQuery, state: FSMContext):
-        """Tez-tez so'raladigan savollar (inline)"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
+            await callback.answer()
+            
             faq_text = (
-                "❓ Tez-tez so'raladigan savollar:\n\n"
-                "1. Qanday buyurtma beraman?\n"
-                "   - 'Yangi buyurtma' tugmasini bosing\n\n"
-                "2. Buyurtmam qachon bajariladi?\n"
-                "   - Odatda 1-3 ish kuni ichida\n\n"
-                "3. Narxlar qanday?\n"
-                "   - Operator siz bilan bog'lanib narxni aytadi\n\n"
-                "4. Bekor qilsam bo'ladimi?\n"
-                "   - Ha, operator orqali bekor qilishingiz mumkin"
+                "❓ **Ko'p so'raladigan savollar**\n\n"
+                "**Q: Internet ulanish uchun qanday ariza berish kerak?**\n"
+                "A: Asosiy menyuda '🔌 Ulanish uchun ariza' tugmasini bosing va ko'rsatmalarga amal qiling.\n\n"
+                "**Q: Texnik muammo bo'lsa nima qilish kerak?**\n"
+                "A: '🔧 Texnik xizmat' bo'limidan ariza yarating va muammoni batafsil tasvirlab bering.\n\n"
+                "**Q: Buyurtma holatini qanday tekshirish mumkin?**\n"
+                "A: '📋 Mening buyurtmalarim' bo'limida barcha buyurtmalaringizni ko'rishingiz mumkin.\n\n"
+                "**Q: Qo'ng'iroq orqali bog'lanish mumkinmi?**\n"
+                "A: Ha, +998901234567 raqamiga qo'ng'iroq qilishingiz mumkin.\n\n"
+                "**Q: Ariza qabul qilindimi qanday bilish mumkin?**\n"
+                "A: Ariza yaratganingizda sizga tasdiqlash xabari yuboriladi."
             )
-
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_help_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
             await callback.message.edit_text(
-                faq_text,
-                reply_markup=get_back_to_help_menu_keyboard('uz')
+                text=faq_text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
             )
-            await state.update_data(last_message_id=callback.message.message_id)
-
+            
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data == "client_how_to_order")
-    async def client_how_to_order_handler(callback: CallbackQuery, state: FSMContext):
-        """Qanday buyurtma berish (inline)"""
+    @router.callback_query(F.data == "contact_support")
+    async def contact_support(callback: CallbackQuery, state: FSMContext):
+        """Show contact support information"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            guide_text = (
-                "📝 Qanday buyurtma berish:\n\n"
-                "1️⃣ 'Yangi buyurtma' tugmasini bosing\n"
-                "2️⃣ Buyurtma turini tanlang\n"
-                "3️⃣ Tavsifni kiriting\n"
-                "4️⃣ Manzilni kiriting\n"
-                "5️⃣ Rasm biriktiring (ixtiyoriy)\n"
-                "6️⃣ Geolokatsiya yuboring (ixtiyoriy)\n"
-                "7️⃣ Buyurtmani tasdiqlang\n\n"
-                "✅ Tayyor! Operator siz bilan bog'lanadi."
-            )
-
-            await callback.message.edit_text(
-                guide_text,
-                reply_markup=get_back_to_help_menu_keyboard('uz')
-            )
-            await state.update_data(last_message_id=callback.message.message_id)
-
-        except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
-
-    @router.callback_query(F.data == "client_track_order")
-    async def client_track_order_handler(callback: CallbackQuery, state: FSMContext):
-        """Buyurtmani kuzatish (inline)"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            track_text = (
-                "📍 Buyurtmani kuzatish:\n\n"
-                "Buyurtmangiz holatini bilish uchun:\n"
-                "• 'Mening buyurtmalarim' bo'limiga o'ting\n"
-                "• Yoki operator bilan bog'laning\n\n"
-                "Buyurtma holatlari:\n"
-                "🆕 Yangi - qabul qilindi\n"
-                "✅ Tasdiqlangan - ishga olingan\n"
-                "⏳ Jarayonda - bajarilmoqda\n"
-                "✅ Bajarilgan - tugallangan"
-            )
-
-            await callback.message.edit_text(
-                track_text,
-                reply_markup=get_back_to_help_menu_keyboard('uz')
-            )
-            await state.update_data(last_message_id=callback.message.message_id)
-
-        except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
-
-    @router.callback_query(F.data == "client_contact_support")
-    async def client_contact_support_handler(callback: CallbackQuery, state: FSMContext):
-        """Qo'llab-quvvatlash xizmati (inline)"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
+            await callback.answer()
+            
             support_text = (
-                "📞 Qo'llab-quvvatlash xizmati:\n\n"
-                "📱 Telefon: +998 90 123 45 67\n"
-                "📧 Email: support@company.uz\n"
-                "💬 Telegram: @support_bot\n\n"
-                "🕐 Ish vaqti:\n"
-                "Dushanba - Juma: 9:00 - 18:00\n"
-                "Shanba: 9:00 - 14:00\n"
-                "Yakshanba: Dam olish kuni\n\n"
-                "Yoki botda xabar qoldiring!"
+                "📞 **Qo'llab-quvvatlash bilan bog'lanish**\n\n"
+                "**📱 Telefon raqamlar:**\n"
+                "• Asosiy: +998901234567\n"
+                "• Texnik yordam: +998901234568\n"
+                "• Qo'ng'iroq markazi: +998901234569\n\n"
+                "**📧 Email manzillar:**\n"
+                "• Umumiy: info@alfaconnect.uz\n"
+                "• Texnik yordam: support@alfaconnect.uz\n"
+                "• Shikoyatlar: complaints@alfaconnect.uz\n\n"
+                "**⏰ Ish vaqti:**\n"
+                "• Dushanba - Juma: 09:00 - 18:00\n"
+                "• Shanba: 09:00 - 15:00\n"
+                "• Yakshanba: Dam olish kuni\n\n"
+                "**📍 Manzil:**\n"
+                "Toshkent shahri, Chilonzor tumani, 15-uy"
             )
-
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_help_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
             await callback.message.edit_text(
-                support_text,
-                reply_markup=get_back_to_help_menu_keyboard('uz')
+                text=support_text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
             )
-            await state.update_data(last_message_id=callback.message.message_id)
-
+            
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data == "client_back_help")
-    async def client_back_help_handler(callback: CallbackQuery, state: FSMContext):
-        """Yordam bo'limiga qaytish (inline)"""
+    @router.callback_query(F.data == "service_info")
+    async def show_service_info(callback: CallbackQuery, state: FSMContext):
+        """Show service information"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            help_text = "Yordam bo'limi"
-
-            await callback.message.edit_text(
-                help_text,
-                reply_markup=get_help_menu_keyboard('uz')
+            await callback.answer()
+            
+            service_text = (
+                "📋 **Xizmatlar haqida ma'lumot**\n\n"
+                "**🔌 Internet ulanish:**\n"
+                "• Tezlik: 10-100 Mbps\n"
+                "• Narx: 50,000-200,000 so'm/oy\n"
+                "• O'rnatish: 1-3 kun\n\n"
+                "**📺 TV xizmati:**\n"
+                "• Kanallar: 100+ ta\n"
+                "• HD sifat: Mavjud\n"
+                "• Narx: 30,000-80,000 so'm/oy\n\n"
+                "**🔧 Texnik xizmat:**\n"
+                "• Bepul diagnostika\n"
+                "• 24 soat ichida javob\n"
+                "• Malakali texniklar\n\n"
+                "**📱 Mobil xizmatlar:**\n"
+                "• 4G/5G internet\n"
+                "• Cheksiz qo'ng'iroqlar\n"
+                "• SMS paketlari"
             )
-            await state.update_data(last_message_id=callback.message.message_id)
-
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_help_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=service_text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+            
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data == "client_contact_operator")
-    async def client_contact_operator_handler(callback: CallbackQuery, state: FSMContext):
-        """Operator bilan bog'lanish (inline)"""
+    @router.callback_query(F.data == "back_to_help_menu")
+    async def back_to_help_menu(callback: CallbackQuery, state: FSMContext):
+        """Back to help menu"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            support_text = (
-                "📞 Qo'llab-quvvatlash xizmati:\n\n"
-                "📱 Telefon: +998 90 123 45 67\n"
-                "📧 Email: support@company.uz\n"
-                "💬 Telegram: @support_bot\n\n"
-                "🕐 Ish vaqti:\n"
-                "Dushanba - Juma: 9:00 - 18:00\n"
-                "Shanba: 9:00 - 14:00\n"
-                "Yakshanba: Dam olish kuni\n\n"
-                "Yoki botda xabar qoldiring!"
+            await callback.answer()
+            
+            help_text = (
+                "❓ **Yordam va qo'llab-quvvatlash**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
             )
-
+            
+            keyboard = get_help_keyboard()
             await callback.message.edit_text(
-                support_text,
-                reply_markup=get_back_to_help_menu_keyboard('uz')
+                text=help_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
             )
-            await state.update_data(last_message_id=callback.message.message_id)
-
+            
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router

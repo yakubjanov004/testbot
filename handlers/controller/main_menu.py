@@ -1,100 +1,109 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+"""
+Controller Main Menu Handler - Simplified Implementation
+
+This module handles the main menu for controllers.
+"""
+
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import controllers_main_menu
-from states.controller_states import ControllerMainMenuStates
-
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'controller',
-        'language': 'uz',
-        'full_name': 'Test Controller',
-        'phone_number': '+998901234567'
-    }
-
-async def get_system_statistics():
-    """Mock system statistics"""
-    return {
-        'total_orders': 150,
-        'completed_orders': 120,
-        'pending_orders': 30,
-        'active_clients': 85,
-        'active_technicians': 12,
-        'revenue_today': 2500000,
-        'avg_completion_time': 2.5
-    }
-
-async def get_user_lang(telegram_id: int):
-    """Mock get user language"""
-    return 'uz'
-
-async def get_role_router(role: str):
-    """Mock role router"""
-    from aiogram import Router
-    return Router()
+from states.controller_states import MainMenuStates
 
 def get_controller_main_menu_router():
-    """Get controller main menu router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
+    """Controller main menu router - Simplified Implementation"""
+    router = Router()
 
-    @router.message(F.text.in_(["🎛️ Controller", "🎛️ Nazoratchi"]))
-    async def controllers_start(message: Message, state: FSMContext):
-        """Controllers panel asosiy menyu"""
-        user_id = message.from_user.id
-        
+    @router.message(F.text.in_(["/start", "🏠 Asosiy menyu", "🏠 Главное меню"]))
+    async def main_menu_handler(message: Message, state: FSMContext):
+        """Controller main menu handler"""
         try:
-            await state.clear()
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                text = "Sizda ruxsat yo'q."
-                await message.answer(text)
-                return
-                
-            await state.set_state(ControllerMainMenuStates.main_menu)
-            lang = user.get('language', 'uz')
-            stats = await get_system_statistics()
+            await state.set_state(MainMenuStates.main_menu)
             
-            welcome_text = (
-                "🎛️ <b>Nazoratchi paneli</b>\n\n"
-                "📊 <b>Tizim holati:</b>\n"
-                f"• Jami buyurtmalar: {stats.get('total_orders', 0)}\n"
-                f"• Bajarilgan: {stats.get('completed_orders', 0)}\n"
-                f"• Kutilayotgan: {stats.get('pending_orders', 0)}\n"
-                f"• Faol mijozlar: {stats.get('active_clients', 0)}\n"
-                f"• Faol texniklar: {stats.get('active_technicians', 0)}\n\n"
-                "Kerakli bo'limni tanlang:"
-            )
+            welcome_text = """
+🎛️ <b>Controller Panel</b>
+
+👋 Xush kelibsiz, Controller xodimi!
+
+📋 <b>Sizning vazifalaringiz:</b>
+• 📋 Arizalarni ko'rish va boshqarish
+• 🔍 Arizalarni tekshirish va tasdiqlash
+• 📊 Statistikalarni ko'rish
+• ⚙️ Sozlamalarni boshqarish
+• 📞 Mijozlar bilan bog'lanish
+            """
             
-            await message.answer(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Arizalar", callback_data="controller_applications")],
+                [InlineKeyboardButton(text="🔍 Tekshirish", callback_data="controller_review")],
+                [InlineKeyboardButton(text="📊 Statistika", callback_data="controller_stats")],
+                [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="controller_settings")],
+                [InlineKeyboardButton(text="📞 Mijozlar", callback_data="controller_clients")],
+                [InlineKeyboardButton(text="🌐 Tilni o'zgartirish", callback_data="controller_language")]
+            ])
+            
+            await message.answer(welcome_text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
-            print(f"Error in controllers_start: {str(e)}")
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+            await message.answer("❌ Xatolik yuz berdi")
 
-    @router.message(F.text.in_(["🏠 Bosh menyu"]))
-    async def back_to_main_menu(message: Message, state: FSMContext):
-        """Bosh menyuga qaytish"""
-        user_id = message.from_user.id
-        
+    @router.callback_query(F.data == "back_to_main_menu")
+    async def back_to_main_menu(callback: CallbackQuery, state: FSMContext):
+        """Back to main menu"""
         try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await message.answer("Sizda controller huquqi yo'q.")
-                return
-                
-            await controllers_start(message, state)
+            await state.set_state(MainMenuStates.main_menu)
+            
+            welcome_text = """
+🎛️ <b>Controller Panel</b>
+
+👤 Controller xodimi
+📊 Asosiy menyu
+
+Kerakli bo'limni tanlang:
+            """
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Arizalar", callback_data="controller_applications")],
+                [InlineKeyboardButton(text="🔍 Tekshirish", callback_data="controller_review")],
+                [InlineKeyboardButton(text="📊 Statistika", callback_data="controller_stats")],
+                [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="controller_settings")],
+                [InlineKeyboardButton(text="📞 Mijozlar", callback_data="controller_clients")],
+                [InlineKeyboardButton(text="🌐 Tilni o'zgartirish", callback_data="controller_language")]
+            ])
+            
+            await callback.message.edit_text(welcome_text.strip(), parse_mode='HTML', reply_markup=keyboard)
+            await callback.answer()
             
         except Exception as e:
-            print(f"Error in back_to_main_menu: {str(e)}")
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    
+    @router.callback_query(F.data == "controller_main_menu")
+    async def controller_main_menu_callback(callback: CallbackQuery, state: FSMContext):
+        """Return to controller main menu"""
+        try:
+            await state.set_state(MainMenuStates.main_menu)
+            
+            welcome_text = """
+🎛️ <b>Controller Panel</b>
+
+👤 Controller xodimi
+📊 Asosiy menyu
+
+Kerakli bo'limni tanlang:
+            """
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Arizalar", callback_data="controller_applications")],
+                [InlineKeyboardButton(text="🔍 Tekshirish", callback_data="controller_review")],
+                [InlineKeyboardButton(text="📊 Statistika", callback_data="controller_stats")],
+                [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="controller_settings")],
+                [InlineKeyboardButton(text="📞 Mijozlar", callback_data="controller_clients")],
+                [InlineKeyboardButton(text="🌐 Tilni o'zgartirish", callback_data="controller_language")]
+            ])
+            
+            await callback.message.edit_text(welcome_text.strip(), parse_mode='HTML', reply_markup=keyboard)
+            await callback.answer()
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router

@@ -7,91 +7,54 @@ This module handles technician inbox functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.technician_buttons import get_technician_inbox_keyboard, get_technician_back_keyboard
-from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'technician',
-        'language': 'uz',
-        'full_name': 'Test Technician',
-        'phone_number': '+998901234567'
-    }
-
-async def get_user_lang(telegram_id: int):
-    """Mock get user language"""
-    return 'uz'
-
-async def get_technician_applications(user_id: int):
-    """Mock get technician applications"""
-    return [
-        {
-            'id': 'req_001_2024_01_15',
-            'workflow_type': 'technical_service',
-            'current_status': 'assigned',
-            'contact_info': {
-                'full_name': 'Aziz Karimov',
-                'phone': '+998901234567'
-            },
-            'created_at': datetime.now(),
-            'description': 'Internet tezligi sekin',
-            'location': 'Tashkent, Chorsu',
-            'priority': 'high',
-            'region': 'Toshkent shahri',
-            'address': 'Chorsu tumani, 15-uy',
-            'estimated_time': '2-3 kun'
-        },
-        {
-            'id': 'req_002_2024_01_16',
-            'workflow_type': 'connection_request',
-            'current_status': 'in_progress',
-            'contact_info': {
-                'full_name': 'Malika Toshmatova',
-                'phone': '+998901234568'
-            },
-            'created_at': datetime.now(),
-            'description': 'Yangi ulanish',
-            'location': 'Tashkent, Yunusabad',
-            'priority': 'normal',
-            'region': 'Toshkent shahri',
-            'address': 'Yunusobod tumani, 25-uy',
-            'estimated_time': '1-2 kun'
-        }
-    ]
-
 def get_technician_inbox_router():
-    """Router for technician inbox functionality"""
+    """Router for technician inbox functionality - Simplified Implementation"""
     router = Router()
 
     @router.message(F.text.in_(["📥 Inbox", "📥 Входящие"]))
     async def view_inbox(message: Message, state: FSMContext):
         """Technician view inbox handler"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'technician':
-                return
-            
-            lang = user.get('language', 'uz')
-            
-            # Get technician applications
-            applications = await get_technician_applications(message.from_user.id)
+            # Mock applications data
+            applications = [
+                {
+                    'id': 'req_001_2024_01_15',
+                    'workflow_type': 'technical_service',
+                    'current_status': 'assigned',
+                    'contact_info': {
+                        'full_name': 'Aziz Karimov',
+                        'phone': '+998901234567'
+                    },
+                    'created_at': datetime.now(),
+                    'description': 'Internet tezligi sekin',
+                    'location': 'Tashkent, Chorsu',
+                    'priority': 'high',
+                    'region': 'Toshkent shahri',
+                    'address': 'Chorsu tumani, 15-uy',
+                    'estimated_time': '2-3 kun'
+                },
+                {
+                    'id': 'req_002_2024_01_16',
+                    'workflow_type': 'connection_request',
+                    'current_status': 'in_progress',
+                    'contact_info': {
+                        'full_name': 'Malika Toshmatova',
+                        'phone': '+998901234568'
+                    },
+                    'created_at': datetime.now(),
+                    'description': 'Yangi ulanish',
+                    'location': 'Tashkent, Yunusabad',
+                    'priority': 'normal',
+                    'region': 'Toshkent shahri',
+                    'address': 'Yunusobod tumani, 25-uy',
+                    'estimated_time': '1-2 kun'
+                }
+            ]
             
             if not applications:
-                no_applications_text = (
-                    "📭 Hozircha sizga biriktirilgan arizalar yo'q."
-                    if lang == 'uz' else
-                    "📭 Пока нет заявок, назначенных вам."
-                )
-                
-                await message.answer(
-                    text=no_applications_text,
-                    reply_markup=get_technician_back_keyboard(lang)
-                )
+                await message.answer("📭 Hozircha sizga biriktirilgan arizalar yo'q.")
                 return
             
             # Show first application
@@ -173,9 +136,9 @@ def get_technician_inbox_router():
                 
         except Exception as e:
             if isinstance(message_or_callback, Message):
-                await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+                await message_or_callback.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
             else:
-                await message_or_callback.answer("Xatolik yuz berdi")
+                await message_or_callback.answer("❌ Xatolik yuz berdi")
 
     @router.callback_query(F.data == "tech_prev_application")
     async def show_previous_application(callback: CallbackQuery, state: FSMContext):
@@ -187,7 +150,41 @@ def get_technician_inbox_router():
             current_index = await state.get_data()
             current_index = current_index.get('current_app_index', 0)
             
-            applications = await get_technician_applications(callback.from_user.id)
+            # Mock applications data
+            applications = [
+                {
+                    'id': 'req_001_2024_01_15',
+                    'workflow_type': 'technical_service',
+                    'current_status': 'assigned',
+                    'contact_info': {
+                        'full_name': 'Aziz Karimov',
+                        'phone': '+998901234567'
+                    },
+                    'created_at': datetime.now(),
+                    'description': 'Internet tezligi sekin',
+                    'location': 'Tashkent, Chorsu',
+                    'priority': 'high',
+                    'region': 'Toshkent shahri',
+                    'address': 'Chorsu tumani, 15-uy',
+                    'estimated_time': '2-3 kun'
+                },
+                {
+                    'id': 'req_002_2024_01_16',
+                    'workflow_type': 'connection_request',
+                    'current_status': 'in_progress',
+                    'contact_info': {
+                        'full_name': 'Malika Toshmatova',
+                        'phone': '+998901234568'
+                    },
+                    'created_at': datetime.now(),
+                    'description': 'Yangi ulanish',
+                    'location': 'Tashkent, Yunusabad',
+                    'priority': 'normal',
+                    'region': 'Toshkent shahri',
+                    'address': 'Yunusobod tumani, 25-uy',
+                    'estimated_time': '1-2 kun'
+                }
+            ]
             
             if current_index > 0:
                 new_index = current_index - 1
@@ -197,7 +194,7 @@ def get_technician_inbox_router():
                 await callback.answer("Bu birinchi ariza")
                 
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi")
 
     @router.callback_query(F.data == "tech_next_application")
     async def show_next_application(callback: CallbackQuery, state: FSMContext):
@@ -209,7 +206,41 @@ def get_technician_inbox_router():
             current_index = await state.get_data()
             current_index = current_index.get('current_app_index', 0)
             
-            applications = await get_technician_applications(callback.from_user.id)
+            # Mock applications data
+            applications = [
+                {
+                    'id': 'req_001_2024_01_15',
+                    'workflow_type': 'technical_service',
+                    'current_status': 'assigned',
+                    'contact_info': {
+                        'full_name': 'Aziz Karimov',
+                        'phone': '+998901234567'
+                    },
+                    'created_at': datetime.now(),
+                    'description': 'Internet tezligi sekin',
+                    'location': 'Tashkent, Chorsu',
+                    'priority': 'high',
+                    'region': 'Toshkent shahri',
+                    'address': 'Chorsu tumani, 15-uy',
+                    'estimated_time': '2-3 kun'
+                },
+                {
+                    'id': 'req_002_2024_01_16',
+                    'workflow_type': 'connection_request',
+                    'current_status': 'in_progress',
+                    'contact_info': {
+                        'full_name': 'Malika Toshmatova',
+                        'phone': '+998901234568'
+                    },
+                    'created_at': datetime.now(),
+                    'description': 'Yangi ulanish',
+                    'location': 'Tashkent, Yunusabad',
+                    'priority': 'normal',
+                    'region': 'Toshkent shahri',
+                    'address': 'Yunusobod tumani, 25-uy',
+                    'estimated_time': '1-2 kun'
+                }
+            ]
             
             if current_index < len(applications) - 1:
                 new_index = current_index + 1
@@ -219,7 +250,7 @@ def get_technician_inbox_router():
                 await callback.answer("Bu oxirgi ariza")
                 
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            await callback.answer("❌ Xatolik yuz berdi")
 
     return router
 

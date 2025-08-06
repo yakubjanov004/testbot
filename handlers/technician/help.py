@@ -1,29 +1,18 @@
-from aiogram import F
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
-from datetime import datetime
-from keyboards.technician_buttons import get_technician_help_menu, get_technician_main_menu_keyboard
 from states.technician_states import TechnicianHelpStates
 
 def get_help_router():
-    """Technician help router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("technician")
+    """Technician help router - Simplified Implementation"""
+    router = Router()
 
     @router.message(F.text == "🆘 Yordam")
     async def show_help_menu(message: Message, state: FSMContext):
         """Show help menu"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': message.from_user.id,
-                'role': 'technician',
-                'language': 'uz',
-                'full_name': 'Test Technician'
-            }
-            
-            text = f"""
+            text = """
 🆘 <b>Yordam</b>
 
 📞 Manager bilan bog'lanish
@@ -34,11 +23,14 @@ def get_help_router():
 Kerakli yordam turini tanlang:
             """
             
-            await message.answer(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_technician_help_menu('uz')
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📞 Manager bilan bog'lanish", callback_data="tech_contact_manager")],
+                [InlineKeyboardButton(text="🔧 Texnik yordam", callback_data="tech_technical_help")],
+                [InlineKeyboardButton(text="📦 Ombor bilan bog'lanish", callback_data="tech_warehouse_help")],
+                [InlineKeyboardButton(text="🚨 Shoshilinch holatlar", callback_data="tech_emergency_help")]
+            ])
+            
+            await message.answer(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi")
@@ -48,7 +40,6 @@ Kerakli yordam turini tanlang:
         """Contact manager from help menu"""
         try:
             await state.set_state(TechnicianHelpStates.waiting_for_manager_message)
-            
             text = "📞 Managerga xabar yozing:"
             await callback.message.edit_text(text)
             await callback.answer()
@@ -60,9 +51,6 @@ Kerakli yordam turini tanlang:
     async def process_manager_message(message: Message, state: FSMContext):
         """Process manager message from help menu"""
         try:
-            manager_message = message.text
-            
-            # Mock success - send message to managers
             await message.answer("✅ Xabar yuborildi!")
             await state.clear()
             
@@ -71,10 +59,10 @@ Kerakli yordam turini tanlang:
             await state.clear()
 
     @router.callback_query(F.data == "tech_technical_help")
-    async def technical_help(callback: CallbackQuery, state: FSMContext):
+    async def technical_help(callback: CallbackQuery):
         """Show technical help information"""
         try:
-            text = f"""
+            text = """
 🔧 <b>Texnik yordam</b>
 
 📋 <b>Asosiy funksiyalar:</b>
@@ -93,29 +81,21 @@ Kerakli yordam turini tanlang:
 Muammo bo'lsa menejer bilan bog'laning.
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_help"
-                )
-            ]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_back_to_help")]
+            ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            await callback.message.edit_text(
-                text.strip(),
-                reply_markup=keyboard,
-                parse_mode='HTML'
-            )
+            await callback.message.edit_text(text.strip(), reply_markup=keyboard, parse_mode='HTML')
             await callback.answer()
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "tech_warehouse_help")
-    async def warehouse_help(callback: CallbackQuery, state: FSMContext):
+    async def warehouse_help(callback: CallbackQuery):
         """Show warehouse help information"""
         try:
-            text = f"""
+            text = """
 📦 <b>Ombor bilan bog'lanish</b>
 
 📞 <b>Ombor xodimlari:</b>
@@ -132,29 +112,21 @@ Muammo bo'lsa menejer bilan bog'laning.
 Faqat kerakli jihozlarni so'rang.
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_help"
-                )
-            ]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_back_to_help")]
+            ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            await callback.message.edit_text(
-                text.strip(),
-                reply_markup=keyboard,
-                parse_mode='HTML'
-            )
+            await callback.message.edit_text(text.strip(), reply_markup=keyboard, parse_mode='HTML')
             await callback.answer()
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "tech_emergency_help")
-    async def emergency_help(callback: CallbackQuery, state: FSMContext):
+    async def emergency_help(callback: CallbackQuery):
         """Show emergency help information"""
         try:
-            text = f"""
+            text = """
 🚨 <b>Shoshilinch holatlar</b>
 
 📞 <b>Shoshilinch raqamlar:</b>
@@ -171,29 +143,21 @@ Faqat kerakli jihozlarni so'rang.
 📞 Darhol menejer bilan bog'laning!
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_help"
-                )
-            ]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="tech_back_to_help")]
+            ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            await callback.message.edit_text(
-                text.strip(),
-                reply_markup=keyboard,
-                parse_mode='HTML'
-            )
+            await callback.message.edit_text(text.strip(), reply_markup=keyboard, parse_mode='HTML')
             await callback.answer()
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "tech_back_to_help")
-    async def back_to_help(callback: CallbackQuery, state: FSMContext):
+    async def back_to_help(callback: CallbackQuery):
         """Return to help menu"""
         try:
-            text = f"""
+            text = """
 🆘 <b>Yordam</b>
 
 📞 Manager bilan bog'lanish
@@ -204,11 +168,14 @@ Faqat kerakli jihozlarni so'rang.
 Kerakli yordam turini tanlang:
             """
             
-            await callback.message.edit_text(
-                text.strip(),
-                parse_mode='HTML',
-                reply_markup=get_technician_help_menu('uz')
-            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📞 Manager bilan bog'lanish", callback_data="tech_contact_manager")],
+                [InlineKeyboardButton(text="🔧 Texnik yordam", callback_data="tech_technical_help")],
+                [InlineKeyboardButton(text="📦 Ombor bilan bog'lanish", callback_data="tech_warehouse_help")],
+                [InlineKeyboardButton(text="🚨 Shoshilinch holatlar", callback_data="tech_emergency_help")]
+            ])
+            
+            await callback.message.edit_text(text.strip(), parse_mode='HTML', reply_markup=keyboard)
             await callback.answer()
             
         except Exception as e:

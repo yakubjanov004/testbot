@@ -1,163 +1,158 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+"""
+Technician Communication Handler - Simplified Implementation
+
+This module handles communication for technicians.
+"""
+
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from datetime import datetime
-from states.technician_states import TechnicianCommunicationStates
+from keyboards.technician_buttons import get_communication_keyboard
+from states.technician_states import CommunicationStates
 
 def get_technician_communication_router():
-    """Technician communication router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("technician")
+    router = Router()
 
-    @router.callback_query(F.data == "tech_send_location")
-    async def tech_send_location_handler(callback: CallbackQuery, state: FSMContext):
-        """Request location from technician"""
+    @router.message(F.text.in_(["💬 Aloqa", "💬 Связь"]))
+    async def communication_menu(message: Message, state: FSMContext):
+        """Show communication menu"""
         try:
-            # Mock user data (like other modules)
-            user = {
-                'id': callback.from_user.id,
-                'role': 'technician',
-                'language': 'uz',
-                'full_name': 'Test Technician',
-                'phone_number': '+998901234567'
-            }
+            comm_text = (
+                "💬 **Aloqa va xabarlar**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+            )
             
-            location_text = "📍 Geolokatsiyangizni yuboring:"
-            await callback.message.edit_text(location_text)
-            await state.set_state(TechnicianCommunicationStates.waiting_for_location)
+            keyboard = get_communication_keyboard()
+            await message.answer(
+                text=comm_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.callback_query(F.data == "contact_client")
+    async def contact_client(callback: CallbackQuery, state: FSMContext):
+        """Contact client"""
+        try:
             await callback.answer()
             
-        except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
-
-    @router.message(TechnicianCommunicationStates.waiting_for_location, F.location)
-    async def process_technician_location(message: Message, state: FSMContext):
-        """Process technician location and send to managers"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'technician',
-                'language': 'uz',
-                'full_name': 'Test Technician',
-                'phone_number': '+998901234567'
-            }
+            text = (
+                "📞 **Mijoz bilan bog'lanish**\n\n"
+                "Mijoz bilan bog'lanish funksiyasi.\n\n"
+                "📋 Joriy buyurtmalar:\n"
+                "• ORD001 - Ahmad Karimov (+998901234567)\n"
+                "• ORD002 - Malika Yusupova (+998901234568)\n\n"
+                "💬 Xabar turi:\n"
+                "• Buyurtma holati haqida\n"
+                "• Kelishilgan vaqt haqida\n"
+                "• Texnik muammo haqida\n"
+                "• Boshqa savollar"
+            )
             
-            location = message.location
-            
-            # Mock managers
-            managers = [
-                {
-                    'telegram_id': 123456789,
-                    'role': 'manager',
-                    'language': 'uz'
-                },
-                {
-                    'telegram_id': 987654321,
-                    'role': 'manager',
-                    'language': 'uz'
-                }
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_comm_menu")]
             ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
             
-            sent_count = 0
-            for manager in managers:
-                try:
-                    location_text = (
-                        f"📍 Texnik geolokatsiyasi\n\n"
-                        f"👨‍🔧 Texnik: {user['full_name']}\n"
-                        f"📞 Telefon: {user.get('phone_number', 'Noma\'lum')}\n"
-                        f"⏰ Vaqt: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
-                    )
-                    
-                    # Mock sending location (in real app this would send to actual managers)
-                    sent_count += 1
-                    
-                except Exception as e:
-                    # Mock error handling
-                    pass
-            
-            # Confirm to technician
-            success_text = "✅ Geolokatsiya muvaffaqiyatli yuborildi!"
-            await message.answer(success_text)
-            await state.clear()
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-            await state.clear()
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data == "tech_contact_manager")
-    async def tech_contact_manager_handler(callback: CallbackQuery, state: FSMContext):
-        """Contact manager directly"""
+    @router.callback_query(F.data == "contact_manager")
+    async def contact_manager(callback: CallbackQuery, state: FSMContext):
+        """Contact manager"""
         try:
-            # Mock user data
-            user = {
-                'id': callback.from_user.id,
-                'role': 'technician',
-                'language': 'uz',
-                'full_name': 'Test Technician',
-                'phone_number': '+998901234567'
-            }
-            
-            await state.set_state(TechnicianCommunicationStates.waiting_for_manager_message)
-            message_text = "Menejerga xabar yozing:"
-            await callback.message.edit_text(message_text)
             await callback.answer()
             
-        except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
-
-    @router.message(TechnicianCommunicationStates.waiting_for_manager_message)
-    async def process_manager_message(message: Message, state: FSMContext):
-        """Process message to manager"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'technician',
-                'language': 'uz',
-                'full_name': 'Test Technician',
-                'phone_number': '+998901234567'
-            }
+            text = (
+                "👨‍💼 **Menejer bilan bog'lanish**\n\n"
+                "Menejer bilan bog'lanish funksiyasi.\n\n"
+                "👨‍💼 Mavjud menejerlar:\n"
+                "• Aziz Karimov (Katta menejer) - +998901234569\n"
+                "• Malika Yusupova (Menejer) - +998901234570\n"
+                "• Bekzod Toirov (Kichik menejer) - +998901234571\n\n"
+                "💬 Xabar turi:\n"
+                "• Buyurtma holati haqida\n"
+                "• Texnik muammo haqida\n"
+                "• Qo'shimcha yordam haqida\n"
+                "• Boshqa savollar"
+            )
             
-            # Mock managers
-            managers = [
-                {
-                    'telegram_id': 123456789,
-                    'role': 'manager',
-                    'language': 'uz'
-                },
-                {
-                    'telegram_id': 987654321,
-                    'role': 'manager',
-                    'language': 'uz'
-                }
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_comm_menu")]
             ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
             
-            sent_count = 0
-            for manager in managers:
-                try:
-                    manager_text = (
-                        f"💬 Texnikdan xabar\n\n"
-                        f"👨‍🔧 Texnik: {user['full_name']}\n"
-                        f"📞 Telefon: {user.get('phone_number', 'Noma\'lum')}\n"
-                        f"💬 Xabar: {message.text}\n"
-                        f"⏰ Vaqt: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
-                    )
-                    
-                    # Mock sending message (in real app this would send to actual managers)
-                    sent_count += 1
-                    
-                except Exception as e:
-                    # Mock error handling
-                    pass
-            
-            # Confirm to technician
-            success_text = "✅ Xabar menejerga yuborildi!"
-            await message.answer(success_text)
-            await state.clear()
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-            await state.clear()
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "send_report")
+    async def send_report(callback: CallbackQuery, state: FSMContext):
+        """Send report"""
+        try:
+            await callback.answer()
+            
+            text = (
+                "📋 **Hisobot yuborish**\n\n"
+                "Hisobot yuborish funksiyasi.\n\n"
+                "📋 Hisobot turlari:\n"
+                "• Kunlik hisobot\n"
+                "• Buyurtma hisoboti\n"
+                "• Texnik hisobot\n"
+                "• Muammo hisoboti\n\n"
+                "📊 Bugungi ma'lumotlar:\n"
+                "• Bajarilgan buyurtmalar: 5\n"
+                "• Kutilayotgan buyurtmalar: 2\n"
+                "• Muammolar: 1\n"
+                "• Ish vaqti: 8 soat"
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_comm_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "back_to_comm_menu")
+    async def back_to_communication_menu(callback: CallbackQuery, state: FSMContext):
+        """Back to communication menu"""
+        try:
+            await callback.answer()
+            
+            comm_text = (
+                "💬 **Aloqa va xabarlar**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+            )
+            
+            keyboard = get_communication_keyboard()
+            await callback.message.edit_text(
+                text=comm_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router

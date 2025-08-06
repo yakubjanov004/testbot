@@ -1,561 +1,209 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+"""
+Warehouse Orders Handler - Simplified Implementation
+
+This module handles orders functionality for warehouse.
+"""
+
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.warehouse_buttons import warehouse_orders_menu, order_status_keyboard
-from states.warehouse_states import WarehouseOrdersStates, WarehouseMainMenuStates
+from keyboards.warehouse_buttons import get_orders_keyboard
+from states.warehouse_states import OrdersStates
 
 def get_warehouse_orders_router():
-    """Warehouse orders router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("warehouse")
+    router = Router()
 
-    @router.message(F.text == "📋 Buyurtmalar")
-    async def orders_management_handler(message: Message, state: FSMContext):
-        """Handle orders management"""
+    @router.message(F.text.in_(["📋 Buyurtmalar", "📋 Заказы"]))
+    async def orders_menu(message: Message, state: FSMContext):
+        """Show orders menu"""
         try:
-            orders_text = "📋 Buyurtmalar"
-            
-            await message.answer(
-                orders_text,
-                reply_markup=warehouse_orders_menu('uz')
+            orders_text = (
+                "📋 **Buyurtmalar boshqaruvi**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
             )
-            await state.set_state(WarehouseOrdersStates.orders_menu)
+            
+            keyboard = get_orders_keyboard()
+            await message.answer(
+                text=orders_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @router.message(F.text == "⏳ Kutilayotgan buyurtmalar")
-    async def pending_orders_reply_handler(message: Message, state: FSMContext):
-        """Reply tugmasi orqali kutilayotgan buyurtmalarni ko'rsatish"""
+    @router.callback_query(F.data == "view_all_orders")
+    async def view_all_orders(callback: CallbackQuery, state: FSMContext):
+        """View all orders"""
         try:
-            # Mock pending orders data (like other modules)
+            await callback.answer()
+            
+            # Mock orders data
             orders = [
                 {
-                    'id': '1001',
-                    'client_name': 'Test Client 1',
-                    'description': 'Internet ulanish so\'rovi',
-                    'created_at': '2024-01-15 10:30:00',
-                    'status': 'pending',
-                    'client_phone': '+998901234567'
+                    'id': 'ORD001',
+                    'client': 'Ahmad Karimov',
+                    'type': 'Internet ulanish',
+                    'status': 'Jarayonda',
+                    'materials': ['Router TP-Link', 'Kabel UTP'],
+                    'created': '2024-01-15 10:30',
+                    'technician': 'Aziz Karimov'
                 },
                 {
-                    'id': '1002',
-                    'client_name': 'Test Client 2',
-                    'description': 'Texnik xizmat so\'rovi',
-                    'created_at': '2024-01-15 11:15:00',
-                    'status': 'pending',
-                    'client_phone': '+998901234568'
+                    'id': 'ORD002',
+                    'client': 'Malika Yusupova',
+                    'type': 'TV xizmati',
+                    'status': 'Bajarilgan',
+                    'materials': ['TV antena', 'Kabel'],
+                    'created': '2024-01-15 11:45',
+                    'technician': 'Bekzod Rahimov'
+                },
+                {
+                    'id': 'ORD003',
+                    'client': 'Bekzod Toirov',
+                    'type': 'Texnik xizmat',
+                    'status': 'Yangi',
+                    'materials': ['Modem', 'Kabel'],
+                    'created': '2024-01-15 09:15',
+                    'technician': 'Olimjon Toshmatov'
                 }
             ]
             
-            if orders:
-                text = "⏳ Kutilayotgan buyurtmalar:\n\n"
-                for order in orders:
-                    text += f"🔹 #{order['id']} - {order.get('client_name', 'Noma\'lum')}\n"
-                    text += f"   📝 {order['description'][:50]}{'...' if len(order['description']) > 50 else ''}\n"
-                    text += f"   📅 {order['created_at']}\n"
-                    text += f"   📊 Status: {order['status']}\n"
-                    if order.get('client_phone'):
-                        text += f"   📞 {order['client_phone']}\n"
-                    text += "\n"
-                    if len(text) > 3500:
-                        text += "... va boshqalar"
-                        break
-            else:
-                text = "📭 Kutilayotgan buyurtmalar yo'q"
-            
-            await message.answer(text, reply_markup=warehouse_orders_menu('uz'))
-            await state.set_state(WarehouseOrdersStates.orders_menu)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-
-    @router.message(F.text == "🔄 Jarayondagi buyurtmalar")
-    async def in_progress_orders_reply_handler(message: Message, state: FSMContext):
-        """Reply tugmasi orqali jarayondagi buyurtmalarni ko'rsatish"""
-        try:
-            # Mock in progress orders data (like other modules)
-            orders = [
-                {
-                    'id': '1003',
-                    'client_name': 'Test Client 3',
-                    'description': 'Uskuna o\'rnatish jarayoni',
-                    'technician_name': 'Tech 1',
-                    'created_at': '2024-01-15 09:00:00',
-                    'status': 'in_progress',
-                    'client_phone': '+998901234569'
-                },
-                {
-                    'id': '1004',
-                    'client_name': 'Test Client 4',
-                    'description': 'Tarmoq sozlash ishlari',
-                    'technician_name': 'Tech 2',
-                    'created_at': '2024-01-15 08:30:00',
-                    'status': 'in_progress',
-                    'client_phone': '+998901234570'
-                }
-            ]
-            
-            if orders:
-                text = "🔄 Jarayondagi buyurtmalar:\n\n"
-                for order in orders:
-                    text += f"🔹 #{order['id']} - {order.get('client_name', 'Noma\'lum')}\n"
-                    text += f"   📝 {order['description'][:50]}{'...' if len(order['description']) > 50 else ''}\n"
-                    text += f"   👨‍🔧 Texnik: {order.get('technician_name', 'Tayinlanmagan')}\n"
-                    text += f"   📅 {order['created_at']}\n"
-                    text += f"   📊 Status: {order['status']}\n"
-                    if order.get('client_phone'):
-                        text += f"   📞 {order['client_phone']}\n"
-                    text += "\n"
-                    if len(text) > 3500:
-                        text += "... va boshqalar"
-                        break
-            else:
-                text = "📭 Jarayondagi buyurtmalar yo'q"
-            
-            await message.answer(text, reply_markup=warehouse_orders_menu('uz'))
-            await state.set_state(WarehouseOrdersStates.orders_menu)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-
-    @router.message(F.text == "✅ Bajarilgan buyurtmalar")
-    async def completed_orders_reply_handler(message: Message, state: FSMContext):
-        """Reply tugmasi orqali bajarilgan buyurtmalarni ko'rsatish"""
-        try:
-            # Mock completed orders data (like other modules)
-            orders = [
-                {
-                    'id': '999',
-                    'client_name': 'Test Client 5',
-                    'description': 'Internet ulanish muvaffaqiyatli bajarildi',
-                    'technician_name': 'Tech 3',
-                    'created_at': '2024-01-14 14:00:00',
-                    'completed_at': '2024-01-15 16:30:00',
-                    'client_phone': '+998901234571'
-                },
-                {
-                    'id': '998',
-                    'client_name': 'Test Client 6',
-                    'description': 'Texnik xizmat tugallandi',
-                    'technician_name': 'Tech 4',
-                    'created_at': '2024-01-14 10:00:00',
-                    'completed_at': '2024-01-15 12:00:00',
-                    'client_phone': '+998901234572'
-                }
-            ]
-            
-            if orders:
-                text = "✅ Bajarilgan buyurtmalar:\n\n"
-                for order in orders:
-                    text += f"🔹 #{order['id']} - {order.get('client_name', 'Noma\'lum')}\n"
-                    text += f"   📝 {order['description'][:50]}{'...' if len(order['description']) > 50 else ''}\n"
-                    text += f"   👨‍🔧 Texnik: {order.get('technician_name', 'Noma\'lum')}\n"
-                    text += f"   📅 Yaratilgan: {order['created_at']}\n"
-                    text += f"   ✅ Tugallangan: {order['completed_at']}\n"
-                    if order.get('client_phone'):
-                        text += f"   📞 {order['client_phone']}\n"
-                    text += "\n"
-                    if len(text) > 3500:
-                        text += "... va boshqalar"
-                        break
-            else:
-                text = "📭 Bajarilgan buyurtmalar yo'q"
-            
-            await message.answer(text, reply_markup=warehouse_orders_menu('uz'))
-            await state.set_state(WarehouseOrdersStates.orders_menu)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-
-    @router.message(F.text == "◀️ Orqaga")
-    async def orders_back_reply_handler(message: Message, state: FSMContext):
-        """Buyurtmalar menyusidan orqaga qaytish"""
-        try:
-            from keyboards.warehouse_buttons import warehouse_main_menu
-            await message.answer("Ombor bosh menyusi", reply_markup=warehouse_main_menu('uz'))
-            await state.set_state(WarehouseMainMenuStates.main_menu)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-
-    @router.callback_query(F.data == "pending_orders")
-    async def pending_orders_handler(callback: CallbackQuery, state: FSMContext):
-        """Show pending orders"""
-        try:
-            # Mock pending orders data (like other modules)
-            orders = [
-                {
-                    'id': '1001',
-                    'client_name': 'Test Client 1',
-                    'description': 'Internet ulanish so\'rovi',
-                    'created_at': '2024-01-15 10:30:00',
-                    'status': 'pending',
-                    'client_phone': '+998901234567'
-                },
-                {
-                    'id': '1002',
-                    'client_name': 'Test Client 2',
-                    'description': 'Texnik xizmat so\'rovi',
-                    'created_at': '2024-01-15 11:15:00',
-                    'status': 'pending',
-                    'client_phone': '+998901234568'
-                }
-            ]
-            
-            if orders:
-                text = "⏳ Kutilayotgan buyurtmalar:\n\n"
+            text = "📋 **Barcha buyurtmalar**\n\n"
+            for order in orders:
+                status_emoji = {
+                    'Yangi': '🆕',
+                    'Jarayonda': '🔄',
+                    'Bajarilgan': '✅',
+                    'Bekor qilingan': '❌'
+                }.get(order['status'], '⚪')
                 
-                for order in orders:
-                    text += f"🔹 **#{order['id']}** - {order.get('client_name', 'Noma\'lum')}\n"
-                    text += f"   📝 {order['description'][:50]}{'...' if len(order['description']) > 50 else ''}\n"
-                    text += f"   📅 {order['created_at']}\n"
-                    text += f"   📊 Status: {order['status']}\n"
-                    if order.get('client_phone'):
-                        text += f"   📞 {order['client_phone']}\n"
-                    text += "\n"
-                    
-                    # Limit text length
-                    if len(text) > 3500:
-                        text += "... va boshqalar"
-                        break
-            else:
-                text = "📭 Kutilayotgan buyurtmalar yo'q"
+                text += (
+                    f"{status_emoji} **{order['id']}** - {order['client']}\n"
+                    f"📋 Tur: {order['type']}\n"
+                    f"📊 Status: {order['status']}\n"
+                    f"👨‍🔧 Texnik: {order['technician']}\n"
+                    f"📦 Materiallar: {', '.join(order['materials'])}\n"
+                    f"📅 Sana: {order['created']}\n\n"
+                )
             
-            await callback.message.edit_text(text, parse_mode="Markdown")
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("Buyurtmalarni olishda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data == "in_progress_orders")
-    async def in_progress_orders_handler(callback: CallbackQuery, state: FSMContext):
-        """Show in progress orders"""
-        try:
-            # Mock in progress orders data (like other modules)
-            orders = [
-                {
-                    'id': '1003',
-                    'client_name': 'Test Client 3',
-                    'description': 'Uskuna o\'rnatish jarayoni',
-                    'technician_name': 'Tech 1',
-                    'created_at': '2024-01-15 09:00:00',
-                    'status': 'in_progress',
-                    'client_phone': '+998901234569'
-                },
-                {
-                    'id': '1004',
-                    'client_name': 'Test Client 4',
-                    'description': 'Tarmoq sozlash ishlari',
-                    'technician_name': 'Tech 2',
-                    'created_at': '2024-01-15 08:30:00',
-                    'status': 'in_progress',
-                    'client_phone': '+998901234570'
-                }
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_orders_menu")]
             ]
-            
-            if orders:
-                text = "🔄 Jarayondagi buyurtmalar:\n\n"
-                
-                for order in orders:
-                    text += f"🔹 **#{order['id']}** - {order.get('client_name', 'Noma\'lum')}\n"
-                    text += f"   📝 {order['description'][:50]}{'...' if len(order['description']) > 50 else ''}\n"
-                    text += f"   👨‍🔧 Texnik: {order.get('technician_name', 'Tayinlanmagan')}\n"
-                    text += f"   📅 {order['created_at']}\n"
-                    text += f"   📊 Status: {order['status']}\n"
-                    if order.get('client_phone'):
-                        text += f"   📞 {order['client_phone']}\n"
-                    text += "\n"
-                    
-                    # Limit text length
-                    if len(text) > 3500:
-                        text += "... va boshqalar"
-                        break
-            else:
-                text = "📭 Jarayondagi buyurtmalar yo'q"
-            
-            await callback.message.edit_text(text, parse_mode="Markdown")
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("Buyurtmalarni olishda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data == "completed_orders")
-    async def completed_orders_handler(callback: CallbackQuery, state: FSMContext):
-        """Show completed orders"""
-        try:
-            # Mock completed orders data (like other modules)
-            orders = [
-                {
-                    'id': '999',
-                    'client_name': 'Test Client 5',
-                    'description': 'Internet ulanish muvaffaqiyatli bajarildi',
-                    'technician_name': 'Tech 3',
-                    'created_at': '2024-01-14 14:00:00',
-                    'completed_at': '2024-01-15 16:30:00',
-                    'client_phone': '+998901234571'
-                },
-                {
-                    'id': '998',
-                    'client_name': 'Test Client 6',
-                    'description': 'Texnik xizmat tugallandi',
-                    'technician_name': 'Tech 4',
-                    'created_at': '2024-01-14 10:00:00',
-                    'completed_at': '2024-01-15 12:00:00',
-                    'client_phone': '+998901234572'
-                }
-            ]
-            
-            if orders:
-                text = "✅ Bajarilgan buyurtmalar:\n\n"
-                
-                for order in orders:
-                    text += f"🔹 **#{order['id']}** - {order.get('client_name', 'Noma\'lum')}\n"
-                    text += f"   📝 {order['description'][:50]}{'...' if len(order['description']) > 50 else ''}\n"
-                    text += f"   👨‍🔧 Texnik: {order.get('technician_name', 'Noma\'lum')}\n"
-                    text += f"   📅 Yaratilgan: {order['created_at']}\n"
-                    text += f"   ✅ Tugallangan: {order['completed_at']}\n"
-                    if order.get('client_phone'):
-                        text += f"   📞 {order['client_phone']}\n"
-                    text += "\n"
-                    
-                    # Limit text length
-                    if len(text) > 3500:
-                        text += "... va boshqalar"
-                        break
-            else:
-                text = "📭 Bajarilgan buyurtmalar yo'q"
-            
-            await callback.message.edit_text(text, parse_mode="Markdown")
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("Buyurtmalarni olishda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data.startswith("mark_ready_"))
-    async def mark_order_ready_handler(callback: CallbackQuery, state: FSMContext):
-        """Mark order as ready for installation"""
-        try:
-            order_id = int(callback.data.split("_")[-1])
-            
-            # Mock success response (like other modules)
-            success_text = f"✅ #{order_id} buyurtma o'rnatishga tayyor deb belgilandi!"
-            await callback.message.edit_text(success_text)
-            
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("❌ Buyurtmani belgilashda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data.startswith("update_order_status_"))
-    async def update_order_status_handler(callback: CallbackQuery, state: FSMContext):
-        """Update order status"""
-        try:
-            # Parse callback data: update_order_status_{order_id}_{status}
-            parts = callback.data.split("_")
-            order_id = int(parts[3])
-            new_status = parts[4]
-            
-            # Mock success response (like other modules)
-            status_names = {
-                'confirmed': 'Tasdiqlangan',
-                'in_progress': 'Jarayonda',
-                'completed': 'Bajarilgan',
-                'cancelled': 'Bekor qilingan'
-            }
-            
-            status_name = status_names.get(new_status, new_status)
-            success_text = f"✅ #{order_id} buyurtma holati '{status_name}' ga o'zgartirildi!"
-            await callback.message.edit_text(success_text)
-            
-            await callback.answer()
-            
-        except Exception as e:
-            await callback.message.edit_text("❌ Holatni o'zgartirishda xatolik")
-            await callback.answer()
-
-    @router.callback_query(F.data == "orders_by_status")
-    async def orders_by_status_handler(callback: CallbackQuery, state: FSMContext):
-        """Show orders filtering by status"""
-        try:
-            filter_text = "📊 Holatga ko'ra filtrlash:"
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
             
             await callback.message.edit_text(
-                filter_text,
-                reply_markup=order_status_keyboard('uz')
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
             )
-            await callback.answer()
             
         except Exception as e:
-            await callback.message.edit_text("Xatolik yuz berdi")
-            await callback.answer()
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data.startswith("filter_orders_"))
-    async def filter_orders_handler(callback: CallbackQuery, state: FSMContext):
-        """Filter orders by specific status"""
+    @router.callback_query(F.data == "process_order")
+    async def process_order(callback: CallbackQuery, state: FSMContext):
+        """Process order"""
         try:
-            status = callback.data.split("_")[-1]
+            await callback.answer()
             
-            # Mock filtered orders data (like other modules)
-            orders = [
-                {
-                    'id': '1001',
-                    'client_name': 'Test Client 1',
-                    'description': 'Internet ulanish so\'rovi',
-                    'created_at': '2024-01-15 10:30:00',
-                    'technician_name': 'Tech 1',
-                    'client_phone': '+998901234567'
-                }
+            text = (
+                "📋 **Buyurtmani qayta ishlash**\n\n"
+                "Buyurtmalarni qayta ishlash funksiyasi.\n\n"
+                "📋 Mavjud buyurtmalar:\n"
+                "• ORD001 - Ahmad Karimov (Internet ulanish) - Jarayonda\n"
+                "• ORD002 - Malika Yusupova (TV xizmati) - Bajarilgan\n"
+                "• ORD003 - Bekzod Toirov (Texnik xizmat) - Yangi\n\n"
+                "👨‍🔧 Mavjud texniklar:\n"
+                "• Aziz Karimov (Internet texnik)\n"
+                "• Bekzod Rahimov (TV texnik)\n"
+                "• Olimjon Toshmatov (Umumiy texnik)"
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_orders_menu")]
             ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
             
-            status_names = {
-                'new': 'Yangi',
-                'confirmed': 'Tasdiqlangan',
-                'in_progress': 'Jarayonda',
-                'completed': 'Bajarilgan',
-                'cancelled': 'Bekor qilingan'
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "order_statistics")
+    async def order_statistics(callback: CallbackQuery, state: FSMContext):
+        """Show order statistics"""
+        try:
+            await callback.answer()
+            
+            # Mock statistics data
+            statistics = {
+                'total_orders': 45,
+                'new_orders': 12,
+                'in_progress': 8,
+                'completed': 25,
+                'completion_rate': '55.6%',
+                'avg_completion_time': '2.3 soat',
+                'popular_services': [
+                    {'service': 'Internet ulanish', 'count': 20},
+                    {'service': 'TV xizmati', 'count': 15},
+                    {'service': 'Texnik xizmat', 'count': 10}
+                ]
             }
             
-            status_name = status_names.get(status, status)
+            text = (
+                f"📊 **Buyurtmalar statistikasi**\n\n"
+                f"📈 **Umumiy ma'lumotlar:**\n"
+                f"• Jami buyurtmalar: {statistics['total_orders']}\n"
+                f"• Yangi: {statistics['new_orders']}\n"
+                f"• Jarayonda: {statistics['in_progress']}\n"
+                f"• Bajarilgan: {statistics['completed']}\n\n"
+                f"📈 **Samaradorlik:**\n"
+                f"• Bajarilish darajasi: {statistics['completion_rate']}\n"
+                f"• O'rtacha vaqt: {statistics['avg_completion_time']}\n\n"
+                f"🏆 **Eng ko'p talab qilinadigan xizmatlar:**\n"
+            )
             
-            if orders:
-                text = f"📊 {status_name} buyurtmalar:\n\n"
-                
-                for order in orders:
-                    text += f"🔹 **#{order['id']}** - {order.get('client_name', 'Noma\'lum')}\n"
-                    text += f"   📝 {order['description'][:50]}{'...' if len(order['description']) > 50 else ''}\n"
-                    text += f"   📅 {order['created_at']}\n"
-                    if order.get('technician_name'):
-                        text += f"   👨‍🔧 {order['technician_name']}\n"
-                    if order.get('client_phone'):
-                        text += f"   📞 {order['client_phone']}\n"
-                    text += "\n"
-                    
-                    # Limit text length
-                    if len(text) > 3500:
-                        text += "... va boshqalar"
-                        break
-            else:
-                text = f"📭 {status_name} buyurtmalar yo'q"
+            for service in statistics['popular_services']:
+                text += f"• {service['service']}: {service['count']} ta\n"
             
-            await callback.message.edit_text(text, parse_mode="Markdown")
-            await callback.answer()
+            keyboard = [
+                [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_orders_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
-            await callback.message.edit_text("Filtrlashda xatolik")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "back_to_orders_menu")
+    async def back_to_orders_menu(callback: CallbackQuery, state: FSMContext):
+        """Back to orders menu"""
+        try:
             await callback.answer()
+            
+            orders_text = (
+                "📋 **Buyurtmalar boshqaruvi**\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+            )
+            
+            keyboard = get_orders_keyboard()
+            await callback.message.edit_text(
+                text=orders_text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
     return router
-
-# Mock functions (like other modules)
-async def get_pending_warehouse_orders():
-    """Get pending warehouse orders (mock function like other modules)"""
-    try:
-        return [
-            {
-                'id': '1001',
-                'client_name': 'Test Client 1',
-                'description': 'Internet ulanish so\'rovi',
-                'created_at': '2024-01-15 10:30:00',
-                'status': 'pending',
-                'client_phone': '+998901234567'
-            },
-            {
-                'id': '1002',
-                'client_name': 'Test Client 2',
-                'description': 'Texnik xizmat so\'rovi',
-                'created_at': '2024-01-15 11:15:00',
-                'status': 'pending',
-                'client_phone': '+998901234568'
-            }
-        ]
-    except Exception as e:
-        return []
-
-async def get_in_progress_warehouse_orders():
-    """Get in progress warehouse orders (mock function like other modules)"""
-    try:
-        return [
-            {
-                'id': '1003',
-                'client_name': 'Test Client 3',
-                'description': 'Uskuna o\'rnatish jarayoni',
-                'technician_name': 'Tech 1',
-                'created_at': '2024-01-15 09:00:00',
-                'status': 'in_progress',
-                'client_phone': '+998901234569'
-            },
-            {
-                'id': '1004',
-                'client_name': 'Test Client 4',
-                'description': 'Tarmoq sozlash ishlari',
-                'technician_name': 'Tech 2',
-                'created_at': '2024-01-15 08:30:00',
-                'status': 'in_progress',
-                'client_phone': '+998901234570'
-            }
-        ]
-    except Exception as e:
-        return []
-
-async def get_completed_warehouse_orders(limit: int = 10):
-    """Get completed warehouse orders (mock function like other modules)"""
-    try:
-        return [
-            {
-                'id': '999',
-                'client_name': 'Test Client 5',
-                'description': 'Internet ulanish muvaffaqiyatli bajarildi',
-                'technician_name': 'Tech 3',
-                'created_at': '2024-01-14 14:00:00',
-                'completed_at': '2024-01-15 16:30:00',
-                'client_phone': '+998901234571'
-            },
-            {
-                'id': '998',
-                'client_name': 'Test Client 6',
-                'description': 'Texnik xizmat tugallandi',
-                'technician_name': 'Tech 4',
-                'created_at': '2024-01-14 10:00:00',
-                'completed_at': '2024-01-15 12:00:00',
-                'client_phone': '+998901234572'
-            }
-        ]
-    except Exception as e:
-        return []
-
-async def update_order_status_warehouse(order_id: int, new_status: str, user_id: int):
-    """Update order status warehouse (mock function like other modules)"""
-    try:
-        # Mock update (like other modules)
-        return True
-    except Exception as e:
-        return False
-
-async def mark_order_ready_for_installation(order_id: int, user_id: int):
-    """Mark order ready for installation (mock function like other modules)"""
-    try:
-        # Mock mark ready (like other modules)
-        return True
-    except Exception as e:
-        return False
-
-async def get_warehouse_orders_by_status(statuses: list):
-    """Get warehouse orders by status (mock function like other modules)"""
-    try:
-        return [
-            {
-                'id': '1001',
-                'client_name': 'Test Client 1',
-                'description': 'Internet ulanish so\'rovi',
-                'created_at': '2024-01-15 10:30:00',
-                'technician_name': 'Tech 1',
-                'client_phone': '+998901234567'
-            }
-        ]
-    except Exception as e:
-        return []
