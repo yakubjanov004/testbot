@@ -7,11 +7,7 @@ Bu modul manager uchun inbox funksionalligini o'z ichiga oladi.
 from aiogram import F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
 from datetime import datetime
-from states.manager_states import ManagerInboxStates
-
-from states.manager_states import ManagerInboxStates
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -459,38 +455,6 @@ def get_manager_inbox_router():
             # Create action buttons
             buttons = []
             
-            # Add comment button
-            buttons.append([
-                InlineKeyboardButton(
-                    text="💬 Izoh qo'shish",
-                    callback_data=f"mgr_add_comment_{full_id}"
-                )
-            ])
-            
-            # Add detailed view button
-            buttons.append([
-                InlineKeyboardButton(
-                    text="🔍 Batafsil",
-                    callback_data=f"mgr_detail_{full_id}"
-                )
-            ])
-            
-            # Navigation buttons
-            nav_buttons = []
-            if index > 0:
-                nav_buttons.append(InlineKeyboardButton(
-                    text="⬅️ Oldingi",
-                    callback_data="mgr_prev"
-                ))
-            if index < len(requests) - 1:
-                nav_buttons.append(InlineKeyboardButton(
-                    text="Keyingisi ➡️",
-                    callback_data="mgr_next"
-                ))
-            
-            if nav_buttons:
-                buttons.append(nav_buttons)
-            
             # Assignment button (only for connection requests)
             if request['workflow_type'] == 'connection_request' and request['role_current'] == 'manager':
                 buttons.append([
@@ -543,181 +507,11 @@ def get_manager_inbox_router():
             except Exception as edit_error:
                 print(f"Error editing message: {edit_error}")
 
-    @router.callback_query(F.data == "mgr_prev")
-    async def navigate_prev(callback: CallbackQuery, state: FSMContext):
-        try:
-            await callback.answer()
-            
-            data = await state.get_data()
-            requests = data.get('inbox_requests', [])
-            current_index = data.get('current_index', 0)
-            
-            if not requests:
-                await callback.message.edit_text("📭 Inbox bo'sh")
-                return
-            
-            if current_index > 0:
-                new_index = current_index - 1
-                await state.update_data(current_index=new_index)
-                
-                user = await get_user_by_telegram_id(callback.from_user.id)
-                lang = user.get('language', 'uz')
-                
-                await display_manager_request(callback, state, requests, new_index, lang, user)
-            else:
-                await callback.answer("Birinchi ariza", show_alert=True)
-            
-        except Exception as e:
-            print(f"Error in navigate_prev: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data == "mgr_next")
-    async def navigate_next(callback: CallbackQuery, state: FSMContext):
-        try:
-            await callback.answer()
-            
-            data = await state.get_data()
-            requests = data.get('inbox_requests', [])
-            current_index = data.get('current_index', 0)
-            
-            if not requests:
-                await callback.message.edit_text("📭 Inbox bo'sh")
-                return
-            
-            if current_index < len(requests) - 1:
-                new_index = current_index + 1
-                await state.update_data(current_index=new_index)
-                
-                user = await get_user_by_telegram_id(callback.from_user.id)
-                lang = user.get('language', 'uz')
-                
-                await display_manager_request(callback, state, requests, new_index, lang, user)
-            else:
-                await callback.answer("Oxirgi ariza", show_alert=True)
-            
-        except Exception as e:
-            print(f"Error in navigate_next: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data.startswith("mgr_detail_"))
-    async def show_detail(callback: CallbackQuery, state: FSMContext):
-        """Show detailed request information with all comments"""
-        try:
-            await callback.answer()
-            
-            request_id = callback.data.replace("mgr_detail_", "")  # full id
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
 
-            # Get full request details
-            state_manager = MockStateManager()
-            request = await state_manager.get_request(request_id)
-            
-            if not request:
-                await callback.message.edit_text("Zayavka topilmadi!")
-                return
 
-            # Get all comments that manager can see
-            comments = await get_comments_for_role(request['id'], 'manager')
 
-            comments_info = ""
-            if comments:
-                comments_info = "\n\n💬 <b>Izohlar:</b>\n"
-                for c in comments:
-                    created_str = c.get('created_at')
-                    if created_str:
-                        # Handle both string and datetime objects
-                        if isinstance(created_str, str):
-                            created = datetime.fromisoformat(created_str).strftime('%d.%m.%Y %H:%M')
-                        else:
-                            created = created_str.strftime('%d.%m.%Y %H:%M')
-                    else:
-                        created = '-'
-                    
-                    # Get role from comment_type
-                    comment_type = c.get('comment_type', '')
-                    role = comment_type.replace('_comment', '') if comment_type else 'unknown'
-                    
-                    # Role emojis
-                    role_emoji = {
-                        'manager': '👨‍💼',
-                        'junior_manager': '👨‍💼',
-                        'controller': '🎛️',
-                        'technician': '🔧',
-                        'warehouse': '📦',
-                        'call_center': '📞',
-                        'call_center_supervisor': '📞',
-                        'admin': '👑'
-                    }.get(role, '👤')
-                    
-                    comments_info += f"{role_emoji} <b>{c.get('commenter', 'N/A')}</b> ({role}): {c.get('comment', 'N/A')} ({created})\n"
-
-            client_name = request['contact_info'].get('full_name', 'N/A') if isinstance(request['contact_info'], dict) else 'N/A'
-            client_phone = request['contact_info'].get('phone', 'N/A') if isinstance(request['contact_info'], dict) else 'N/A'
-            
-            text = (
-                f"🔌 <b>Ariza batafsil ma'lumotlari!</b>\n\n"
-                f"📝 <b>ID:</b> {request['id']}\n"
-                f"👤 <b>Mijoz:</b> {client_name}\n"
-                f"📞 <b>Telefon:</b> {client_phone}\n"
-                f"📄 <b>Ta'rif:</b> {request.get('description', 'N/A')}\n"
-                f"📍 <b>Manzil:</b> {request.get('location') or 'Noma\'lum'}\n"
-                f"📊 <b>Status:</b> {request.get('current_status', 'N/A')}\n"
-                f"📅 <b>Yaratilgan:</b> {request.get('created_at', 'N/A')}\n"
-                f"📊 <b>Turi:</b> {'Ulanish' if request.get('workflow_type') == 'connection_request' else 'Texnik xizmat'}"
-                f"{comments_info}"
-            )
-
-            buttons = [
-                [
-                    InlineKeyboardButton(text="🔙 Ortga", callback_data="mgr_back_to_inbox")
-                ]
-            ]
-
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-
-            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
-            
-        except Exception as e:
-            print(f"Error in show_detail: {e}")
-            await callback.answer("Xatolik yuz berdi!", show_alert=True)
-
-    @router.callback_query(F.data == "mgr_back_to_inbox")
-    async def back_to_inbox(callback: CallbackQuery, state: FSMContext):
-        try:
-            await callback.answer()
-            
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'manager':
-                return
-            
-            lang = user.get('language', 'uz')
-            
-            # Reload requests from database with status filter
-            access_control = MockWorkflowAccessControl()
-            requests = await access_control.get_filtered_requests_for_role(
-                user_id=user['id'],
-                user_role='manager',
-                status_filter='created'
-            )
-            requests = [r for r in requests if r.get('role_current') == 'manager']
-            
-            if not requests:
-                text = "📭 Inbox bo'sh"
-                await callback.message.edit_text(text)
-                return
-            
-            # Set current index to 0 and save to state
-            await state.update_data(
-                inbox_requests=requests,
-                current_index=0
-            )
-            
-            await display_manager_request(callback, state, requests, 0, lang, user)
-            
-        except Exception as e:
-            print(f"Error in back_to_inbox: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("mgr_assign_jm_"))
     async def assign_to_junior_manager(callback: CallbackQuery, state: FSMContext):
@@ -744,10 +538,7 @@ def get_manager_inbox_router():
                     callback_data=f"mgr_confirm_jm_{full_id}_{jm['id']}"
                 )])
             
-            buttons.append([InlineKeyboardButton(
-                text="🔙 Orqaga",
-                callback_data="mgr_back_to_inbox"
-            )])
+
             
             text = (
                 f"👨‍💼 <b>Kichik menjer tanlang</b>\n\n"
@@ -856,84 +647,6 @@ def get_manager_inbox_router():
             print(f"Error in confirm_junior_manager_assignment: {str(e)}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data.startswith("mgr_add_comment_"))
-    async def add_comment_start(callback: CallbackQuery, state: FSMContext):
-        """Start adding comment for manager"""
-        try:
-            await callback.answer()
-            
-            request_id = callback.data.replace("mgr_add_comment_", "")  # full
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
 
-            # Save request ID in state
-            await state.update_data(comment_request_id=request_id)
-            await state.set_state(ManagerInboxStates.entering_comment)
-
-            prompt_text = "💬 Iltimos, izohingizni yuboring:"
-
-            cancel_text = "❌ Bekor qilish"
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=cancel_text, callback_data="mgr_cancel_comment")]
-            ])
-
-            await callback.message.edit_text(prompt_text, reply_markup=keyboard)
-            
-        except Exception as e:
-            print(f"Error in add_comment_start: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    @router.message(StateFilter(ManagerInboxStates.entering_comment))
-    async def process_comment(message: Message, state: FSMContext):
-        try:
-            comment = message.text
-            data = await state.get_data()
-            current_request_id = data.get('comment_request_id') # full
-            
-            user = await get_user_by_telegram_id(message.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            if not current_request_id:
-                await message.answer("Sessiya muddati tugadi. Qaytadan boshlang.")
-                await state.clear()
-                return
-            
-            # Add comment using new database function
-            success = await add_role_comment(current_request_id, message.from_user.id, comment, 'manager')
-            
-            if success:
-                text = (
-                    f"✅ <b>Izoh qo'shildi!</b>\n\n"
-                    f"💬 Izoh: {comment}"
-                )
-                await message.answer(text, parse_mode='HTML')
-                
-                # Return to inbox
-                requests = data.get('inbox_requests', [])
-                current_index = data.get('current_index', 0)
-                
-                if requests:
-                    await display_manager_request(message, state, requests, current_index, lang, user)
-                
-            else:
-                await message.answer("Izoh qo'shishda xatolik yuz berdi")
-            
-            await state.clear()
-            
-        except Exception as e:
-            print(f"Error in process_comment: {str(e)}")
-            await message.answer("Xatolik yuz berdi")
-            await state.clear()
-
-    @router.callback_query(F.data == "mgr_cancel_comment")
-    async def cancel_comment(callback: CallbackQuery, state: FSMContext):
-        """Cancel comment adding"""
-        try:
-            await callback.answer()
-            await state.clear()
-            await show_manager_inbox(callback.message, state)
-        except Exception as e:
-            print(f"Error in cancel_comment: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     return router

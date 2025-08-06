@@ -7,7 +7,7 @@ This module handles controller staff application creation functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controller_buttons import get_staff_creation_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import get_staff_creation_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -345,3 +345,7 @@ def get_staff_navigation_keyboard(current_index: int, total_staff: int):
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_controller_staff_application_router():
+    """Get controller staff application router - alias for get_staff_application_creation_router"""
+    return get_staff_application_creation_router()

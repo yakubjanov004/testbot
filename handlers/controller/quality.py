@@ -7,7 +7,7 @@ This module handles controller quality management functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controller_buttons import get_quality_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import get_quality_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -373,3 +373,7 @@ def get_quality_issues_navigation_keyboard(current_index: int, total_issues: int
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_controller_quality_router():
+    """Get controller quality router - alias for get_quality_router"""
+    return get_quality_router()

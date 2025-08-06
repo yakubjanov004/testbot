@@ -98,6 +98,37 @@ def get_technician_selection_keyboard(technicians):
         ])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+def get_technician_inbox_keyboard(lang='uz'):
+    """Generate inbox keyboard for technician with locale support"""
+    new_messages_text = "🆕 Yangi xabarlar" if lang == "uz" else "🆕 Новые сообщения"
+    read_messages_text = "✅ O'qilgan xabarlar" if lang == "uz" else "✅ Прочитанные сообщения"
+    urgent_messages_text = "🚨 Shoshilinch xabarlar" if lang == "uz" else "🚨 Срочные сообщения"
+    all_messages_text = "📋 Barcha xabarlar" if lang == "uz" else "📋 Все сообщения"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=new_messages_text, callback_data="tech_inbox_new"),
+            InlineKeyboardButton(text=read_messages_text, callback_data="tech_inbox_read")
+        ],
+        [
+            InlineKeyboardButton(text=urgent_messages_text, callback_data="tech_inbox_urgent"),
+            InlineKeyboardButton(text=all_messages_text, callback_data="tech_inbox_all")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_technician_main")
+        ]
+    ])
+    return keyboard
+
+def get_technician_back_keyboard(lang='uz'):
+    """Technician back keyboard"""
+    back_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_text)]],
+        resize_keyboard=True
+    )
+
 def get_task_action_keyboard(task_id, status, lang="uz") -> InlineKeyboardMarkup:
     """Task action keyboard"""
     buttons = []

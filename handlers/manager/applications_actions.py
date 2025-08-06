@@ -69,7 +69,7 @@ class MockWorkflowEngine:
 class WorkflowAction:
     ASSIGN_TO_JUNIOR_MANAGER = "assign_to_junior_manager"
 
-def get_applications_actions_router():
+def get_manager_applications_actions_router():
     """Router for applications actions functionality"""
     router = Router()
 

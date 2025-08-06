@@ -7,7 +7,7 @@ This module handles controller technical service functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controller_buttons import get_technical_service_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import get_technical_service_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -260,3 +260,7 @@ def get_services_navigation_keyboard(current_index: int, total_services: int):
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_controller_technical_service_router():
+    """Get controller technical service router - alias for get_technical_service_router"""
+    return get_technical_service_router()

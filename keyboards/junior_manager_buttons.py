@@ -459,7 +459,7 @@ def _get_status_emoji(status: str) -> str:
 
 def get_language_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     """Junior manager uchun til tanlash inline keyboard"""
-    uz_text = "🇺🇿 O‘zbekcha" if lang == "uz" else "🇺🇿 Узбекский"
+    uz_text = "🇺🇿 O'zbekcha" if lang == "uz" else "🇺🇿 Узбекский"
     ru_text = "🇷🇺 Ruscha" if lang == "uz" else "🇷🇺 Русский"
 
     keyboard = InlineKeyboardMarkup(
@@ -469,3 +469,71 @@ def get_language_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
         ]
     )
     return keyboard
+
+def get_statistics_keyboard(lang='uz'):
+    """Generate statistics keyboard for junior manager with locale support"""
+    daily_text = "📅 Kunlik statistika" if lang == "uz" else "📅 Дневная статистика"
+    weekly_text = "📅 Haftalik statistika" if lang == "uz" else "📅 Недельная статистика"
+    monthly_text = "📅 Oylik statistika" if lang == "uz" else "📅 Месячная статистика"
+    performance_text = "📊 Samaradorlik" if lang == "uz" else "📊 Производительность"
+    applications_text = "📋 Ariza statistikasi" if lang == "uz" else "📋 Статистика заявок"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=daily_text, callback_data="jm_stats_daily"),
+            InlineKeyboardButton(text=weekly_text, callback_data="jm_stats_weekly")
+        ],
+        [
+            InlineKeyboardButton(text=monthly_text, callback_data="jm_stats_monthly"),
+            InlineKeyboardButton(text=performance_text, callback_data="jm_stats_performance")
+        ],
+        [
+            InlineKeyboardButton(text=applications_text, callback_data="jm_stats_applications")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_junior_manager_main")
+        ]
+    ])
+    return keyboard
+
+def get_orders_keyboard(lang='uz'):
+    """Generate orders keyboard for junior manager with locale support"""
+    view_all_text = "📋 Barcha buyurtmalar" if lang == "uz" else "📋 Все заказы"
+    new_orders_text = "🆕 Yangi buyurtmalar" if lang == "uz" else "🆕 Новые заказы"
+    pending_orders_text = "⏳ Kutilayotgan buyurtmalar" if lang == "uz" else "⏳ Ожидающие заказы"
+    completed_orders_text = "✅ Bajarilgan buyurtmalar" if lang == "uz" else "✅ Выполненные заказы"
+    search_orders_text = "🔍 Buyurtma qidirish" if lang == "uz" else "🔍 Поиск заказа"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=view_all_text, callback_data="jm_orders_all"),
+            InlineKeyboardButton(text=new_orders_text, callback_data="jm_orders_new")
+        ],
+        [
+            InlineKeyboardButton(text=pending_orders_text, callback_data="jm_orders_pending"),
+            InlineKeyboardButton(text=completed_orders_text, callback_data="jm_orders_completed")
+        ],
+        [
+            InlineKeyboardButton(text=search_orders_text, callback_data="jm_orders_search")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_junior_manager_main")
+        ]
+    ])
+    return keyboard
+
+def get_junior_manager_back_keyboard(lang='uz'):
+    """Junior manager uchun bosh menyuga qaytish klaviaturasi"""
+    back_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_text)]],
+        resize_keyboard=True
+    )
+
+def get_client_search_keyboard(lang='uz'):
+    """Alias for get_client_search_menu for compatibility"""
+    return get_client_search_menu(lang)
+
+

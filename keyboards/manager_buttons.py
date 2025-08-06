@@ -577,3 +577,68 @@ def get_manager_word_documents_keyboard(lang: str = 'uz') -> InlineKeyboardMarku
         ]
     )
     return keyboard
+
+def get_manager_filters_keyboard(lang='uz'):
+    """Generate filters keyboard for manager with locale support"""
+    region_text = "🌍 Hudud bo'yicha" if lang == "uz" else "🌍 По региону"
+    status_text = "📊 Holat bo'yicha" if lang == "uz" else "📊 По статусу"
+    date_text = "📅 Sana bo'yicha" if lang == "uz" else "📅 По дате"
+    priority_text = "⚡ Ustuvorlik bo'yicha" if lang == "uz" else "⚡ По приоритету"
+    type_text = "📋 Ariza turi bo'yicha" if lang == "uz" else "📋 По типу заявки"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=region_text, callback_data="filter_by_region"),
+            InlineKeyboardButton(text=status_text, callback_data="filter_by_status")
+        ],
+        [
+            InlineKeyboardButton(text=date_text, callback_data="filter_by_date"),
+            InlineKeyboardButton(text=priority_text, callback_data="filter_by_priority")
+        ],
+        [
+            InlineKeyboardButton(text=type_text, callback_data="filter_by_type")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_manager_main")
+        ]
+    ])
+    return keyboard
+
+def get_manager_notifications_keyboard(lang='uz'):
+    """Generate notifications keyboard for manager with locale support"""
+    new_text = "🆕 Yangi bildirishnomalar" if lang == "uz" else "🆕 Новые уведомления"
+    read_text = "✅ O'qilgan bildirishnomalar" if lang == "uz" else "✅ Прочитанные уведомления"
+    urgent_text = "🚨 Shoshilinch bildirishnomalar" if lang == "uz" else "🚨 Срочные уведомления"
+    all_text = "📋 Barcha bildirishnomalar" if lang == "uz" else "📋 Все уведомления"
+    settings_text = "⚙️ Bildirishnoma sozlamalari" if lang == "uz" else "⚙️ Настройки уведомлений"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=new_text, callback_data="notifications_new"),
+            InlineKeyboardButton(text=read_text, callback_data="notifications_read")
+        ],
+        [
+            InlineKeyboardButton(text=urgent_text, callback_data="notifications_urgent"),
+            InlineKeyboardButton(text=all_text, callback_data="notifications_all")
+        ],
+        [
+            InlineKeyboardButton(text=settings_text, callback_data="notifications_settings")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_manager_main")
+        ]
+    ])
+    return keyboard
+
+def get_manager_search_keyboard(lang='uz'):
+    """Generate search keyboard for manager with locale support"""
+    search_text = "🔍 Qidiruv" if lang == "uz" else "🔍 Поиск"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = [
+        [KeyboardButton(text=search_text)],
+        [KeyboardButton(text=back_text)]
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)

@@ -11,7 +11,7 @@ This module provides complete technician functionality including:
 - Language settings
 """
 
-from utils.role_system import get_role_router
+from aiogram import Router
 from .main_menu import get_technician_main_menu_router
 from .inbox import get_technician_inbox_router
 from .reports import get_reports_router
@@ -21,7 +21,7 @@ from .equipment import get_technician_equipment_router
 
 def get_technician_router():
     """Get the complete technician router with all handlers"""
-    router = get_role_router("technician")
+    router = Router()
 
     # Include all technician routers
     router.include_router(get_technician_main_menu_router())

@@ -344,3 +344,153 @@ def technical_service_assignment_keyboard(request_id, technicians=None, lang='uz
     keyboard.append([InlineKeyboardButton(text=back_text, callback_data="controllers_back")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_quality_keyboard(lang='uz'):
+    """Generate quality keyboard for controller with locale support"""
+    quality_issues_text = "🔴 Sifat muammolari" if lang == "uz" else "🔴 Проблемы качества"
+    quality_metrics_text = "📊 Sifat ko'rsatkichlari" if lang == "uz" else "📊 Показатели качества"
+    quality_reports_text = "📋 Sifat hisobotlari" if lang == "uz" else "📋 Отчеты качества"
+    quality_settings_text = "⚙️ Sifat sozlamalari" if lang == "uz" else "⚙️ Настройки качества"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=quality_issues_text, callback_data="ctrl_quality_issues"),
+            InlineKeyboardButton(text=quality_metrics_text, callback_data="ctrl_quality_metrics")
+        ],
+        [
+            InlineKeyboardButton(text=quality_reports_text, callback_data="ctrl_quality_reports"),
+            InlineKeyboardButton(text=quality_settings_text, callback_data="ctrl_quality_settings")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_controller_back_keyboard(lang='uz'):
+    """Controller uchun bosh menyuga qaytish klaviaturasi"""
+    back_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_text)]],
+        resize_keyboard=True
+    )
+
+def get_technician_keyboard(lang='uz'):
+    """Generate technician keyboard for controller with locale support"""
+    view_all_text = "📋 Barcha texniklar" if lang == "uz" else "📋 Все техники"
+    active_text = "🟢 Faol texniklar" if lang == "uz" else "🟢 Активные техники"
+    busy_text = "🟡 Band texniklar" if lang == "uz" else "🟡 Занятые техники"
+    performance_text = "📊 Samaradorlik" if lang == "uz" else "📊 Производительность"
+    assignments_text = "📋 Tayinlashlar" if lang == "uz" else "📋 Назначения"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=view_all_text, callback_data="ctrl_tech_all"),
+            InlineKeyboardButton(text=active_text, callback_data="ctrl_tech_active")
+        ],
+        [
+            InlineKeyboardButton(text=busy_text, callback_data="ctrl_tech_busy"),
+            InlineKeyboardButton(text=performance_text, callback_data="ctrl_tech_performance")
+        ],
+        [
+            InlineKeyboardButton(text=assignments_text, callback_data="ctrl_tech_assignments")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_technical_service_keyboard(lang='uz'):
+    """Generate technical service keyboard for controller with locale support"""
+    create_service_text = "🔧 Texnik xizmat yaratish" if lang == "uz" else "🔧 Создать техническую услугу"
+    view_services_text = "📋 Texnik xizmatlarni ko'rish" if lang == "uz" else "📋 Просмотр технических услуг"
+    assign_technician_text = "👨‍🔧 Texnik tayinlash" if lang == "uz" else "👨‍🔧 Назначить техника"
+    service_reports_text = "📊 Xizmat hisobotlari" if lang == "uz" else "📊 Отчеты услуг"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=create_service_text, callback_data="ctrl_service_create"),
+            InlineKeyboardButton(text=view_services_text, callback_data="ctrl_service_view")
+        ],
+        [
+            InlineKeyboardButton(text=assign_technician_text, callback_data="ctrl_service_assign"),
+            InlineKeyboardButton(text=service_reports_text, callback_data="ctrl_service_reports")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_staff_creation_keyboard(lang='uz'):
+    """Generate staff creation keyboard for controller with locale support"""
+    create_connection_text = "🔌 Ulanish arizasi yaratish" if lang == "uz" else "🔌 Создать заявку на подключение"
+    create_technical_text = "🔧 Texnik xizmat yaratish" if lang == "uz" else "🔧 Создать техническую заявку"
+    view_applications_text = "📋 Arizalarni ko'rish" if lang == "uz" else "📋 Просмотр заявок"
+    assign_technician_text = "👨‍🔧 Texnik tayinlash" if lang == "uz" else "👨‍🔧 Назначить техника"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=create_connection_text, callback_data="ctrl_staff_connection"),
+            InlineKeyboardButton(text=create_technical_text, callback_data="ctrl_staff_technical")
+        ],
+        [
+            InlineKeyboardButton(text=view_applications_text, callback_data="ctrl_staff_view"),
+            InlineKeyboardButton(text=assign_technician_text, callback_data="ctrl_staff_assign")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_monitoring_keyboard(lang='uz'):
+    """Generate monitoring keyboard for controller with locale support"""
+    system_status_text = "📊 Tizim holati" if lang == "uz" else "📊 Состояние системы"
+    performance_text = "📈 Samaradorlik" if lang == "uz" else "📈 Производительность"
+    alerts_text = "🚨 Ogohlantirishlar" if lang == "uz" else "🚨 Уведомления"
+    reports_text = "📋 Hisobotlar" if lang == "uz" else "📋 Отчеты"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=system_status_text, callback_data="ctrl_monitor_system"),
+            InlineKeyboardButton(text=performance_text, callback_data="ctrl_monitor_performance")
+        ],
+        [
+            InlineKeyboardButton(text=alerts_text, callback_data="ctrl_monitor_alerts"),
+            InlineKeyboardButton(text=reports_text, callback_data="ctrl_monitor_reports")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_realtime_monitoring_keyboard(lang='uz'):
+    """Generate realtime monitoring keyboard for controller with locale support"""
+    live_status_text = "🟢 Jonli holat" if lang == "uz" else "🟢 Живое состояние"
+    recent_activities_text = "📋 So'nggi faoliyatlar" if lang == "uz" else "📋 Последние действия"
+    alerts_text = "🚨 Ogohlantirishlar" if lang == "uz" else "🚨 Уведомления"
+    performance_text = "📈 Samaradorlik" if lang == "uz" else "📈 Производительность"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=live_status_text, callback_data="ctrl_realtime_status"),
+            InlineKeyboardButton(text=recent_activities_text, callback_data="ctrl_realtime_activities")
+        ],
+        [
+            InlineKeyboardButton(text=alerts_text, callback_data="ctrl_realtime_alerts"),
+            InlineKeyboardButton(text=performance_text, callback_data="ctrl_realtime_performance")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard

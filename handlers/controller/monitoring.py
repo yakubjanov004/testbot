@@ -7,7 +7,7 @@ This module handles controller monitoring functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controller_buttons import get_monitoring_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import get_monitoring_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -244,3 +244,7 @@ def get_monitoring_router():
             await callback.answer("❌ Xatolik yuz berdi")
 
     return router
+
+def get_controller_monitoring_router():
+    """Get controller monitoring router - alias for get_monitoring_router"""
+    return get_monitoring_router()

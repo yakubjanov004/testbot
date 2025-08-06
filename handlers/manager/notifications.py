@@ -59,7 +59,7 @@ async def get_manager_notifications(user_id: int):
         }
     ]
 
-def get_notifications_router():
+def get_manager_notifications_router():
     """Router for notifications functionality"""
     router = Router()
 
@@ -234,3 +234,5 @@ def get_notifications_navigation_keyboard(current_index: int, total_notification
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard) 
+
+ 

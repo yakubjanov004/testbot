@@ -257,3 +257,7 @@ def get_applications_navigation_keyboard(current_index: int, total_applications:
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_call_center_supervisor_inbox_router():
+    """Get call center supervisor inbox router - alias for get_supervisor_inbox_router"""
+    return get_supervisor_inbox_router()

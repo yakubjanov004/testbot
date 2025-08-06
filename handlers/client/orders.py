@@ -246,6 +246,8 @@ def get_orders_router():
         except Exception as e:
             await callback.answer("Xatolik yuz berdi")
 
+    return router
+
 def get_orders_navigation_keyboard(current_index: int, current_page: int, total_pages: int, orders_on_page: int, order_id: int):
     """Create navigation keyboard for orders"""
     keyboard = []

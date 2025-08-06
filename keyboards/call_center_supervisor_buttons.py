@@ -1753,17 +1753,47 @@ def get_language_selection_inline_menu() -> InlineKeyboardMarkup:
 
 
 def _get_status_emoji(status: str) -> str:
-    """Get emoji for order status"""
+    """Get status emoji for order status"""
     status_emojis = {
         'new': '🆕',
-        'assigned': '👤',
-        'in_progress': '⏳',
-        'on_hold': '⏸️',
+        'pending': '⏳',
+        'in_progress': '🔄',
         'completed': '✅',
         'cancelled': '❌',
-        'issue': '🔴',
-        'escalated': '⬆️',
-        'pending': '⏳',
-        'review': '👁️'
+        'urgent': '🚨',
+        'high_priority': '⚡',
+        'normal_priority': '📋',
+        'low_priority': '📝'
     }
-    return status_emojis.get(status, '❓')
+    return status_emojis.get(status, '📋')
+
+def get_supervisor_inbox_keyboard(lang='uz'):
+    """Generate inbox keyboard for supervisor with locale support"""
+    new_messages_text = "🆕 Yangi xabarlar" if lang == "uz" else "🆕 Новые сообщения"
+    read_messages_text = "✅ O'qilgan xabarlar" if lang == "uz" else "✅ Прочитанные сообщения"
+    urgent_messages_text = "🚨 Shoshilinch xabarlar" if lang == "uz" else "🚨 Срочные сообщения"
+    all_messages_text = "📋 Barcha xabarlar" if lang == "uz" else "📋 Все сообщения"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=new_messages_text, callback_data="ccs_inbox_new"),
+            InlineKeyboardButton(text=read_messages_text, callback_data="ccs_inbox_read")
+        ],
+        [
+            InlineKeyboardButton(text=urgent_messages_text, callback_data="ccs_inbox_urgent"),
+            InlineKeyboardButton(text=all_messages_text, callback_data="ccs_inbox_all")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_ccs_main")
+        ]
+    ])
+    return keyboard
+
+def get_supervisor_back_keyboard(lang='uz'):
+    """Supervisor back keyboard"""
+    back_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_text)]],
+        resize_keyboard=True
+    )

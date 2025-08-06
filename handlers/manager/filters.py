@@ -60,11 +60,11 @@ async def get_filtered_applications(filters: dict):
         }
     ]
 
-def get_filters_router():
+def get_manager_filters_router():
     """Router for filters functionality"""
     router = Router()
 
-    @router.message(F.text.in_(["🔍 Filtrlash", "🔍 Фильтрация"]))
+    @router.message(F.text.in_(["🔍 Filtrlar", "🔍 Фильтрация"]))
     async def view_filters(message: Message, state: FSMContext):
         """Manager view filters handler"""
         try:
@@ -261,3 +261,4 @@ def get_filtered_applications_navigation_keyboard(current_index: int, total_appl
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+

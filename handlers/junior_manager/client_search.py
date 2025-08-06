@@ -270,3 +270,7 @@ def get_clients_navigation_keyboard(current_index: int, total_clients: int):
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard) 
+
+def get_junior_manager_client_search_router():
+    """Get junior manager client search router - alias for get_client_search_router"""
+    return get_client_search_router() 

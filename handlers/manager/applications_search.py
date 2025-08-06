@@ -89,7 +89,7 @@ async def search_applications(query: str):
     
     return results
 
-def get_applications_search_router():
+def get_manager_applications_search_router():
     """Router for applications search functionality"""
     router = Router()
 

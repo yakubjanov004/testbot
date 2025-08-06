@@ -12,7 +12,7 @@ from datetime import datetime
 from keyboards.manager_buttons import get_status_keyboard, get_manager_main_keyboard
 from states.manager_states import ManagerStatusStates
 
-def get_manager_status_management_complete_router():
+def get_manager_status_management_router():
     """Get complete status management router for manager"""
     from utils.role_system import get_role_router
     router = get_role_router("manager")
@@ -627,6 +627,3 @@ def get_current_time() -> str:
     return datetime.now().strftime('%d.%m.%Y %H:%M')
 
 
-def get_manager_status_management_router():
-    """Get manager status management router"""
-    return get_manager_status_management_complete_router()

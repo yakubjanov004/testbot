@@ -14,7 +14,7 @@ This module provides core client functionality including:
 - Order utilities
 """
 
-from utils.role_system import get_role_router
+from aiogram import Router
 from .start import get_client_start_router
 from .contact import get_client_contact_router
 from .feedback import get_client_feedback_router
@@ -26,22 +26,21 @@ from .service_order import get_service_order_router
 from .profile import get_client_profile_router
 from .orders import get_orders_router
 
-# Use role router for client functionality
-client_router = get_role_router("client")
-
-# Include all client routers
-client_router.include_router(get_client_start_router())
-client_router.include_router(get_client_contact_router())
-client_router.include_router(get_client_feedback_router())
-client_router.include_router(get_client_help_router())
-client_router.include_router(get_client_language_router())
-client_router.include_router(get_client_main_menu_router())
-client_router.include_router(get_connection_order_router())
-client_router.include_router(get_service_order_router())
-client_router.include_router(get_client_profile_router())
-client_router.include_router(get_orders_router())
-
 def get_client_router():
     """Get the complete client router with all handlers"""
-    return client_router
+    router = Router()
+    
+    # Include all client routers
+    router.include_router(get_client_start_router())
+    router.include_router(get_client_contact_router())
+    router.include_router(get_client_feedback_router())
+    router.include_router(get_client_help_router())
+    router.include_router(get_client_language_router())
+    router.include_router(get_client_main_menu_router())
+    router.include_router(get_connection_order_router())
+    router.include_router(get_service_order_router())
+    router.include_router(get_client_profile_router())
+    router.include_router(get_orders_router())
+    
+    return router
 

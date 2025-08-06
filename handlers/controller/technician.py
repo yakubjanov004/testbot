@@ -7,7 +7,7 @@ This module handles controller technician management functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controller_buttons import get_technician_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import get_technician_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -364,3 +364,7 @@ def get_technicians_navigation_keyboard(current_index: int, total_technicians: i
     keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_controller_technician_router():
+    """Get controller technician router - alias for get_technician_router"""
+    return get_technician_router()

@@ -93,7 +93,7 @@ class MockWorkflowAccessControl:
             }
         ]
 
-def get_applications_list_router():
+def get_manager_applications_list_router():
     """Router for applications list and navigation functionality"""
     router = Router()
 

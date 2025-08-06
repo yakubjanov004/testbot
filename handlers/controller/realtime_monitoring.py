@@ -7,7 +7,7 @@ This module handles controller realtime monitoring functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controller_buttons import get_realtime_monitoring_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import get_realtime_monitoring_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -65,7 +65,7 @@ def get_realtime_monitoring_router():
     """Router for realtime monitoring functionality"""
     router = Router()
 
-    @router.message(F.text.in_(["📡 Real vaqtda kuzatish", "📡 Мониторинг в реальном времени"]))
+    @router.message(F.text.in_(["🕐 Real vaqtda kuzatish", "📡 Мониторинг в реальном времени"]))
     async def view_realtime_monitoring(message: Message, state: FSMContext):
         """Controller view realtime monitoring handler"""
         try:
@@ -211,3 +211,7 @@ def get_realtime_monitoring_router():
             await callback.answer("❌ Xatolik yuz berdi")
 
     return router 
+
+def get_controller_realtime_monitoring_router():
+    """Get controller realtime monitoring router - alias for get_realtime_monitoring_router"""
+    return get_realtime_monitoring_router() 

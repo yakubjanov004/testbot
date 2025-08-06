@@ -106,7 +106,7 @@ class MockWordGenerator:
         print(f"Mock: Generating {document_type} document for request {request_id}")
         return f"/tmp/mock_document_{request_id}.docx"
 
-def get_applications_callbacks_router():
+def get_manager_applications_callbacks_router():
     """Router for applications callback functionality"""
     router = Router()
 
