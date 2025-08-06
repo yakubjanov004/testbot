@@ -70,11 +70,14 @@ dp = Dispatcher(storage=storage)
 # Middleware'larni qo'shish
 from middlewares.logger_middleware import LoggerMiddleware
 from middlewares.error_middleware import ErrorMiddleware
+from middlewares.callback_answer_middleware import CallbackAnswerMiddleware
 
 dp.message.middleware(LoggerMiddleware())
 dp.callback_query.middleware(LoggerMiddleware())
 dp.message.middleware(ErrorMiddleware())
 dp.callback_query.middleware(ErrorMiddleware())
+# Add CallbackAnswerMiddleware to automatically answer all callback queries
+dp.callback_query.middleware(CallbackAnswerMiddleware())
 
 # Role mapping
 ROLE_MAPPING = {
