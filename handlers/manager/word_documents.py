@@ -18,8 +18,8 @@ from states.manager_states import ManagerWordDocumentStates
 
 def get_manager_word_documents_router():
     """Manager word documents router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    from aiogram import Router
+    router = Router()
 
     @router.message(F.text == "📄 Hujjatlar yaratish")
     async def show_word_documents_menu(message: Message, state: FSMContext):

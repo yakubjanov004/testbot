@@ -12,8 +12,8 @@ from datetime import date, datetime, timedelta
 
 def get_manager_statistics_router():
     """Get manager statistics router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    from aiogram import Router
+    router = Router()
     
     @router.message(F.text == "📊 Statistika")
     async def manager_statistics_menu(message: Message):

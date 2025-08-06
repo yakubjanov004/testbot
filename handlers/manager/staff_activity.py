@@ -9,11 +9,12 @@ from aiogram import F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, date, timedelta
+from keyboards.manager_buttons import get_manager_main_keyboard
 
 def get_manager_staff_activity_router():
     """Get router for manager staff activity handlers"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    from aiogram import Router
+    router = Router()
 
     @router.message(F.text == "👥 Xodimlar faoliyati")
     async def show_staff_activity_menu(message: Message, state: FSMContext):
@@ -135,7 +136,6 @@ def get_manager_staff_activity_router():
             }
             
             # Return to main menu
-            from keyboards.manager_buttons import get_manager_main_keyboard
             await message.answer(
                 "Asosiy menyu:",
                 reply_markup=get_manager_main_keyboard()

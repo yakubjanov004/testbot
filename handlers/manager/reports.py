@@ -6,6 +6,7 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, date, timedelta
+from keyboards.manager_buttons import get_manager_main_keyboard
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -418,8 +419,6 @@ def get_manager_reports_router():
             
             user = await get_user_by_telegram_id(callback.from_user.id)
             lang = user.get('language', 'uz') if user else 'uz'
-            
-            from keyboards.manager_buttons import get_manager_main_keyboard
             
             welcome_text = (
                 f"🏠 <b>Asosiy menyu</b>\n\n"

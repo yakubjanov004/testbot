@@ -13,8 +13,8 @@ from states.staff_application_states import StaffApplicationStates
 
 def get_manager_staff_application_router():
     """Get router for manager staff application creation handlers"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    from aiogram import Router
+    router = Router()
     
     @router.message(F.text == "🔌 Ulanish arizasi yaratish")
     async def manager_create_connection_request(message: Message, state: FSMContext):

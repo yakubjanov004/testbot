@@ -14,8 +14,8 @@ from states.manager_states import ManagerStatusStates
 
 def get_manager_status_management_router():
     """Get complete status management router for manager"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    from aiogram import Router
+    router = Router()
     
     @router.message(F.text == "🔄 Status o'zgartirish")
     async def manager_status_management_main(message: Message, state: FSMContext):

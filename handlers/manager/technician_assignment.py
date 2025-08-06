@@ -14,8 +14,8 @@ from datetime import datetime
 
 def get_manager_technician_assignment_router():
     """Get technician assignment router for manager"""
-    from utils.role_system import get_role_router
-    router = get_role_router("manager")
+    from aiogram import Router
+    router = Router()
     
     @router.message(F.text == "👨‍🔧 Texnik biriktirish")
     async def manager_technician_assignment_main(message: Message, state: FSMContext):
