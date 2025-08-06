@@ -48,8 +48,8 @@ def get_call_center_client_rating_router():
             'satisfaction_rate': '94.8%',
             'response_rate': '87.2%'
         }
-            
-            text = (
+        
+        text = (
             f"📊 <b>Reyting statistikasi</b>\n\n"
             f"⭐ <b>Umumiy reyting:</b> {rating_stats['average_rating']}/5\n"
             f"📈 <b>Mamnuniyat darajasi:</b> {rating_stats['satisfaction_rate']}\n"
@@ -112,8 +112,8 @@ def get_call_center_client_rating_router():
                 'type': 'negative'
             }
         ]
-            
-            text = (
+        
+        text = (
             f"📝 <b>Fikrlar va shikoyatlar</b>\n\n"
             f"📊 <b>Bugun:</b> {len(feedback_list)} ta fikr\n\n"
         )

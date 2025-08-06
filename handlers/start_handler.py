@@ -6,7 +6,7 @@ based on user role.
 """
 
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from loader import get_user_role
 from utils.role_system import show_role_menu
@@ -44,5 +44,30 @@ def get_start_router():
             
         except Exception as e:
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+    
+    @router.callback_query(F.data == "back_to_main_menu")
+    async def back_to_main_menu_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle back to main menu button"""
+        try:
+            await callback.answer()
+            
+            user_role = get_user_role(callback.from_user.id)
+            
+            # Clear any existing state
+            await state.clear()
+            
+            # Show appropriate menu based on role
+            if user_role == 'client':
+                from keyboards.client_buttons import get_main_menu_keyboard
+                keyboard = get_main_menu_keyboard('uz')
+                await callback.message.edit_text(
+                    "Quyidagi menyudan kerakli bo'limni tanlang.",
+                    reply_markup=keyboard
+                )
+            else:
+                await show_role_menu(callback.message, user_role)
+            
+        except Exception as e:
+            await callback.message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
     
     return router 

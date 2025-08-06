@@ -78,10 +78,7 @@ async def get_single_order_details(order_id: int):
         'priority': 'normal'
     }
 
-async def get_role_router(role: str):
-    """Mock role router"""
-    from aiogram import Router
-    return Router()
+# Removed duplicate get_role_router - using centralized version from utils.role_system
 
 # Mock keyboards
 def orders_control_menu(lang: str):

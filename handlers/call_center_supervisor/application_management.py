@@ -15,9 +15,7 @@ from keyboards.call_center_supervisor_buttons import (
 from states.call_center_supervisor_states import CallCenterSupervisorApplicationStates
 
 # Mock functions to replace utils and database imports
-async def get_role_router(role: str):
-    """Mock role router function"""
-    return Router()
+# Removed duplicate get_role_router - using centralized version from utils.role_system
 
 async def get_user_by_telegram_id(telegram_id: int) -> Dict[str, Any]:
     """Mock user data"""

@@ -5,7 +5,7 @@ Bu modul manager uchun asosiy menyu funksionalligini o'z ichiga oladi.
 """
 
 from aiogram import F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.filters.state import StateFilter
 
@@ -57,5 +57,28 @@ def get_manager_main_menu_router():
             lang = await get_user_lang(message.from_user.id)
             error_text = "Xatolik yuz berdi"
             await message.answer(error_text)
+
+    @router.callback_query(F.data == "manager_back_to_main")
+    async def manager_back_to_main_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle manager back to main menu button"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'manager':
+                return
+            
+            lang = user.get('language', 'uz')
+            main_menu_text = "Menejer paneliga xush kelibsiz! Quyidagi menyudan kerakli bo'limni tanlang."
+            
+            await callback.message.edit_text(
+                text=main_menu_text,
+                reply_markup=get_manager_main_keyboard(lang)
+            )
+            
+            await state.set_state(ManagerMainMenuStates.main_menu)
+            
+        except Exception as e:
+            await callback.message.answer("❌ Xatolik yuz berdi")
 
     return router

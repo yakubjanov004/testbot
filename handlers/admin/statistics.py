@@ -496,20 +496,33 @@ def get_admin_statistics_router():
         """Export orders statistics"""
         await call.answer()
         
-        processing_text = "Zayavkalar statistikasi eksport qilinmoqda..."
-        await call.message.edit_text(processing_text)
-        
-        # Mock export
-        await call.message.answer(
-            f"📊 <b>Zayavkalar statistikasi</b>\n\n"
-            f"📁 Fayl: orders_statistics.xlsx\n"
-            f"📏 O'lcham: 2.3 MB\n"
-            f"📅 Yaratilgan: {datetime.now().strftime('%d.%m.%Y %H:%M')}\n\n"
-            f"📋 Ma'lumotlar:\n"
-            f"• Umumiy zayavkalar: 3,456\n"
-            f"• Bajarilgan: 2,890\n"
-            f"• Kutilmoqda: 566\n"
-            f"• Bajarilish darajasi: 83.6%"
-        )
+        try:
+            from utils.export_utils import create_export_file
+            from aiogram.types import BufferedInputFile
+            
+            processing_text = "Zayavkalar statistikasi eksport qilinmoqda..."
+            await call.message.edit_text(processing_text)
+            
+            # Create export file
+            file_content, filename = create_export_file("statistics", "xlsx")
+            
+            # Send success message
+            await call.message.answer(
+                f"✅ Statistika ma'lumotlari export qilindi!\n"
+                f"📁 Fayl: {filename}\n"
+                f"📅 Yaratilgan: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+            )
+            
+            # Send the actual file
+            await call.message.answer_document(
+                BufferedInputFile(
+                    file_content.read(),
+                    filename=filename
+                ),
+                caption=f"📊 Statistika export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            )
+            
+        except Exception as e:
+            await call.message.answer("❌ Export xatoligi yuz berdi")
 
     return router

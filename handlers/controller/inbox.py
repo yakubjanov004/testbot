@@ -48,9 +48,7 @@ async def get_users_by_role(role: str):
         ]
     return []
 
-async def get_role_router(role: str):
-    """Mock role router"""
-    return Router()
+# Removed duplicate get_role_router - using centralized version from utils.role_system
 
 async def get_user_lang(user_id: int) -> str:
     """Mock user language"""

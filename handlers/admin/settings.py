@@ -306,26 +306,32 @@ def get_admin_settings_router():
         """Export all system data"""
         await call.answer()
         
-        processing_text = "Barcha ma'lumotlar eksport qilinmoqda..."
-        await call.message.edit_text(processing_text)
-        
-        # Mock export process
-        exported_files = [
-            ('users', 'users_export.csv'),
-            ('orders', 'orders_export.csv'),
-            ('logs', 'logs_export.csv')
-        ]
-        
-        success_text = f"✅ {len(exported_files)} ta fayl eksport qilindi!"
-        await call.message.edit_text(success_text)
-        
-        # Send mock files
-        for export_type, file_path in exported_files:
-            await call.message.answer(
-                f"📤 {export_type.title()} ma'lumotlari\n"
-                f"Fayl: {file_path}\n"
-                f"O'lcham: 1.2 MB\n"
-                f"Yaratilgan: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
-            )
+        try:
+            from utils.export_utils import create_export_file
+            from aiogram.types import BufferedInputFile
+            
+            processing_text = "Barcha ma'lumotlar eksport qilinmoqda..."
+            await call.message.edit_text(processing_text)
+            
+            # Export different types of data
+            export_types = ["users", "orders", "statistics"]
+            
+            success_text = f"✅ {len(export_types)} ta fayl export qilindi!"
+            await call.message.edit_text(success_text)
+            
+            # Send each export file
+            for export_type in export_types:
+                file_content, filename = create_export_file(export_type, "csv")
+                
+                await call.message.answer_document(
+                    BufferedInputFile(
+                        file_content.read(),
+                        filename=filename
+                    ),
+                    caption=f"📤 {export_type.title()} ma'lumotlari - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                )
+                
+        except Exception as e:
+            await call.message.answer("❌ Export xatoligi yuz berdi")
 
     return router

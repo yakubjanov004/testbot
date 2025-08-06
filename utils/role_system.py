@@ -11,7 +11,7 @@ from aiogram.fsm.context import FSMContext
 from loader import get_user_role, get_bot
 
 def get_role_router(role: str):
-    """Get router for specific role"""
+    """Get router for specific role - centralized function to avoid duplicates"""
     router = Router()
     
     # No role filtering - allow all handlers to work normally

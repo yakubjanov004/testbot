@@ -32,10 +32,7 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-async def get_role_router(role: str):
-    """Mock role router"""
-    from aiogram import Router
-    return Router()
+# Removed duplicate get_role_router - using centralized version from utils.role_system
 
 def get_controller_main_menu_router():
     """Get controller main menu router"""
@@ -95,6 +92,64 @@ def get_controller_main_menu_router():
             error_text = "Xatolik yuz berdi"
             await message.answer(error_text)
 
-    
+    @router.callback_query(F.data == "controllers_back")
+    async def controllers_back_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle controllers back button"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'controller':
+                return
+            
+            lang = user.get('language', 'uz')
+            stats = await get_system_statistics()
+            
+            welcome_text = (
+                "🎛️ <b>Nazoratchi paneli</b>\n\n"
+                "📊 <b>Tizim holati:</b>\n"
+                f"• Jami buyurtmalar: {stats.get('total_orders', 0)}\n"
+                f"• Bajarilgan: {stats.get('completed_orders', 0)}\n"
+                f"• Kutilayotgan: {stats.get('pending_orders', 0)}\n"
+                f"• Faol mijozlar: {stats.get('active_clients', 0)}\n"
+                f"• Faol texniklar: {stats.get('active_technicians', 0)}\n\n"
+                "Kerakli bo'limni tanlang:"
+            )
+            
+            await callback.message.edit_text(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await state.set_state(ControllerMainMenuStates.main_menu)
+            
+        except Exception as e:
+            await callback.message.answer("❌ Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "back_to_controller_main")
+    async def back_to_controller_main_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle back to controller main menu button"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'controller':
+                return
+            
+            lang = user.get('language', 'uz')
+            stats = await get_system_statistics()
+            
+            welcome_text = (
+                "🎛️ <b>Nazoratchi paneli</b>\n\n"
+                "📊 <b>Tizim holati:</b>\n"
+                f"• Jami buyurtmalar: {stats.get('total_orders', 0)}\n"
+                f"• Bajarilgan: {stats.get('completed_orders', 0)}\n"
+                f"• Kutilayotgan: {stats.get('pending_orders', 0)}\n"
+                f"• Faol mijozlar: {stats.get('active_clients', 0)}\n"
+                f"• Faol texniklar: {stats.get('active_technicians', 0)}\n\n"
+                "Kerakli bo'limni tanlang:"
+            )
+            
+            await callback.message.edit_text(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await state.set_state(ControllerMainMenuStates.main_menu)
+            
+        except Exception as e:
+            await callback.message.answer("❌ Xatolik yuz berdi")
 
     return router
