@@ -123,15 +123,18 @@ class MockWorkflowAccessControl:
             {
                 'id': 'req_001_2024_01_15',
                 'workflow_type': 'connection_request',
-                'current_status': 'created',
+                'current_status': 'in_progress',
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Aziz Karimov',
-                    'phone': '+998901234567'
+                    'phone': '+998901234567',
+                    'phone_number': '+998901234567'
                 },
                 'created_at': datetime.now(),
-                'description': 'Internet ulanish arizasi',
-                'location': 'Tashkent, Chorsu'
+                'description': 'Internet ulanish arizasi - B2C mijoz uchun',
+                'location': 'Tashkent, Chorsu',
+                'region': 'Toshkent shahri',
+                'priority': 'high'
             },
             {
                 'id': 'req_002_2024_01_16',
@@ -140,11 +143,30 @@ class MockWorkflowAccessControl:
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Malika Toshmatova',
-                    'phone': '+998901234568'
+                    'phone': '+998901234568',
+                    'phone_number': '+998901234568'
                 },
                 'created_at': datetime.now(),
-                'description': 'TV signal muammosi',
-                'location': 'Tashkent, Yunusabad'
+                'description': 'TV signal muammosi - signal yo\'q',
+                'location': 'Tashkent, Yunusabad',
+                'region': 'Toshkent shahri',
+                'priority': 'medium'
+            },
+            {
+                'id': 'req_003_2024_01_17',
+                'workflow_type': 'connection_request',
+                'current_status': 'assigned_to_manager',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Jasur Rahimov',
+                    'phone': '+998901234569',
+                    'phone_number': '+998901234569'
+                },
+                'created_at': datetime.now(),
+                'description': 'B2B ulanish arizasi - ofis uchun',
+                'location': 'Tashkent, Mirabad',
+                'region': 'Toshkent shahri',
+                'priority': 'normal'
             }
         ]
     
@@ -432,20 +454,19 @@ def get_manager_inbox_router():
             
             # Comprehensive text with all information
             text = (
-                f"{workflow_emoji} <b>Manager Inbox</b>\n"
+                f"{workflow_emoji} <b>Ulanish arizasi - To'liq ma'lumot</b>\n"
                 f"{inbox_info}"
-                f"\n🆔 <b>ID:</b> {short_id}-{full_id[8:12].upper()}\n"
-                f"📋 <b>Tur:</b> {workflow_name}\n"
-                f"🔗 <b>Ulanish turi:</b> {connection_type}\n"
-                f"📊 <b>Tarif:</b> {tariff_info}\n"
+                f"\n🆔 <b>Ariza ID:</b> {full_id}\n"
+                f"📅 <b>Sana:</b> {created_date}\n"
                 f"👤 <b>Mijoz:</b> {client_name}\n"
                 f"📞 <b>Telefon:</b> {phone_number}\n"
-                f"📍 <b>Manzil:</b> {address}\n"
-                f"📅 <b>Yaratilgan:</b> {created_date}\n"
-                f"{priority_emoji} <b>Muhimlik:</b> {request['priority'].title()}\n"
+                f"🏛️ <b>Hudud:</b> {request.get('region', 'N/A')}\n"
+                f"🏠 <b>Manzil:</b> {address}\n"
+                f"📝 <b>Tavsif:</b> {request['description'] or 'Yoq'}\n"
                 f"{status_emoji} <b>Holat:</b> {status_name}\n"
-                f"💬 <b>Izohlar:</b> {comments_count} ta\n"
-                f"📝 <b>Tavsif:</b> {request['description'][:150]}{'...' if request['description'] and len(request['description']) > 150 else request['description'] or 'Yoq'}\n\n"
+                f"{priority_emoji} <b>Ustuvorlik:</b> {request['priority'].title()}\n"
+                f"📋 <b>Workflow turi:</b> {workflow_name}\n"
+                f"💬 <b>Izohlar:</b> {comments_count} ta\n\n"
                 f"<i>📊 Ariza {index + 1}/{len(requests)}</i>"
             )
             
@@ -463,6 +484,26 @@ def get_manager_inbox_router():
                         callback_data=f"mgr_assign_jm_{full_id}"
                     )
                 ])
+            
+            # Navigation buttons
+            nav_buttons = []
+            if len(requests) > 1:
+                if index > 0:
+                    nav_buttons.append(
+                        InlineKeyboardButton(
+                            text="⬅️ Oldingi",
+                            callback_data=f"mgr_nav_prev_{index}"
+                        )
+                    )
+                if index < len(requests) - 1:
+                    nav_buttons.append(
+                        InlineKeyboardButton(
+                            text="Keyingi ➡️",
+                            callback_data=f"mgr_nav_next_{index}"
+                        )
+                    )
+                if nav_buttons:
+                    buttons.append(nav_buttons)
             
             keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
             
@@ -512,6 +553,46 @@ def get_manager_inbox_router():
 
 
 
+
+    @router.callback_query(F.data.startswith("mgr_nav_"))
+    async def handle_navigation(callback: CallbackQuery, state: FSMContext):
+        """Handle navigation between applications"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user:
+                return
+            
+            lang = user.get('language', 'uz')
+            data = await state.get_data()
+            requests = data.get('inbox_requests', [])
+            
+            if not requests:
+                await callback.answer("Arizalar topilmadi", show_alert=True)
+                return
+            
+            # Parse navigation action
+            nav_data = callback.data.replace("mgr_nav_", "")
+            action, index_str = nav_data.split("_", 1)
+            current_index = int(index_str)
+            
+            if action == "prev":
+                new_index = max(0, current_index - 1)
+            elif action == "next":
+                new_index = min(len(requests) - 1, current_index + 1)
+            else:
+                return
+            
+            # Update state
+            await state.update_data(current_index=new_index)
+            
+            # Display the new request
+            await display_manager_request(callback, state, requests, new_index, lang, user)
+            
+        except Exception as e:
+            print(f"Error in handle_navigation: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("mgr_assign_jm_"))
     async def assign_to_junior_manager(callback: CallbackQuery, state: FSMContext):
