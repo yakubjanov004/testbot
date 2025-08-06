@@ -230,6 +230,12 @@ def get_controller_inbox_router():
         user_id = event.from_user.id
         
         try:
+            # Check user role first - only process if user is controller
+            from loader import get_user_role
+            user_role = get_user_role(event.from_user.id)
+            if user_role != 'controller':
+                return  # Skip processing for non-controller users
+            
             await state.clear()
             await state.update_data(current_page=0)
             # Faqat menyudan bosilganda yangi xabar yuboriladi

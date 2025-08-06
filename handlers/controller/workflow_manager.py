@@ -287,6 +287,6 @@ def get_workflows_navigation_keyboard(current_index: int, total_workflows: int):
         keyboard.append(nav_buttons)
     
     # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifawfmanager", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

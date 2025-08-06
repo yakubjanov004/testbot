@@ -211,7 +211,3 @@ def get_realtime_monitoring_router():
             await callback.answer("❌ Xatolik yuz berdi")
 
     return router 
-
-def get_controller_realtime_monitoring_router():
-    """Get controller realtime monitoring router - alias for get_realtime_monitoring_router"""
-    return get_realtime_monitoring_router() 

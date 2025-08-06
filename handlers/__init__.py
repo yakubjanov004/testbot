@@ -31,6 +31,10 @@ def setup_handlers(dp: Dispatcher):
         client_router = get_client_router()
         dp.include_router(client_router)
         
+        # Include manager router early to ensure it gets priority for inbox handlers
+        manager_router = get_manager_router()
+        dp.include_router(manager_router)
+        
         # Include other role routers
         call_center_router = get_call_center_router()
         dp.include_router(call_center_router)
@@ -46,9 +50,6 @@ def setup_handlers(dp: Dispatcher):
         
         controller_router = get_controller_router()
         dp.include_router(controller_router)
-        
-        manager_router = get_manager_router()
-        dp.include_router(manager_router)
         
         warehouse_router = get_warehouse_router()
         dp.include_router(warehouse_router)

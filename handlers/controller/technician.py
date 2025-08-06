@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.controllers_buttons import get_technician_keyboard, get_controller_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from handlers.technician import get_technician_router
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -361,7 +362,7 @@ def get_technicians_navigation_keyboard(current_index: int, total_technicians: i
     keyboard.append([InlineKeyboardButton(text="📊 Samaradorlik", callback_data="view_technician_performance")])
     
     # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifacontrollere", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

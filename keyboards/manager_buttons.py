@@ -2,7 +2,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMar
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def get_manager_main_keyboard(lang='uz'):
-    """Generate main keyboard for manager with locale support"""
+    """Generate main keyboard for manager with locale support, 2 buttons per row where possible"""
     # Ariza yaratish tugmalari (asosiy funksiya)
     create_connection_text = "🔌 Ulanish arizasi yaratish" if lang == "uz" else "🔌 Создать заявку на подключение"
     create_technical_text = "🔧 Texnik xizmat yaratish" if lang == "uz" else "🔧 Создать техническую заявку"
@@ -30,31 +30,15 @@ def get_manager_main_keyboard(lang='uz'):
     inbox_text = "📥 Inbox"
     change_language_text = "🌐 Tilni o'zgartirish" if lang == "uz" else "🌐 Изменить язык"
     
+    # 2tadan qilib chiqadigan keyboard
     keyboard = [
-        # Ariza yaratish (asosiy funksiya - eng muhim)
-        [KeyboardButton(text=create_connection_text)],
-        [KeyboardButton(text=create_technical_text)],
-        
-        # Arizalarni boshqarish
-        [KeyboardButton(text=view_applications_text)],
-        [KeyboardButton(text=filter_applications_text), KeyboardButton(text=change_status_text)],
-        
-        # Texnik biriktirish va xabarnomalar
-        [KeyboardButton(text=technician_assignment_text), KeyboardButton(text=notifications_text)],
-        
-        # Hisobot va monitoring
-        [KeyboardButton(text=generate_report_text)],
-        [KeyboardButton(text=staff_activity_text)],
-        
-        # Real vaqtda kuzatish
-        [KeyboardButton(text=realtime_monitoring_text)],
-        
-        # Hujjatlar yaratish
-        [KeyboardButton(text=word_documents_text)],
-        
-        # Inbox va sozlamalar
-        [KeyboardButton(text=inbox_text)],
-        [KeyboardButton(text=change_language_text)],
+        [KeyboardButton(text=create_connection_text), KeyboardButton(text=create_technical_text)],
+        [KeyboardButton(text=view_applications_text), KeyboardButton(text=filter_applications_text)],
+        [KeyboardButton(text=change_status_text), KeyboardButton(text=technician_assignment_text)],
+        [KeyboardButton(text=notifications_text), KeyboardButton(text=generate_report_text)],
+        [KeyboardButton(text=staff_activity_text), KeyboardButton(text=realtime_monitoring_text)],
+        [KeyboardButton(text=word_documents_text), KeyboardButton(text=inbox_text)],
+        [KeyboardButton(text=change_language_text)]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 

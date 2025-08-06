@@ -70,6 +70,12 @@ def get_supervisor_inbox_router():
     async def view_inbox(message: Message, state: FSMContext):
         """Supervisor view inbox handler"""
         try:
+            # Check user role first - only process if user is call_center_supervisor
+            from loader import get_user_role
+            user_role = get_user_role(message.from_user.id)
+            if user_role != 'call_center_supervisor':
+                return  # Skip processing for non-supervisor users
+            
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'call_center_supervisor':
                 return
@@ -254,7 +260,7 @@ def get_applications_navigation_keyboard(current_index: int, total_applications:
         keyboard.append(nav_buttons)
     
     # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifaccs", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

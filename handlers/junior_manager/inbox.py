@@ -70,6 +70,12 @@ def get_junior_manager_inbox_router():
     async def view_inbox(message: Message, state: FSMContext):
         """Junior manager view inbox handler"""
         try:
+            # Check user role first - only process if user is junior_manager
+            from loader import get_user_role
+            user_role = get_user_role(message.from_user.id)
+            if user_role != 'junior_manager':
+                return  # Skip processing for non-junior-manager users
+            
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
                 return
@@ -245,6 +251,6 @@ def get_applications_navigation_keyboard(current_index: int, total_applications:
         keyboard.append(nav_buttons)
     
     # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa_inbox_jm", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

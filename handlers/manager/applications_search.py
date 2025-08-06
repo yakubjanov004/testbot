@@ -325,6 +325,6 @@ def get_search_results_navigation_keyboard(current_index: int, total_results: in
         keyboard.append(nav_buttons)
     
     # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifaappsear", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard) 

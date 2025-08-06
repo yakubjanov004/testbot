@@ -240,6 +240,12 @@ Kerakli yordam turini tanlang:
     async def inbox_handler(message: Message, state: FSMContext):
         """Inbox handler"""
         try:
+            # Check user role first - only process if user is technician
+            from loader import get_user_role
+            user_role = get_user_role(message.from_user.id)
+            if user_role != 'technician':
+                return  # Skip processing for non-technician users
+            
             # Mock user data (like other modules)
             user = {
                 'id': 1,

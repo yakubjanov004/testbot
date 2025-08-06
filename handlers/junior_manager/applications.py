@@ -118,6 +118,12 @@ def get_applications_router():
     async def show_junior_manager_inbox(message: Message, state: FSMContext):
         """Show junior manager inbox with assigned applications"""
         try:
+            # Check user role first - only process if user is junior_manager
+            from loader import get_user_role
+            user_role = get_user_role(message.from_user.id)
+            if user_role != 'junior_manager':
+                return  # Skip processing for non-junior-manager users
+            
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
                 return

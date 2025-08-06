@@ -171,7 +171,7 @@ Kerakli bo'limni tanlang:
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-    @router.message(F.text == "🏠 Bosh sahifa")
+    @router.message(F.text == "🏠 Bosh sahifassssasa")
     async def warehouse_home_handler(message: Message, state: FSMContext):
         """Warehouse home handler"""
         try:

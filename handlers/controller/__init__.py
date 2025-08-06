@@ -11,7 +11,7 @@ from .technical_service import get_controller_technical_service_router
 from .staff_application_creation import get_controller_staff_application_router
 from .application_creator import get_controller_application_creator_router
 from .monitoring import get_controller_monitoring_router
-from .realtime_monitoring import get_controller_realtime_monitoring_router
+from .realtime_monitoring import get_realtime_monitoring_router
 
 def get_controller_router():
     """Get the complete controller router with all handlers"""
@@ -30,7 +30,7 @@ def get_controller_router():
     router.include_router(get_controller_staff_application_router())
     router.include_router(get_controller_application_creator_router())
     router.include_router(get_controller_monitoring_router())
-    router.include_router(get_controller_realtime_monitoring_router())
+    router.include_router(get_realtime_monitoring_router())
     
     return router
 

@@ -128,6 +128,12 @@ def get_warehouse_inbox_router():
     async def show_warehouse_inbox(message: Message, state: FSMContext):
         """Show warehouse inbox with all warehouse-related requests"""
         try:
+            # Check user role first - only process if user is warehouse
+            from loader import get_user_role
+            user_role = get_user_role(message.from_user.id)
+            if user_role != 'warehouse':
+                return  # Skip processing for non-warehouse users
+            
             # Mock user data (like other modules)
             user = {
                 'id': 1,

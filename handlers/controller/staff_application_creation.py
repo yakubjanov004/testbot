@@ -342,7 +342,7 @@ def get_staff_navigation_keyboard(current_index: int, total_staff: int):
     keyboard.append([InlineKeyboardButton(text="📝 Ariza yaratish", callback_data="create_staff_application")])
     
     # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifasac", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

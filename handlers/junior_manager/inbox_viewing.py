@@ -144,6 +144,12 @@ def get_junior_manager_inbox_viewing_router():
     @router.message(F.text.in_(["📥 Inbox", "Inbox"]))
     async def handle_inbox_message(message: Message, state: FSMContext):
         """Handle inbox message command"""
+        # Check user role first - only process if user is junior_manager
+        from loader import get_user_role
+        user_role = get_user_role(message.from_user.id)
+        if user_role != 'junior_manager':
+            return  # Skip processing for non-junior-manager users
+        
         await junior_manager_inbox(message, state)
 
     @router.callback_query(F.data.startswith("jm_inbox_"))

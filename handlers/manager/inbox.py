@@ -67,22 +67,146 @@ class MockStateManager:
     """Mock state manager"""
     async def get_request(self, request_id: str):
         """Mock get request"""
-        from datetime import datetime
-        return {
-            'id': request_id,
-            'workflow_type': 'connection_request',
-            'current_status': 'created',
-            'role_current': 'manager',
-            'contact_info': {
-                'full_name': 'Test Client',
-                'phone': '+998901234567',
-                'phone_number': '+998901234567'
-            },
-            'created_at': datetime.now(),
-            'description': 'Test ariza',
-            'location': 'Test manzil',
-            'priority': 'normal'
-        }
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        
+        # Different data based on request ID
+        if 'req_001' in request_id:
+            return {
+                'id': request_id,
+                'workflow_type': 'connection_request',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Aziz Karimov',
+                    'phone': '+998901234567',
+                    'phone_number': '+998901234567'
+                },
+                'created_at': now - timedelta(hours=2),
+                'description': 'Internet ulanish arizasi\nTariff: 100 Mbps\nB2C mijoz\nManzil: Tashkent, Chorsu tumani, 15-uy',
+                'location': 'Tashkent, Chorsu tumani, 15-uy',
+                'priority': 'high'
+            }
+        elif 'req_002' in request_id:
+            return {
+                'id': request_id,
+                'workflow_type': 'technical_service',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Malika Toshmatova',
+                    'phone': '+998901234568',
+                    'phone_number': '+998901234568'
+                },
+                'created_at': now - timedelta(hours=1, minutes=30),
+                'description': 'TV signal yo\'q\nKabel uzilgan\nManzil: Tashkent, Yunusabad tumani, 45-uy',
+                'location': 'Tashkent, Yunusabad tumani, 45-uy',
+                'priority': 'medium'
+            }
+        elif 'req_003' in request_id:
+            return {
+                'id': request_id,
+                'workflow_type': 'connection_request',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Jasur Rahimov',
+                    'phone': '+998901234569',
+                    'phone_number': '+998901234569'
+                },
+                'created_at': now - timedelta(minutes=45),
+                'description': 'Internet ulanish arizasi\nTariff: 50 Mbps\nB2B mijoz\nManzil: Tashkent, Sergeli tumani, 78-uy',
+                'location': 'Tashkent, Sergeli tumani, 78-uy',
+                'priority': 'normal'
+            }
+        elif 'req_004' in request_id:
+            return {
+                'id': request_id,
+                'workflow_type': 'call_center_direct',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Dilfuza Karimova',
+                    'phone': '+998901234570',
+                    'phone_number': '+998901234570'
+                },
+                'created_at': now - timedelta(minutes=20),
+                'description': 'Internet sekin ishlaydi\nTezlik past\nManzil: Tashkent, Chilanzar tumani, 23-uy',
+                'location': 'Tashkent, Chilanzar tumani, 23-uy',
+                'priority': 'high'
+            }
+        elif 'req_005' in request_id:
+            return {
+                'id': request_id,
+                'workflow_type': 'technical_service',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Asadbek Abdullayev',
+                    'phone': '+998901234571',
+                    'phone_number': '+998901234571'
+                },
+                'created_at': now - timedelta(minutes=10),
+                'description': 'Router ishlamayapti\nYangi router kerak\nManzil: Tashkent, Shayxontohur tumani, 67-uy',
+                'location': 'Tashkent, Shayxontohur tumani, 67-uy',
+                'priority': 'urgent'
+            }
+        else:
+            # Default fallback - try to extract request number from ID
+            import re
+            match = re.search(r'req_(\d+)', request_id)
+            if match:
+                req_num = match.group(1)
+                # Generate data based on request number
+                if req_num == '001' or req_num == '003':
+                    return {
+                        'id': request_id,
+                        'workflow_type': 'connection_request',
+                        'current_status': 'created',
+                        'role_current': 'manager',
+                        'contact_info': {
+                            'full_name': f'Client {req_num}',
+                            'phone': '+998901234567',
+                            'phone_number': '+998901234567'
+                        },
+                        'created_at': now - timedelta(minutes=int(req_num) * 10),
+                        'description': f'Internet ulanish arizasi\nTariff: {int(req_num) * 10} Mbps\nB2C mijoz\nManzil: Tashkent, Test tumani, {req_num}-uy',
+                        'location': f'Tashkent, Test tumani, {req_num}-uy',
+                        'priority': 'normal'
+                    }
+                else:
+                    return {
+                        'id': request_id,
+                        'workflow_type': 'technical_service',
+                        'current_status': 'created',
+                        'role_current': 'manager',
+                        'contact_info': {
+                            'full_name': f'Client {req_num}',
+                            'phone': '+998901234567',
+                            'phone_number': '+998901234567'
+                        },
+                        'created_at': now - timedelta(minutes=int(req_num) * 10),
+                        'description': f'Texnik muammo\nManzil: Tashkent, Test tumani, {req_num}-uy',
+                        'location': f'Tashkent, Test tumani, {req_num}-uy',
+                        'priority': 'medium'
+                    }
+            else:
+                # Generic fallback
+                return {
+                    'id': request_id,
+                    'workflow_type': 'connection_request',
+                    'current_status': 'created',
+                    'role_current': 'manager',
+                    'contact_info': {
+                        'full_name': 'Test Client',
+                        'phone': '+998901234567',
+                        'phone_number': '+998901234567'
+                    },
+                    'created_at': now,
+                    'description': 'Test ariza',
+                    'location': 'Test manzil',
+                    'priority': 'normal'
+                }
 
 # Mock inbox manager
 class MockInboxManager:
@@ -94,17 +218,41 @@ class MockInboxManager:
             {
                 'id': 1,
                 'application_id': 'req_001_2024_01_15',
-                'title': 'Yangi ariza',
-                'description': 'Internet ulanish arizasi',
-                'priority': 'medium',
-                'time_ago': '5 daqiqa oldin'
+                'title': '🔴 Muhim: Internet ulanish arizasi',
+                'description': 'Aziz Karimov - 100 Mbps tariff, B2C mijoz',
+                'priority': 'high',
+                'time_ago': '2 soat oldin'
             },
             {
                 'id': 2,
                 'application_id': 'req_002_2024_01_16',
-                'title': 'TV signal muammosi',
-                'description': 'TV signal yo\'q',
+                'title': '🔧 TV signal muammosi',
+                'description': 'Malika Toshmatova - kabel uzilgan',
+                'priority': 'medium',
+                'time_ago': '1 soat 30 daqiqa oldin'
+            },
+            {
+                'id': 3,
+                'application_id': 'req_003_2024_01_17',
+                'title': '🔌 Yangi internet ulanish',
+                'description': 'Jasur Rahimov - 50 Mbps tariff, B2B mijoz',
+                'priority': 'normal',
+                'time_ago': '45 daqiqa oldin'
+            },
+            {
+                'id': 4,
+                'application_id': 'req_004_2024_01_18',
+                'title': '🚨 Internet sekin ishlaydi',
+                'description': 'Dilfuza Karimova - tezlik past',
                 'priority': 'high',
+                'time_ago': '20 daqiqa oldin'
+            },
+            {
+                'id': 5,
+                'application_id': 'req_005_2024_01_19',
+                'title': '⚡ Router ishlamayapti',
+                'description': 'Asadbek Abdullayev - yangi router kerak',
+                'priority': 'urgent',
                 'time_ago': '10 daqiqa oldin'
             }
         ]
@@ -118,7 +266,9 @@ class MockWorkflowAccessControl:
     """Mock workflow access control"""
     async def get_filtered_requests_for_role(self, user_id: int, user_role: str, **kwargs):
         """Mock get filtered requests for role"""
-        from datetime import datetime
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        
         return [
             {
                 'id': 'req_001_2024_01_15',
@@ -127,11 +277,13 @@ class MockWorkflowAccessControl:
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Aziz Karimov',
-                    'phone': '+998901234567'
+                    'phone': '+998901234567',
+                    'phone_number': '+998901234567'
                 },
-                'created_at': datetime.now(),
-                'description': 'Internet ulanish arizasi',
-                'location': 'Tashkent, Chorsu'
+                'created_at': now - timedelta(hours=2),
+                'description': 'Internet ulanish arizasi\nTariff: 100 Mbps\nB2C mijoz\nManzil: Tashkent, Chorsu tumani, 15-uy',
+                'location': 'Tashkent, Chorsu tumani, 15-uy',
+                'priority': 'high'
             },
             {
                 'id': 'req_002_2024_01_16',
@@ -140,11 +292,58 @@ class MockWorkflowAccessControl:
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Malika Toshmatova',
-                    'phone': '+998901234568'
+                    'phone': '+998901234568',
+                    'phone_number': '+998901234568'
                 },
-                'created_at': datetime.now(),
-                'description': 'TV signal muammosi',
-                'location': 'Tashkent, Yunusabad'
+                'created_at': now - timedelta(hours=1, minutes=30),
+                'description': 'TV signal yo\'q\nKabel uzilgan\nManzil: Tashkent, Yunusabad tumani, 45-uy',
+                'location': 'Tashkent, Yunusabad tumani, 45-uy',
+                'priority': 'medium'
+            },
+            {
+                'id': 'req_003_2024_01_17',
+                'workflow_type': 'connection_request',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Jasur Rahimov',
+                    'phone': '+998901234569',
+                    'phone_number': '+998901234569'
+                },
+                'created_at': now - timedelta(minutes=45),
+                'description': 'Internet ulanish arizasi\nTariff: 50 Mbps\nB2B mijoz\nManzil: Tashkent, Sergeli tumani, 78-uy',
+                'location': 'Tashkent, Sergeli tumani, 78-uy',
+                'priority': 'normal'
+            },
+            {
+                'id': 'req_004_2024_01_18',
+                'workflow_type': 'call_center_direct',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Dilfuza Karimova',
+                    'phone': '+998901234570',
+                    'phone_number': '+998901234570'
+                },
+                'created_at': now - timedelta(minutes=20),
+                'description': 'Internet sekin ishlaydi\nTezlik past\nManzil: Tashkent, Chilanzar tumani, 23-uy',
+                'location': 'Tashkent, Chilanzar tumani, 23-uy',
+                'priority': 'high'
+            },
+            {
+                'id': 'req_005_2024_01_19',
+                'workflow_type': 'technical_service',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Asadbek Abdullayev',
+                    'phone': '+998901234571',
+                    'phone_number': '+998901234571'
+                },
+                'created_at': now - timedelta(minutes=10),
+                'description': 'Router ishlamayapti\nYangi router kerak\nManzil: Tashkent, Shayxontohur tumani, 67-uy',
+                'location': 'Tashkent, Shayxontohur tumani, 67-uy',
+                'priority': 'urgent'
             }
         ]
     
@@ -263,6 +462,12 @@ def get_manager_inbox_router():
     async def show_manager_inbox(message: Message, state: FSMContext):
         """Manager inbox handler"""
         try:
+            # Check user role first - only process if user is manager
+            from loader import get_user_role
+            user_role = get_user_role(message.from_user.id)
+            if user_role != 'manager':
+                return  # Skip processing for non-manager users
+            
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'manager':
                 return
@@ -311,8 +516,8 @@ def get_manager_inbox_router():
             workflow_engine = MockWorkflowEngine()
             workflow_status = await workflow_engine.get_workflow_status(full_id)
             if workflow_status:
-                req['workflow_status'] = workflow_status.current_status
-                req['workflow_role'] = workflow_status.current_role
+                req['workflow_status'] = workflow_status['current_status']
+                req['workflow_role'] = workflow_status['current_role']
             
             state_manager = MockStateManager()
             request = await state_manager.get_request(full_id)
@@ -351,14 +556,6 @@ def get_manager_inbox_router():
             }.get(request['current_status'], '📋')
             
             client_name = request['contact_info'].get('full_name', 'N/A') if isinstance(request['contact_info'], dict) else 'N/A'
-            
-            # Get comments count
-            comments_count = 0
-            try:
-                comments = await get_comments_for_role(request['id'], 'manager')
-                comments_count = len(comments)
-            except Exception as e:
-                print(f"Error getting comments count: {e}")
 
             # Get contact info
             phone_number = request['contact_info'].get('phone_number', 'N/A') if isinstance(request['contact_info'], dict) else 'N/A'
@@ -444,7 +641,6 @@ def get_manager_inbox_router():
                 f"📅 <b>Yaratilgan:</b> {created_date}\n"
                 f"{priority_emoji} <b>Muhimlik:</b> {request['priority'].title()}\n"
                 f"{status_emoji} <b>Holat:</b> {status_name}\n"
-                f"💬 <b>Izohlar:</b> {comments_count} ta\n"
                 f"📝 <b>Tavsif:</b> {request['description'][:150]}{'...' if request['description'] and len(request['description']) > 150 else request['description'] or 'Yoq'}\n\n"
                 f"<i>📊 Ariza {index + 1}/{len(requests)}</i>"
             )
@@ -455,14 +651,45 @@ def get_manager_inbox_router():
             # Create action buttons
             buttons = []
             
+            # Debug: Print request details for troubleshooting
+            print(f"Request type: {request.get('workflow_type')}, Role: {request.get('role_current')}")
+            
             # Assignment button (only for connection requests)
-            if request['workflow_type'] == 'connection_request' and request['role_current'] == 'manager':
+            if request.get('workflow_type') == 'connection_request' and request.get('role_current') == 'manager':
                 buttons.append([
                     InlineKeyboardButton(
                         text="📨 Kichik menejerga yuborish",
                         callback_data=f"mgr_assign_jm_{full_id}"
                     )
                 ])
+                print(f"Added assignment button for request {short_id}")
+            else:
+                print(f"No assignment button for request {short_id} - Type: {request.get('workflow_type')}, Role: {request.get('role_current')}")
+            
+            # Navigation buttons
+            nav_buttons = []
+            
+            # Previous button
+            if index > 0:
+                nav_buttons.append(
+                    InlineKeyboardButton(
+                        text="⬅️ Oldingi",
+                        callback_data=f"mgr_prev_{index}"
+                    )
+                )
+            
+            # Next button
+            if index < len(requests) - 1:
+                nav_buttons.append(
+                    InlineKeyboardButton(
+                        text="Keyingi ➡️",
+                        callback_data=f"mgr_next_{index}"
+                    )
+                )
+            
+            # Add navigation buttons if they exist
+            if nav_buttons:
+                buttons.append(nav_buttons)
             
             keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
             
@@ -471,7 +698,7 @@ def get_manager_inbox_router():
                 # Check if this is a callback query (inline keyboard event)
                 if hasattr(event, 'message') and hasattr(event, 'from_user'):
                     # This is a CallbackQuery - edit the existing message
-                    await event.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+                    await event.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
                     print(f"Successfully edited message for request {short_id}")
                 else:
                     # This is a Message - send new message
@@ -645,6 +872,70 @@ def get_manager_inbox_router():
                 
         except Exception as e:
             print(f"Error in confirm_junior_manager_assignment: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("mgr_prev_"))
+    async def navigate_previous(callback: CallbackQuery, state: FSMContext):
+        """Navigate to previous request"""
+        try:
+            await callback.answer()
+            
+            # Extract index from callback data
+            current_index = int(callback.data.replace("mgr_prev_", ""))
+            new_index = current_index - 1
+            
+            if new_index < 0:
+                await callback.answer("Birinchi ariza", show_alert=True)
+                return
+            
+            # Get user and data
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            data = await state.get_data()
+            requests = data.get('inbox_requests', [])
+            
+            if not requests or new_index >= len(requests):
+                await callback.answer("Ariza topilmadi", show_alert=True)
+                return
+            
+            # Update current index
+            await state.update_data(current_index=new_index)
+            
+            # Display the previous request
+            await display_manager_request(callback, state, requests, new_index, lang, user)
+            
+        except Exception as e:
+            print(f"Error in navigate_previous: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("mgr_next_"))
+    async def navigate_next(callback: CallbackQuery, state: FSMContext):
+        """Navigate to next request"""
+        try:
+            await callback.answer()
+            
+            # Extract index from callback data
+            current_index = int(callback.data.replace("mgr_next_", ""))
+            new_index = current_index + 1
+            
+            # Get user and data
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            data = await state.get_data()
+            requests = data.get('inbox_requests', [])
+            
+            if not requests or new_index >= len(requests):
+                await callback.answer("Oxirgi ariza", show_alert=True)
+                return
+            
+            # Update current index
+            await state.update_data(current_index=new_index)
+            
+            # Display the next request
+            await display_manager_request(callback, state, requests, new_index, lang, user)
+            
+        except Exception as e:
+            print(f"Error in navigate_next: {str(e)}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
 
