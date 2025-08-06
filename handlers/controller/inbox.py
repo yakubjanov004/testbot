@@ -5,6 +5,17 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter
 from states.controller_states import ControllerRequestStates
+from utils.reply_utils import (
+    send_or_edit_message,
+    answer_callback_query,
+    reply_with_error,
+    reply_with_success,
+    reply_with_info,
+    handle_inline_response,
+    clear_message_state,
+    send_confirmation_message,
+    send_list_message
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -85,7 +96,7 @@ class ControllerRequestStates(StatesGroup):
     waiting_for_technician = State()
     waiting_for_comment = State()
 
-# 1. send_or_edit universal qiladi va message_id qaytaradi
+# Use the universal send_or_edit_message from reply_utils
 async def send_or_edit(
     event: Message | CallbackQuery,
     text: str,
@@ -93,34 +104,7 @@ async def send_or_edit(
     state: FSMContext,
     **kwargs
 ) -> int:
-    data = await state.get_data()
-    message_id = data.get("current_message_id")
-    chat_id = event.from_user.id
-
-    try:
-        if message_id:
-            await event.bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text=text,
-                **kwargs
-            )
-            return message_id
-        else:
-            message = await event.bot.send_message(chat_id=chat_id, text=text, **kwargs)
-            await state.update_data(current_message_id=message.message_id)
-            return message.message_id
-    except Exception as e:
-        print(f"Could not edit message {message_id}, sending a new one. Error: {e}")
-        try:
-            if message_id:
-                await event.bot.delete_message(chat_id=chat_id, message_id=message_id)
-        except Exception as del_e:
-            print(f"Error deleting old message {message_id}: {del_e}")
-        
-        message = await event.bot.send_message(chat_id=chat_id, text=text, **kwargs)
-        await state.update_data(current_message_id=message.message_id)
-        return message.message_id
+    return await send_or_edit_message(event, text, state, **kwargs)
 
 def get_controller_inbox_router():
     """Get controller inbox router"""
@@ -131,7 +115,7 @@ def get_controller_inbox_router():
     async def handle_inbox_notification(callback: CallbackQuery, state: FSMContext):
         """Handle inbox notification button click"""
         try:
-            await callback.answer()
+            await answer_callback_query(callback)
             
             # Extract request ID
             request_id_short = callback.data.replace("open_inbox_", "")
@@ -146,7 +130,7 @@ def get_controller_inbox_router():
             
         except Exception as e:
             print(f"Error handling inbox notification: {e}")
-            await callback.answer("Xatolik yuz berdi")
+            await reply_with_error(callback, state, "Xatolik yuz berdi")
     
     async def show_controller_inbox_from_notification(message: Message, state: FSMContext, target_request_id: str = None):
         """Show controller inbox with focus on specific request"""
@@ -428,7 +412,7 @@ def get_controller_inbox_router():
     async def assign_to_technician(callback: CallbackQuery, state: FSMContext):
         user = await get_user_by_telegram_id(callback.from_user.id)
         if not user or user['role'] != 'controller':
-            await callback.answer("Ruxsat yo'q!", show_alert=True)
+            await reply_with_error(callback, state, "Ruxsat yo'q!")
             return
         lang = user.get('language', 'uz')
         request_id = callback.data.replace("ctrl_assign_tech_", "")
@@ -436,9 +420,7 @@ def get_controller_inbox_router():
             # Get available technicians with their workload
             technicians = await get_users_by_role('technician')
             if not technicians:
-                no_tech_text = "Faol texniklar topilmadi!"
-                await callback.answer(no_tech_text, show_alert=True)
-                return
+                return await reply_with_error(callback, state, "Faol texniklar topilmadi!")
             # Create buttons for each technician
             keyboard_buttons = []
             for tech in technicians[:8]:  # Max 8 technicians
@@ -463,24 +445,23 @@ def get_controller_inbox_router():
                 "🟢 - Bo'sh\n🟡 - Kam yuklangan\n🔴 - Ko'p yuklangan\n"
                 "Qavs ichida faol zayavkalar soni ko'rsatilgan."
             )
-            await send_or_edit(
+            await send_or_edit_message(
                 callback,
                 select_text,
+                state,
                 parse_mode='HTML',
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard_buttons),
-                state=state
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
             )
         except Exception as e:
             print(f"Error in assign_to_technician: user_id={callback.from_user.id}, request_id={request_id}, error={e}")
-            error_msg = "Xatolik yuz berdi!"
-            await callback.answer(error_msg, show_alert=True)
+            await reply_with_error(callback, state, "Xatolik yuz berdi!")
 
     @router.callback_query(F.data.startswith("ctrl_select_tech_"))
     async def select_technician(callback: CallbackQuery, state: FSMContext):
         """Assign request to selected technician"""
         user = await get_user_by_telegram_id(callback.from_user.id)
         if not user or user['role'] != 'controller':
-            await callback.answer("Ruxsat yo'q!", show_alert=True)
+            await reply_with_error(callback, state, "Ruxsat yo'q!")
             return
             
         lang = user.get('language', 'uz')
@@ -505,7 +486,7 @@ def get_controller_inbox_router():
                 )
                 
                 # Update message with success status
-                return await send_or_edit(callback, success_text, parse_mode='HTML', state=state)
+                await send_or_edit_message(callback, success_text, state, parse_mode='HTML')
                 
                 # Update the request in our state
                 data = await state.get_data()
@@ -517,22 +498,13 @@ def get_controller_inbox_router():
                 
                 await state.update_data(requests=requests)
                 
-                success_msg = "Muvaffaqiyatli tayinlandi!"
-                await callback.answer(success_msg)
+                await reply_with_success(callback, state, "Muvaffaqiyatli tayinlandi!")
             else:
-                error_text = "❌ <b>Xatolik yuz berdi!</b>"
-                return await send_or_edit(callback, error_text, parse_mode='HTML', state=state)
-                
-                error_msg = "Xatolik yuz berdi!"
-                await callback.answer(error_msg, show_alert=True)
+                await reply_with_error(callback, state, "❌ Xatolik yuz berdi!")
                 
         except Exception as e:
             print(f"Error selecting technician: user_id={callback.from_user.id}, request_id={request_id}, tech_id={tech_id}, error={e}")
-            error_text = "❌ <b>Xatolik yuz berdi!</b>"
-            return await send_or_edit(callback, error_text, parse_mode='HTML', state=state)
-            
-            error_msg = "Xatolik yuz berdi!"
-            await callback.answer(error_msg, show_alert=True)
+            await reply_with_error(callback, state, "Xatolik yuz berdi!")
             
     @router.callback_query(F.data == "ctrl_prev_request")
     @router.callback_query(F.data == "ctrl_next_request")

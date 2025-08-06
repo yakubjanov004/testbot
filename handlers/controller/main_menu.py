@@ -3,6 +3,12 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from keyboards.controllers_buttons import controllers_main_menu
 from states.controller_states import ControllerMainMenuStates
+from utils.reply_utils import (
+    send_or_edit_message,
+    answer_callback_query,
+    reply_with_error,
+    clear_message_state
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -45,12 +51,11 @@ def get_controller_main_menu_router():
         user_id = message.from_user.id
         
         try:
+            await clear_message_state(state)
             await state.clear()
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                text = "Sizda ruxsat yo'q."
-                await message.answer(text)
-                return
+                return await reply_with_error(message, state, "Sizda ruxsat yo'q.")
                 
             await state.set_state(ControllerMainMenuStates.main_menu)
             lang = user.get('language', 'uz')
@@ -67,12 +72,17 @@ def get_controller_main_menu_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            await message.answer(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await send_or_edit_message(
+                message, 
+                welcome_text, 
+                state, 
+                reply_markup=controllers_main_menu(lang), 
+                parse_mode='HTML'
+            )
             
         except Exception as e:
             print(f"Error in controllers_start: {str(e)}")
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+            await reply_with_error(message, state, "Xatolik yuz berdi")
 
     @router.message(F.text.in_(["🏠 Bosh menyu"]))
     async def back_to_main_menu(message: Message, state: FSMContext):
@@ -82,21 +92,19 @@ def get_controller_main_menu_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await message.answer("Sizda controller huquqi yo'q.")
-                return
+                return await reply_with_error(message, state, "Sizda controller huquqi yo'q.")
                 
             await controllers_start(message, state)
             
         except Exception as e:
             print(f"Error in back_to_main_menu: {str(e)}")
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+            await reply_with_error(message, state, "Xatolik yuz berdi")
 
     @router.callback_query(F.data == "controllers_back")
     async def controllers_back_handler(callback: CallbackQuery, state: FSMContext):
         """Handle controllers back button"""
         try:
-            await callback.answer()
+            await answer_callback_query(callback)
             
             user = await get_user_by_telegram_id(callback.from_user.id)
             if not user or user['role'] != 'controller':
@@ -116,17 +124,23 @@ def get_controller_main_menu_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            await callback.message.edit_text(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await send_or_edit_message(
+                callback, 
+                welcome_text, 
+                state, 
+                reply_markup=controllers_main_menu(lang), 
+                parse_mode='HTML'
+            )
             await state.set_state(ControllerMainMenuStates.main_menu)
             
         except Exception as e:
-            await callback.message.answer("❌ Xatolik yuz berdi")
+            await reply_with_error(callback, state, "❌ Xatolik yuz berdi")
 
     @router.callback_query(F.data == "back_to_controller_main")
     async def back_to_controller_main_handler(callback: CallbackQuery, state: FSMContext):
         """Handle back to controller main menu button"""
         try:
-            await callback.answer()
+            await answer_callback_query(callback)
             
             user = await get_user_by_telegram_id(callback.from_user.id)
             if not user or user['role'] != 'controller':
@@ -146,10 +160,16 @@ def get_controller_main_menu_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            await callback.message.edit_text(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await send_or_edit_message(
+                callback, 
+                welcome_text, 
+                state, 
+                reply_markup=controllers_main_menu(lang), 
+                parse_mode='HTML'
+            )
             await state.set_state(ControllerMainMenuStates.main_menu)
             
         except Exception as e:
-            await callback.message.answer("❌ Xatolik yuz berdi")
+            await reply_with_error(callback, state, "❌ Xatolik yuz berdi")
 
     return router
