@@ -1,5 +1,5 @@
 """
-Applications List Handler - Soddalashtirilgan versiya
+Applications List Handler - Simplified Implementation
 
 Bu modul manager uchun arizalar ro'yxati va navigatsiya funksionalligini o'z ichiga oladi.
 """
@@ -27,10 +27,6 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup user inline messages"""
-    print(f"Mock: Cleaning up inline messages for user {user_id}")
-
 # Mock workflow access control
 class MockWorkflowAccessControl:
     """Mock workflow access control"""
@@ -50,7 +46,12 @@ class MockWorkflowAccessControl:
                 'created_at': datetime.now(),
                 'updated_at': datetime.now(),
                 'description': 'Internet ulanish arizasi',
-                'location': 'Tashkent, Chorsu'
+                'location': 'Tashkent, Chorsu',
+                'priority': 'high',
+                'estimated_time': '2-3 kun',
+                'technician': 'Ahmad Karimov',
+                'region': 'Toshkent shahri',
+                'address': 'Chorsu tumani, 15-uy'
             },
             {
                 'id': 'req_002_2024_01_16',
@@ -64,7 +65,12 @@ class MockWorkflowAccessControl:
                 'created_at': datetime.now(),
                 'updated_at': datetime.now(),
                 'description': 'TV signal muammosi',
-                'location': 'Tashkent, Yunusabad'
+                'location': 'Tashkent, Yunusabad',
+                'priority': 'normal',
+                'estimated_time': '1-2 kun',
+                'technician': 'Bekzod Azimov',
+                'region': 'Toshkent shahri',
+                'address': 'Yunusobod tumani, 25-uy'
             },
             {
                 'id': 'req_003_2024_01_17',
@@ -78,7 +84,12 @@ class MockWorkflowAccessControl:
                 'created_at': datetime.now(),
                 'updated_at': datetime.now(),
                 'description': 'Qo\'ng\'iroq markazi arizasi',
-                'location': 'Tashkent, Sergeli'
+                'location': 'Tashkent, Sergeli',
+                'priority': 'low',
+                'estimated_time': '1 kun',
+                'technician': 'Karim Karimov',
+                'region': 'Toshkent shahri',
+                'address': 'Sergeli tumani, 8-uy'
             }
         ]
 
@@ -98,376 +109,195 @@ def get_applications_list_router():
             
             # Use workflow access control to get filtered requests for manager role
             access_control = MockWorkflowAccessControl()
-            requests = await access_control.get_filtered_requests_for_role(
-                user_id=user['id'],
-                user_role='manager'
-            )
+            applications = await access_control.get_filtered_requests_for_role(message.from_user.id, 'manager')
             
-            if not requests:
-                text = "Hozircha hech qanday ariza yo'q."
-                
-                # Use send_and_track for inline cleanup
-                await message.answer(text, reply_markup=get_manager_back_keyboard(lang))
+            if not applications:
+                await message.answer("Hozircha arizalar yo'q.")
                 return
             
-            # Foydalanuvchi state'da joriy zayavka indeksini saqlash
-            data = await state.get_data()
-            current_index = data.get('current_application_index', 0)
+            # Show first application
+            await show_application_details(message, applications[0], applications, 0)
             
-            # Indeksni cheklash
-            if current_index >= len(requests):
-                current_index = 0
-            elif current_index < 0:
-                current_index = len(requests) - 1
-            
-            # Joriy zayavka ma'lumotlari
-            current_request = requests[current_index]
-            
-            # Status belgilarini aniqlash
-            status_emoji = {
-                'created': '🆕',
-                'in_progress': '⏳',
-                'completed': '✅',
-                'cancelled': '❌'
-            }.get(current_request.get('current_status', 'created'), '📋')
-            
-            workflow_type = current_request.get('workflow_type', 'unknown')
-            workflow_emoji = {
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    async def show_application_details(message_or_callback, application, applications, index):
+        """Show application details with navigation"""
+        try:
+            # Format workflow type
+            workflow_type_emoji = {
                 'connection_request': '🔌',
                 'technical_service': '🔧',
                 'call_center_direct': '📞'
-            }.get(workflow_type, '📋')
+            }.get(application['workflow_type'], '📄')
             
-            # Zayavka turini formatlash
             workflow_type_text = {
                 'connection_request': 'Ulanish arizasi',
                 'technical_service': 'Texnik xizmat',
-                'call_center_direct': 'Qo\'ng\'iroq markazi'
-            }.get(workflow_type, 'Noma\'lum')
+                'call_center_direct': 'Call Center'
+            }.get(application['workflow_type'], 'Boshqa')
             
-            # Mijoz ma'lumotlari
-            client_name = current_request.get('contact_info', {}).get('full_name', 'N/A') if isinstance(current_request.get('contact_info'), dict) else 'N/A'
-            client_phone = current_request.get('contact_info', {}).get('phone', 'N/A') if isinstance(current_request.get('contact_info'), dict) else 'N/A'
+            # Format status
+            status_emoji = {
+                'in_progress': '🟡',
+                'created': '🟠',
+                'completed': '🟢',
+                'cancelled': '🔴'
+            }.get(application['current_status'], '⚪')
             
-            # Vaqt ma'lumotlari
-            created_at = current_request.get('created_at', 'N/A')
-            updated_at = current_request.get('updated_at', 'N/A')
-            
-            # Vaqt hisoblash
-            total_duration = "N/A"
-            if created_at and created_at != 'N/A':
-                try:
-                    if isinstance(created_at, str):
-                        created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-                    else:
-                        created_dt = created_at
-                    
-                    current_time = datetime.now()
-                    if created_dt.tzinfo is None:
-                        created_dt = created_dt.replace(tzinfo=None)
-                    
-                    duration = current_time - created_dt
-                    total_hours = int(duration.total_seconds() // 3600)
-                    total_minutes = int((duration.total_seconds() % 3600) // 60)
-                    
-                    if total_hours > 0:
-                        total_duration = f"{total_hours}s {total_minutes}d"
-                    else:
-                        total_duration = f"{total_minutes} daqiqa"
-                except:
-                    total_duration = "N/A"
-            
-            # Izoh va diagnostika
-            description = current_request.get('description', 'Izoh yo\'q')
-            location = current_request.get('location', 'Manzil ko\'rsatilmagan')
-            
-            # Joriy rol va status
-            current_role = current_request.get('role_current', 'Noma\'lum')
-            current_status = current_request.get('current_status', 'Noma\'lum')
-            
-            # Status matnini formatlash
             status_text = {
-                'created': 'Yaratilgan',
                 'in_progress': 'Jarayonda',
-                'completed': 'Tugallangan',
+                'created': 'Yaratilgan',
+                'completed': 'Bajarilgan',
                 'cancelled': 'Bekor qilingan'
-            }.get(current_status, current_status)
+            }.get(application['current_status'], 'Noma\'lum')
             
-            text = f"""
-📋 <b>Ariza #{current_index + 1} / {len(requests)}</b>
-
-{status_emoji}{workflow_emoji} <b>{client_name}</b>
-   📋 ID: {current_request['id'][:8]}...
-   🏷️ Turi: {workflow_type_text}
-   📊 Status: {status_text}
-   👤 Joriy rol: {current_role}
-
-📞 <b>Mijoz ma'lumotlari:</b>
-   • Nomi: {client_name}
-   • Telefon: {client_phone}
-   • Manzil: {location}
-
-⏰ <b>Vaqt ma'lumotlari:</b>
-   • Yaratilgan: {created_at}
-   • Yangilangan: {updated_at}
-   • Umumiy vaqt: {total_duration}
-
-📝 <b>Izoh va diagnostika:</b>
-   {description}
-
-🔧 <b>Texnik ma'lumotlar:</b>
-   • Workflow type: {workflow_type}
-   • Current status: {current_status}
-   • Role current: {current_role}
-"""
+            # Format priority
+            priority_emoji = {
+                'high': '🔴',
+                'normal': '🟡',
+                'low': '🟢'
+            }.get(application.get('priority', 'normal'), '🟡')
             
-            # Navigatsiya tugmalari
-            keyboard_buttons = []
+            priority_text = {
+                'high': 'Yuqori',
+                'normal': 'O\'rtacha',
+                'low': 'Past'
+            }.get(application.get('priority', 'normal'), 'O\'rtacha')
             
-            # Agar 1tadan ko'p zayavka bo'lsa, navigatsiya tugmalarini qo'shish
-            if len(requests) > 1:
-                keyboard_buttons.append([
-                    InlineKeyboardButton(
-                        text="◀️ Oldingi",
-                        callback_data="mgr_prev_application"
-                    ),
-                    InlineKeyboardButton(
-                        text="Keyingi ▶️",
-                        callback_data="mgr_next_application"
-                    )
-                ])
+            # Format dates
+            created_date = application['created_at'].strftime('%d.%m.%Y %H:%M')
+            updated_date = application['updated_at'].strftime('%d.%m.%Y %H:%M')
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            # To'liq ma'lumot
+            text = (
+                f"{workflow_type_emoji} <b>{workflow_type_text} - To'liq ma'lumot</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"📅 <b>Yaratilgan:</b> {created_date}\n"
+                f"🔄 <b>Yangilangan:</b> {updated_date}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📞 <b>Telefon:</b> {application['contact_info']['phone']}\n"
+                f"🏛️ <b>Hudud:</b> {application.get('region', 'Noma\'lum')}\n"
+                f"🏠 <b>Manzil:</b> {application.get('address', 'Noma\'lum')}\n"
+                f"📝 <b>Tavsif:</b> {application['description']}\n"
+                f"{status_emoji} <b>Holat:</b> {status_text}\n"
+                f"👨‍🔧 <b>Texnik:</b> {application.get('technician', 'Tayinlanmagan')}\n"
+                f"⏰ <b>Taxminiy vaqt:</b> {application.get('estimated_time', 'Noma\'lum')}\n"
+                f"{priority_emoji} <b>Ustuvorlik:</b> {priority_text}\n\n"
+                f"📊 <b>Ariza #{index + 1} / {len(applications)}</b>"
+            )
             
-            # State'da joriy indeksni saqlash
-            await state.update_data(current_application_index=current_index)
+            # Create navigation keyboard
+            keyboard = get_applications_navigation_keyboard(index, len(applications))
             
-            # Use send_and_track for inline cleanup
-            await message.answer(text, reply_markup=keyboard, parse_mode='HTML')
-            
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
+            else:
+                await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+                
         except Exception as e:
-            print(f"Error in view_all_applications: {e}")
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            else:
+                await message_or_callback.answer("Xatolik yuz berdi")
 
     @router.callback_query(F.data == "mgr_prev_application")
     async def show_previous_application(callback: CallbackQuery, state: FSMContext):
-        """Oldingi arizani ko'rsatish"""
+        """Show previous application"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'manager':
-                await callback.answer("Ruxsat yo'q!", show_alert=True)
-                return
-
-            # State'dan joriy indeksni olish
-            data = await state.get_data()
-            current_index = data.get('current_application_index', 0)
+            await callback.answer()
             
-            # Oldingi indeksga o'tish
-            await state.update_data(current_application_index=current_index - 1)
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
             
-            # Ariza ro'yxatini qayta ko'rsatish
-            try:
-                await view_all_applications_callback(callback, state)
-                
-            except Exception as e:
-                print(f"Error showing previous application: {e}")
-                await callback.answer("Xatolik yuz berdi", show_alert=True)
+            access_control = MockWorkflowAccessControl()
+            applications = await access_control.get_filtered_requests_for_role(callback.from_user.id, 'manager')
+            
+            if current_index > 0:
+                new_index = current_index - 1
+                await state.update_data(current_app_index=new_index)
+                await show_application_details(callback, applications[new_index], applications, new_index)
+            else:
+                await callback.answer("Bu birinchi ariza")
                 
         except Exception as e:
-            print(f"Error in show_previous_application: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            await callback.answer("Xatolik yuz berdi")
 
     @router.callback_query(F.data == "mgr_next_application")
     async def show_next_application(callback: CallbackQuery, state: FSMContext):
-        """Keyingi arizani ko'rsatish"""
+        """Show next application"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'manager':
-                await callback.answer("Ruxsat yo'q!", show_alert=True)
-                return
-
-            # State'dan joriy indeksni olish
-            data = await state.get_data()
-            current_index = data.get('current_application_index', 0)
+            await callback.answer()
             
-            # Keyingi indeksga o'tish
-            await state.update_data(current_application_index=current_index + 1)
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
             
-            # Ariza ro'yxatini qayta ko'rsatish
-            try:
-                await view_all_applications_callback(callback, state)
-                
-            except Exception as e:
-                print(f"Error showing next application: {e}")
-                await callback.answer("Xatolik yuz berdi", show_alert=True)
-                
-        except Exception as e:
-            print(f"Error in show_next_application: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    async def view_all_applications_callback(callback: CallbackQuery, state: FSMContext):
-        """Callback uchun ariza ro'yxatini ko'rsatish"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'manager':
-                await callback.answer("Ruxsat yo'q!", show_alert=True)
-                return
-            
-            lang = user.get('language', 'uz')
-            
-            # Use workflow access control to get filtered requests for manager role
             access_control = MockWorkflowAccessControl()
-            requests = await access_control.get_filtered_requests_for_role(
-                user_id=user['id'],
-                user_role='manager'
-            )
+            applications = await access_control.get_filtered_requests_for_role(callback.from_user.id, 'manager')
             
-            if not requests:
-                text = "Hozircha hech qanday ariza yo'q."
+            if current_index < len(applications) - 1:
+                new_index = current_index + 1
+                await state.update_data(current_app_index=new_index)
+                await show_application_details(callback, applications[new_index], applications, new_index)
+            else:
+                await callback.answer("Bu oxirgi ariza")
                 
-                # Use edit_and_track for inline cleanup
-                await callback.message.edit_text(text, reply_markup=get_manager_back_keyboard(lang))
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "mgr_view_all_applications")
+    async def view_all_applications_callback(callback: CallbackQuery, state: FSMContext):
+        """View all applications from callback"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'manager':
                 return
             
-            # Foydalanuvchi state'da joriy zayavka indeksini saqlash
-            data = await state.get_data()
-            current_index = data.get('current_application_index', 0)
+            access_control = MockWorkflowAccessControl()
+            applications = await access_control.get_filtered_requests_for_role(callback.from_user.id, 'manager')
             
-            # Indeksni cheklash
-            if current_index >= len(requests):
-                current_index = 0
-            elif current_index < 0:
-                current_index = len(requests) - 1
+            if not applications:
+                await callback.message.edit_text("Hozircha arizalar yo'q.")
+                return
             
-            # Joriy zayavka ma'lumotlari
-            current_request = requests[current_index]
-            
-            # Status belgilarini aniqlash
-            status_emoji = {
-                'created': '🆕',
-                'in_progress': '⏳',
-                'completed': '✅',
-                'cancelled': '❌'
-            }.get(current_request.get('current_status', 'created'), '📋')
-            
-            workflow_type = current_request.get('workflow_type', 'unknown')
-            workflow_emoji = {
-                'connection_request': '🔌',
-                'technical_service': '🔧',
-                'call_center_direct': '📞'
-            }.get(workflow_type, '📋')
-            
-            # Zayavka turini formatlash
-            workflow_type_text = {
-                'connection_request': 'Ulanish arizasi',
-                'technical_service': 'Texnik xizmat',
-                'call_center_direct': 'Qo\'ng\'iroq markazi'
-            }.get(workflow_type, 'Noma\'lum')
-            
-            # Mijoz ma'lumotlari
-            client_name = current_request.get('contact_info', {}).get('full_name', 'N/A') if isinstance(current_request.get('contact_info'), dict) else 'N/A'
-            client_phone = current_request.get('contact_info', {}).get('phone', 'N/A') if isinstance(current_request.get('contact_info'), dict) else 'N/A'
-            
-            # Vaqt ma'lumotlari
-            created_at = current_request.get('created_at', 'N/A')
-            updated_at = current_request.get('updated_at', 'N/A')
-            
-            # Vaqt hisoblash
-            total_duration = "N/A"
-            if created_at and created_at != 'N/A':
-                try:
-                    if isinstance(created_at, str):
-                        created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-                    else:
-                        created_dt = created_at
-                    
-                    current_time = datetime.now()
-                    if created_dt.tzinfo is None:
-                        created_dt = created_dt.replace(tzinfo=None)
-                    
-                    duration = current_time - created_dt
-                    total_hours = int(duration.total_seconds() // 3600)
-                    total_minutes = int((duration.total_seconds() % 3600) // 60)
-                    
-                    if total_hours > 0:
-                        total_duration = f"{total_hours}s {total_minutes}d"
-                    else:
-                        total_duration = f"{total_minutes} daqiqa"
-                except:
-                    total_duration = "N/A"
-            
-            # Izoh va diagnostika
-            description = current_request.get('description', 'Izoh yo\'q')
-            location = current_request.get('location', 'Manzil ko\'rsatilmagan')
-            
-            # Joriy rol va status
-            current_role = current_request.get('role_current', 'Noma\'lum')
-            current_status = current_request.get('current_status', 'Noma\'lum')
-            
-            # Status matnini formatlash
-            status_text = {
-                'created': 'Yaratilgan',
-                'in_progress': 'Jarayonda',
-                'completed': 'Tugallangan',
-                'cancelled': 'Bekor qilingan'
-            }.get(current_status, current_status)
-            
-            text = f"""
-📋 <b>Ariza #{current_index + 1} / {len(requests)}</b>
-
-{status_emoji}{workflow_emoji} <b>{client_name}</b>
-   📋 ID: {current_request['id'][:8]}...
-   🏷️ Turi: {workflow_type_text}
-   📊 Status: {status_text}
-   👤 Joriy rol: {current_role}
-
-📞 <b>Mijoz ma'lumotlari:</b>
-   • Nomi: {client_name}
-   • Telefon: {client_phone}
-   • Manzil: {location}
-
-⏰ <b>Vaqt ma'lumotlari:</b>
-   • Yaratilgan: {created_at}
-   • Yangilangan: {updated_at}
-   • Umumiy vaqt: {total_duration}
-
-📝 <b>Izoh va diagnostika:</b>
-   {description}
-
-🔧 <b>Texnik ma'lumotlar:</b>
-   • Workflow type: {workflow_type}
-   • Current status: {current_status}
-   • Role current: {current_role}
-"""
-            
-            # Navigatsiya tugmalari
-            keyboard_buttons = []
-            
-            # Agar 1tadan ko'p zayavka bo'lsa, navigatsiya tugmalarini qo'shish
-            if len(requests) > 1:
-                keyboard_buttons.append([
-                    InlineKeyboardButton(
-                        text="◀️ Oldingi",
-                        callback_data="mgr_prev_application"
-                    ),
-                    InlineKeyboardButton(
-                        text="Keyingi ▶️",
-                        callback_data="mgr_next_application"
-                    )
-                ])
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
-            
-            # State'da joriy indeksni saqlash
-            await state.update_data(current_application_index=current_index)
-            
-            # Use edit_and_track for inline cleanup
-            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+            # Reset index to 0
+            await state.update_data(current_app_index=0)
+            await show_application_details(callback, applications[0], applications, 0)
             
         except Exception as e:
-            print(f"Error in view_all_applications_callback: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            await callback.answer("Xatolik yuz berdi")
 
-    return router 
+    return router
+
+def get_applications_navigation_keyboard(current_index: int, total_applications: int):
+    """Create navigation keyboard for applications"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="mgr_prev_application"
+        ))
+    
+    # Next button
+    if current_index < total_applications - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="mgr_next_application"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard) 

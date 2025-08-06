@@ -1,19 +1,11 @@
 """
-Main Handlers Module - Complete Implementation
+Main Handlers Module - Simplified Implementation
 
-This module sets up all role-based routers with simplified integration.
-All modules have been refactored to use mock data and simplified architecture.
+This module sets up all role-based routers with clean integration.
+All modules have been simplified to focus on core functionality.
 """
 
-import traceback
-import logging
 from aiogram import Dispatcher
-
-# Logger sozlash
-logger = logging.getLogger(__name__)
-
-# Activity logger
-activity_logger = logging.getLogger('activity')
 
 def setup_handlers(dp: Dispatcher):
     """Setup all role-based handlers with simplified integration"""
@@ -65,34 +57,13 @@ def setup_handlers(dp: Dispatcher):
         dp.include_router(admin_router)
         
         print("✅ All handlers setup completed successfully")
-        logger.info("All handlers setup completed successfully")
         
-    except ImportError as e:
-        logger.error(f"Import Error in setup_handlers: {e}", exc_info=True)
-        print(f"❌ Import Error in setup_handlers: {e}")
-        print(f"📁 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"🔍 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
-        raise
-    except NameError as e:
-        logger.error(f"Name Error in setup_handlers: {e}", exc_info=True)
-        print(f"❌ Name Error in setup_handlers: {e}")
-        print(f"📁 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"🔍 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
-        raise
     except Exception as e:
-        logger.error(f"Error setting up handlers: {e}", exc_info=True)
         print(f"❌ Error setting up handlers: {e}")
-        print(f"📁 Error type: {type(e).__name__}")
-        print(f"🔍 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"📄 Line number: {e.__traceback__.tb_lineno}")
-        traceback.print_exc()
         raise
 
 def get_global_instances():
     """Get global instances for use in handlers (simplified)"""
     return {
-        'logger': logger,  # Return actual logger
         'mock_data': True  # Indicate mock data usage
     }
