@@ -91,9 +91,7 @@ async def setup_logger(name: str):
     """Mock logger setup"""
     return None
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
+
 
 logger = None  # Mock logger
 

@@ -1,15 +1,13 @@
 """
-Applications Search Handler - Soddalashtirilgan versiya
+Manager Applications Search Handler - Simplified Implementation
 
-Bu modul manager uchun arizalar qidirish va ID orqali ko'rish funksionalligini o'z ichiga oladi.
+This module handles manager applications search functionality.
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from aiogram.filters.state import StateFilter
-from states.manager_states import ManagerApplicationStates
-from keyboards.manager_buttons import get_manager_back_keyboard
+from keyboards.manager_buttons import get_manager_search_keyboard, get_manager_back_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -29,220 +27,304 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-
-# Mock workflow access control
-class MockWorkflowAccessControl:
-    """Mock workflow access control"""
-    async def get_filtered_requests_for_role(self, user_id: int, user_role: str):
-        """Mock get filtered requests for role"""
-        from datetime import datetime
-        return [
-            {
-                'id': 'req_001_2024_01_15',
-                'workflow_type': 'connection_request',
-                'current_status': 'in_progress',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Aziz Karimov',
-                    'phone': '+998901234567'
-                },
-                'created_at': datetime.now(),
-                'updated_at': datetime.now(),
-                'description': 'Internet ulanish arizasi',
-                'location': 'Tashkent, Chorsu'
-            },
-            {
-                'id': 'req_002_2024_01_16',
-                'workflow_type': 'technical_service',
-                'current_status': 'created',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Malika Toshmatova',
-                    'phone': '+998901234568'
-                },
-                'created_at': datetime.now(),
-                'updated_at': datetime.now(),
-                'description': 'TV signal muammosi',
-                'location': 'Tashkent, Yunusabad'
-            },
-            {
-                'id': 'req_003_2024_01_17',
-                'workflow_type': 'call_center_direct',
-                'current_status': 'completed',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Jahongir Azimov',
-                    'phone': '+998901234569'
-                },
-                'created_at': datetime.now(),
-                'updated_at': datetime.now(),
-                'description': 'Qo\'ng\'iroq markazi arizasi',
-                'location': 'Tashkent, Sergeli'
-            }
-        ]
-
-# Mock state manager
-class MockStateManager:
-    """Mock state manager"""
-    async def get_request(self, request_id: str):
-        """Mock get request"""
-        from datetime import datetime
-        return {
-            'id': request_id,
+async def search_applications(query: str):
+    """Mock search applications"""
+    # Mock search results
+    all_applications = [
+        {
+            'id': 'req_001_2024_01_15',
             'workflow_type': 'connection_request',
             'current_status': 'in_progress',
-            'role_current': 'manager',
             'contact_info': {
-                'full_name': 'Test Client',
+                'full_name': 'Aziz Karimov',
                 'phone': '+998901234567'
             },
             'created_at': datetime.now(),
-            'updated_at': datetime.now(),
-            'description': 'Test ariza',
-            'location': 'Test manzil'
+            'description': 'Internet ulanish arizasi',
+            'location': 'Tashkent, Chorsu',
+            'priority': 'high',
+            'region': 'Toshkent shahri'
+        },
+        {
+            'id': 'req_002_2024_01_16',
+            'workflow_type': 'technical_service',
+            'current_status': 'created',
+            'contact_info': {
+                'full_name': 'Malika Toshmatova',
+                'phone': '+998901234568'
+            },
+            'created_at': datetime.now(),
+            'description': 'TV signal muammosi',
+            'location': 'Tashkent, Yunusabad',
+            'priority': 'normal',
+            'region': 'Toshkent shahri'
+        },
+        {
+            'id': 'req_003_2024_01_17',
+            'workflow_type': 'call_center_direct',
+            'current_status': 'completed',
+            'contact_info': {
+                'full_name': 'Jahongir Azimov',
+                'phone': '+998901234569'
+            },
+            'created_at': datetime.now(),
+            'description': 'Qo\'ng\'iroq markazi arizasi',
+            'location': 'Tashkent, Sergeli',
+            'priority': 'low',
+            'region': 'Toshkent shahri'
         }
-
-# Mock workflow type enum
-class WorkflowType:
-    CONNECTION_REQUEST = "connection_request"
-    TECHNICAL_SERVICE = "technical_service"
-    CALL_CENTER_DIRECT = "call_center_direct"
+    ]
+    
+    # Simple search logic
+    query_lower = query.lower()
+    results = []
+    
+    for app in all_applications:
+        if (query_lower in app['id'].lower() or
+            query_lower in app['contact_info']['full_name'].lower() or
+            query_lower in app['contact_info']['phone'].lower() or
+            query_lower in app['description'].lower() or
+            query_lower in app['location'].lower()):
+            results.append(app)
+    
+    return results
 
 def get_applications_search_router():
     """Router for applications search functionality"""
     router = Router()
 
-    @router.message(F.text.in_(["🔎 ID bo'yicha ko'rish"]))
-    async def view_by_id_prompt(message: Message, state: FSMContext):
-        """Manager view by ID prompt handler"""
+    @router.message(F.text.in_(["🔍 Qidiruv", "🔍 Поиск"]))
+    async def view_search(message: Message, state: FSMContext):
+        """Manager view search handler"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'manager':
                 return
             
             lang = user.get('language', 'uz')
-            text = "Ariza ID raqamini kiriting :"
             
-            # Use send_and_track for inline cleanup
-            await message.answer(text, reply_markup=get_manager_back_keyboard(lang))
-            
-            await state.set_state(ManagerApplicationStates.waiting_for_id)
-            
-        except Exception as e:
-            print(f"Error in view_by_id_prompt: {e}")
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
-
-    @router.message(StateFilter(ManagerApplicationStates.waiting_for_id))
-    async def view_application_by_id(message: Message, state: FSMContext):
-        """Manager view application by ID handler"""
-        try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'manager':
-                return
-            
-            lang = user.get('language', 'uz')
-            request_id_short = message.text.strip()
-            
-            # Use state manager to find request by partial ID
-            state_manager = MockStateManager()
-            
-            # Search for requests with matching partial ID
-            access_control = MockWorkflowAccessControl()
-            all_requests = await access_control.get_filtered_requests_for_role(
-                user_id=user['id'],
-                user_role='manager'
+            search_text = (
+                "🔍 <b>Qidiruv - To'liq ma'lumot</b>\n\n"
+                "📋 <b>Qidirish mumkin bo'lgan ma'lumotlar:</b>\n"
+                "• Ariza ID raqami\n"
+                "• Mijoz ismi va familiyasi\n"
+                "• Telefon raqami\n"
+                "• Ariza tavsifi\n"
+                "• Manzil va hudud\n\n"
+                "Qidiruv so'zini kiriting:"
+                if lang == 'uz' else
+                "🔍 <b>Поиск - Полная информация</b>\n\n"
+                "📋 <b>Информация для поиска:</b>\n"
+                "• Номер заявки ID\n"
+                "• Имя и фамилия клиента\n"
+                "• Номер телефона\n"
+                "• Описание заявки\n"
+                "• Адрес и регион\n\n"
+                "Введите поисковый запрос:"
             )
             
-            matching_request = None
-            for req in all_requests:
-                if req['id'].startswith(request_id_short):
-                    matching_request = req
-                    break
+            sent_message = await message.answer(
+                text=search_text,
+                reply_markup=get_manager_search_keyboard(lang),
+                parse_mode='HTML'
+            )
             
-            if not matching_request:
-                text = f"ID {request_id_short} bilan boshlanadigan ariza topilmadi."
-                
-                # Use send_and_track for inline cleanup
-                await message.answer(text, reply_markup=get_manager_back_keyboard(lang))
-                
-                await state.clear()
-                return
-            
-            # Get full request details
-            request = await state_manager.get_request(matching_request['id'])
-            
-            if not request:
-                text = "Ariza tafsilotlari topilmadi."
-                
-                # Use send_and_track for inline cleanup
-                await message.answer(text, reply_markup=get_manager_back_keyboard(lang))
-                
-                await state.clear()
-                return
-            
-            # Format request details
-            workflow_type_display = {
-                'connection_request': 'Ulanish',
-                'technical_service': 'Texnik xizmat',
-                'call_center_direct': 'Call markaz'
-            }.get(request['workflow_type'], request['workflow_type'])
-            
-            status_text = {
-                'created': 'Yaratilgan',
-                'in_progress': 'Jarayonda',
-                'completed': 'Bajarilgan',
-                'cancelled': 'Bekor qilingan'
-            }.get(request['current_status'], request['current_status'])
-            
-            client_name = request['contact_info'].get('full_name', 'N/A') if isinstance(request['contact_info'], dict) else 'N/A'
-            client_phone = request['contact_info'].get('phone', 'N/A') if isinstance(request['contact_info'], dict) else 'N/A'
-            
-            text = f"""📋 Ariza tafsilotlari:
-
-🆔 ID: {request['id'][:8]}...
-🏷️ Turi: {workflow_type_display}
-👤 Mijoz: {client_name}
-📱 Telefon: {client_phone}
-📊 Status: {status_text}
-📅 Yaratilgan: {request['created_at']}
-🏠 Manzil: {request.get('location', 'N/A')}
-📝 Tavsif: {request.get('description', 'N/A')}"""
-            
-            # Create action buttons based on workflow state
-            buttons = []
-            
-            # Manager can assign to junior manager for connection requests
-            if request['workflow_type'] == WorkflowType.CONNECTION_REQUEST and request['role_current'] == 'manager':
-                buttons.append([InlineKeyboardButton(
-                    text="👨‍💼 Junior menejerga biriktirish",
-                    callback_data=f"assign_junior_{request['id'][:8]}"
-                )])
-            
-            # Add comment button
-            buttons.append([InlineKeyboardButton(
-                text="💬 Izoh qo'shish",
-                callback_data=f"add_comment_{request['id'][:8]}"
-            )])
-            
-            buttons.append([InlineKeyboardButton(
-                text="◀️ Orqaga",
-                callback_data="back_to_applications"
-            )])
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            
-            # Use send_and_track for inline cleanup
-            await message.answer(text, reply_markup=keyboard)
-            
-            await state.clear()
+            await state.set_state("waiting_for_search_query")
             
         except Exception as e:
-            print(f"Error in view_application_by_id: {e}")
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
-            await state.clear()
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    return router 
+    @router.message(lambda message: message.text and len(message.text) > 2)
+    async def handle_search_query(message: Message, state: FSMContext):
+        """Handle search query"""
+        try:
+            current_state = await state.get_state()
+            if current_state != "waiting_for_search_query":
+                return
+            
+            user = await get_user_by_telegram_id(message.from_user.id)
+            if not user or user['role'] != 'manager':
+                return
+            
+            # Perform search
+            search_results = await search_applications(message.text)
+            
+            if not search_results:
+                no_results_text = (
+                    f"📭 '{message.text}' bo'yicha natija topilmadi.\n\n"
+                    f"Boshqa so'z bilan qidirib ko'ring."
+                    if user.get('language', 'uz') == 'uz' else
+                    f"📭 По запросу '{message.text}' ничего не найдено.\n\n"
+                    f"Попробуйте поиск с другими словами."
+                )
+                
+                await message.answer(
+                    text=no_results_text,
+                    reply_markup=get_manager_back_keyboard(user.get('language', 'uz'))
+                )
+                return
+            
+            # Show first result
+            await show_search_result(message, search_results[0], search_results, 0, message.text)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    async def show_search_result(message_or_callback, application, applications, index, query):
+        """Show search result details"""
+        try:
+            # Format workflow type
+            workflow_type_emoji = {
+                'connection_request': '🔌',
+                'technical_service': '🔧',
+                'call_center_direct': '📞'
+            }.get(application['workflow_type'], '📄')
+            
+            workflow_type_text = {
+                'connection_request': 'Ulanish arizasi',
+                'technical_service': 'Texnik xizmat',
+                'call_center_direct': 'Call Center'
+            }.get(application['workflow_type'], 'Boshqa')
+            
+            # Format status
+            status_emoji = {
+                'in_progress': '🟡',
+                'created': '🟠',
+                'completed': '🟢',
+                'cancelled': '🔴'
+            }.get(application['current_status'], '⚪')
+            
+            status_text = {
+                'in_progress': 'Jarayonda',
+                'created': 'Yaratilgan',
+                'completed': 'Bajarilgan',
+                'cancelled': 'Bekor qilingan'
+            }.get(application['current_status'], 'Noma\'lum')
+            
+            # Format priority
+            priority_emoji = {
+                'high': '🔴',
+                'normal': '🟡',
+                'low': '🟢'
+            }.get(application.get('priority', 'normal'), '🟡')
+            
+            priority_text = {
+                'high': 'Yuqori',
+                'normal': 'O\'rtacha',
+                'low': 'Past'
+            }.get(application.get('priority', 'normal'), 'O\'rtacha')
+            
+            # Format date
+            created_date = application['created_at'].strftime('%d.%m.%Y %H:%M')
+            
+            # To'liq ma'lumot
+            text = (
+                f"🔍 <b>Qidiruv natijasi - To'liq ma'lumot</b>\n\n"
+                f"🔎 <b>Qidiruv so'zi:</b> {query}\n"
+                f"{workflow_type_emoji} <b>{workflow_type_text}</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"📅 <b>Sana:</b> {created_date}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📞 <b>Telefon:</b> {application['contact_info']['phone']}\n"
+                f"🏛️ <b>Hudud:</b> {application.get('region', 'Noma\'lum')}\n"
+                f"🏠 <b>Manzil:</b> {application.get('location', 'Noma\'lum')}\n"
+                f"📝 <b>Tavsif:</b> {application['description']}\n"
+                f"{status_emoji} <b>Holat:</b> {status_text}\n"
+                f"{priority_emoji} <b>Ustuvorlik:</b> {priority_text}\n\n"
+                f"📊 <b>Natija #{index + 1} / {len(applications)}</b>"
+            )
+            
+            # Create navigation keyboard
+            keyboard = get_search_results_navigation_keyboard(index, len(applications))
+            
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
+            else:
+                await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+                
+        except Exception as e:
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            else:
+                await message_or_callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "prev_search_result")
+    async def show_previous_search_result(callback: CallbackQuery, state: FSMContext):
+        """Show previous search result"""
+        try:
+            await callback.answer()
+            
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_search_index', 0)
+            
+            # Get search results from state
+            search_data = await state.get_data()
+            search_results = search_data.get('search_results', [])
+            query = search_data.get('search_query', '')
+            
+            if current_index > 0:
+                new_index = current_index - 1
+                await state.update_data(current_search_index=new_index)
+                await show_search_result(callback, search_results[new_index], search_results, new_index, query)
+            else:
+                await callback.answer("Bu birinchi natija")
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "next_search_result")
+    async def show_next_search_result(callback: CallbackQuery, state: FSMContext):
+        """Show next search result"""
+        try:
+            await callback.answer()
+            
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_search_index', 0)
+            
+            # Get search results from state
+            search_data = await state.get_data()
+            search_results = search_data.get('search_results', [])
+            query = search_data.get('search_query', '')
+            
+            if current_index < len(search_results) - 1:
+                new_index = current_index + 1
+                await state.update_data(current_search_index=new_index)
+                await show_search_result(callback, search_results[new_index], search_results, new_index, query)
+            else:
+                await callback.answer("Bu oxirgi natija")
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    return router
+
+def get_search_results_navigation_keyboard(current_index: int, total_results: int):
+    """Create navigation keyboard for search results"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="prev_search_result"
+        ))
+    
+    # Next button
+    if current_index < total_results - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="next_search_result"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard) 

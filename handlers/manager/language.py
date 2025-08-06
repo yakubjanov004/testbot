@@ -26,9 +26,7 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup user inline messages"""
-    print(f"Mock: Cleaning up inline messages for user {user_id}")
+
 
 # Mock database functions
 async def update_user_language(telegram_id: int, language: str):

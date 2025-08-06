@@ -27,14 +27,6 @@ async def get_role_router(role: str):
     from aiogram import Router
     return Router()
 
-async def send_and_track(message_func, text: str, user_id: int, reply_markup=None, parse_mode=None):
-    """Mock send and track"""
-    return await message_func(text, reply_markup=reply_markup, parse_mode=parse_mode)
-
-async def edit_and_track(message_func, text: str, user_id: int, reply_markup=None, parse_mode=None):
-    """Mock edit and track"""
-    return await message_func(text, reply_markup=reply_markup, parse_mode=parse_mode)
-
 async def search_clients_by_phone(phone: str, db):
     """Mock search clients by phone"""
     return [
@@ -80,11 +72,7 @@ def get_controller_application_creator_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -125,21 +113,15 @@ def get_controller_application_creator_router():
                 ]
             ])
 
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 prompt_text,
-                user_id,
                 reply_markup=keyboard,
                 parse_mode='HTML'
             )
             
         except Exception as e:
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["🔧 Texnik xizmat arizasi yaratish"]))
     async def start_technical_application(message: Message, state: FSMContext):
@@ -149,11 +131,7 @@ def get_controller_application_creator_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -194,21 +172,15 @@ def get_controller_application_creator_router():
                 ]
             ])
 
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 prompt_text,
-                user_id,
                 reply_markup=keyboard,
                 parse_mode='HTML'
             )
             
         except Exception as e:
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     # Callback handlers
     @router.callback_query(F.data == "ctrl_search_phone")
@@ -226,10 +198,8 @@ def get_controller_application_creator_router():
                 "Masalan: +998901234567"
             )
 
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 prompt_text,
-                user_id,
                 parse_mode='HTML'
             )
             await callback.answer()
@@ -252,10 +222,8 @@ def get_controller_application_creator_router():
                 "Masalan: Alisher Karimov"
             )
 
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 prompt_text,
-                user_id,
                 parse_mode='HTML'
             )
             await callback.answer()
@@ -278,10 +246,8 @@ def get_controller_application_creator_router():
                 "Masalan: 12345"
             )
 
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 prompt_text,
-                user_id,
                 parse_mode='HTML'
             )
             await callback.answer()
@@ -304,10 +270,8 @@ def get_controller_application_creator_router():
                 "Mijozning to'liq ismini kiriting:"
             )
 
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 prompt_text,
-                user_id,
                 parse_mode='HTML'
             )
             await callback.answer()
@@ -329,10 +293,8 @@ def get_controller_application_creator_router():
                 "❌ <b>Zayavka yaratish bekor qilindi</b>"
             )
 
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 cancel_text,
-                user_id,
                 parse_mode='HTML'
             )
             await callback.answer()
@@ -374,10 +336,8 @@ def get_controller_application_creator_router():
                 ])
 
                 await state.update_data(search_phone=phone)
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     not_found_text,
-                    user_id,
                     reply_markup=keyboard
                 )
                 return
@@ -409,20 +369,14 @@ def get_controller_application_creator_router():
             ])
 
             keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 select_text,
-                user_id,
                 reply_markup=keyboard
             )
 
         except Exception as e:
             error_text = "Qidirishda xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(ControllerApplicationStates.entering_name)
     async def process_name_search(message: Message, state: FSMContext):

@@ -83,14 +83,6 @@ async def get_role_router(role: str):
     from aiogram import Router
     return Router()
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
 # Mock keyboards
 def orders_control_menu(lang: str):
     """Mock orders control menu keyboard"""
@@ -151,11 +143,7 @@ def get_controller_orders_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
                 
             lang = user.get('language', 'uz')
@@ -177,10 +165,8 @@ def get_controller_orders_router():
                 "Kerakli amalni tanlang:"
             )
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                user_id,
                 reply_markup=orders_control_menu(lang),
                 parse_mode='HTML'
             )
@@ -188,11 +174,7 @@ def get_controller_orders_router():
         except Exception as e:
             print(f"Error in orders_control_menu_handler: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["🆕 Yangi buyurtmalar"]))
     async def show_new_orders(message: Message, state: FSMContext):
@@ -202,11 +184,7 @@ def get_controller_orders_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -227,21 +205,15 @@ def get_controller_orders_router():
                 no_orders_text = "Yangi buyurtmalar yo'q"
                 text += no_orders_text
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                user_id,
                 parse_mode='HTML'
             )
             
         except Exception as e:
             print(f"Error in show_new_orders: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["⏳ Kutilayotgan"]))
     async def show_pending_orders(message: Message, state: FSMContext):
@@ -251,11 +223,7 @@ def get_controller_orders_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -276,21 +244,15 @@ def get_controller_orders_router():
                 no_orders_text = "Kutilayotgan buyurtmalar yo'q"
                 text += no_orders_text
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                user_id,
                 parse_mode='HTML'
             )
             
         except Exception as e:
             print(f"Error in show_pending_orders: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["🔴 Muammoli buyurtmalar"]))
     async def show_problem_orders(message: Message, state: FSMContext):
@@ -300,11 +262,7 @@ def get_controller_orders_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -327,21 +285,15 @@ def get_controller_orders_router():
                 no_issues_text = "Muammoli buyurtmalar yo'q"
                 text += no_issues_text
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                user_id,
                 parse_mode='HTML'
             )
             
         except Exception as e:
             print(f"Error in show_problem_orders: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["📊 Buyurtmalar hisoboti"]))
     async def orders_report(message: Message, state: FSMContext):
@@ -351,11 +303,7 @@ def get_controller_orders_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -382,20 +330,14 @@ def get_controller_orders_router():
 
 📅 <b>Sana:</b> {message.date.strftime('%d.%m.%Y %H:%M')}"""
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                user_id,
                 parse_mode='HTML'
             )
             
         except Exception as e:
             print(f"Error in orders_report: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     return router

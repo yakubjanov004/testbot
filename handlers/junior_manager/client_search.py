@@ -1,17 +1,15 @@
 """
-Junior Manager Client Search Handler - Soddalashtirilgan versiya
+Junior Manager Client Search - Simplified Implementation
 
-Bu modul junior manager uchun mijoz qidirish funksionalligini o'z ichiga oladi.
+This module handles junior manager client search functionality.
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from keyboards.junior_manager_buttons import get_client_search_keyboard, get_junior_manager_back_keyboard
 from typing import Dict, Any, List, Optional
-import asyncio
-import json
 from datetime import datetime
-from utils.role_system import get_role_router
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -26,339 +24,249 @@ async def get_user_by_telegram_id(telegram_id: int):
     }
 
 async def get_user_lang(telegram_id: int):
-    """Mock user language"""
+    """Mock get user language"""
     return 'uz'
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-            
-async def search_clients_by_phone(phone: str):
-    """Mock search clients by phone"""
-    return [
+async def search_clients(query: str):
+    """Mock search clients"""
+    # Mock client data
+    all_clients = [
         {
             'id': 1,
-            'name': 'Aziz Karimov',
-            'phone': phone,
-            'address': 'Tashkent, Chorsu'
+            'full_name': 'Aziz Karimov',
+            'phone': '+998901234567',
+            'email': 'aziz@example.com',
+            'address': 'Tashkent, Chorsu',
+            'created_at': datetime.now(),
+            'total_applications': 3,
+            'last_application': '2024-01-15'
         },
         {
             'id': 2,
-            'name': 'Aziza Azizova',
-            'phone': phone,
-            'address': 'Tashkent, Yunusabad'
-        }
-    ]
-
-async def search_clients_by_name(name: str):
-    """Mock search clients by name"""
-    return [
+            'full_name': 'Malika Toshmatova',
+            'phone': '+998901234568',
+            'email': 'malika@example.com',
+            'address': 'Tashkent, Yunusabad',
+            'created_at': datetime.now(),
+            'total_applications': 1,
+            'last_application': '2024-01-14'
+        },
         {
-            'id': 1,
-            'name': name,
-            'phone': '+998901234567',
-            'address': 'Tashkent, Chorsu'
+            'id': 3,
+            'full_name': 'Jahongir Azimov',
+            'phone': '+998901234569',
+            'email': 'jahongir@example.com',
+            'address': 'Tashkent, Sergeli',
+            'created_at': datetime.now(),
+            'total_applications': 5,
+            'last_application': '2024-01-16'
         }
     ]
-
-async def get_client_by_id(client_id: int):
-    """Mock get client by ID"""
-    return {
-        'id': client_id,
-        'name': 'Test Client',
-        'phone': '+998901234567',
-        'address': 'Tashkent, Test Address'
-    }
-
-async def create_new_client(name: str, phone: str):
-    """Mock create new client"""
-    return {
-        'id': 999,
-        'name': name,
-        'phone': phone,
-        'address': 'Tashkent, New Address',
-        'created_at': datetime.now()
-    }
-
-# Mock keyboard functions
-def get_client_search_menu(lang: str):
-    """Mock client search menu keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="🔍 Telefon raqami bilan qidirish", callback_data="jm_client_search_phone"),
-            InlineKeyboardButton(text="👤 Ism bilan qidirish", callback_data="jm_client_search_name")
-        ],
-        [
-            InlineKeyboardButton(text="➕ Yangi mijoz qo'shish", callback_data="jm_add_new_client"),
-            InlineKeyboardButton(text="🆔 ID bilan qidirish", callback_data="jm_client_search_id")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
-        ]
-    ])
-
-def get_client_selection_keyboard(clients: List[Dict], lang: str = 'uz'):
-    """Mock client selection keyboard"""
-    keyboard_buttons = []
     
-    for client in clients:
-        button_text = f"👤 {client.get('name', 'N/A')} - {client.get('phone', 'N/A')}"
-        keyboard_buttons.append([
-            InlineKeyboardButton(
-                text=button_text,
-                callback_data=f"jm_select_client_{client['id']}"
-            )
-        ])
+    # Simple search logic
+    query_lower = query.lower()
+    results = []
     
-    # Navigation buttons
-    keyboard_buttons.append([
-        InlineKeyboardButton(text="◀️ Orqaga", callback_data="jm_back_to_search"),
-        InlineKeyboardButton(text="➕ Yangi mijoz", callback_data="jm_add_new_client")
-    ])
+    for client in all_clients:
+        if (query_lower in client['full_name'].lower() or
+            query_lower in client['phone'].lower() or
+            query_lower in client['email'].lower() or
+            query_lower in client['address'].lower()):
+            results.append(client)
     
-    return InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+    return results
 
-# Mock states
-from aiogram.fsm.state import State, StatesGroup
+def get_client_search_router():
+    """Router for client search functionality"""
+    router = Router()
 
-class JuniorManagerApplicationStates(StatesGroup):
-    client_search_phone = State()
-    client_search_name = State()
-    client_search_id = State()
-    entering_application_details = State()
-
-def get_junior_manager_client_search_router():
-    """Get router for junior manager client search handlers"""
-    router = get_role_router("junior_manager")
-
-    @router.callback_query(F.data.startswith("jm_client_search_"))
-    async def handle_client_search_method(callback: CallbackQuery, state: FSMContext):
-        """Handle client search method selection"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await callback.answer("Ruxsat yo'q", show_alert=True)
-                return
-
-            lang = user.get('language', 'uz')
-            search_method = callback.data.split("_")[-1]
-            
-            if search_method == "phone":
-                await state.set_state(JuniorManagerApplicationStates.client_search_phone)
-                text = """📱 Mijoz telefon raqamini kiriting:
-
-💡 Masalan: +998901234567"""
-            elif search_method == "name":
-                await state.set_state(JuniorManagerApplicationStates.client_search_name)
-                text = """👤 Mijoz ismini kiriting:
-
-💡 Masalan: Aziz Azizov"""
-            elif search_method == "id":
-                await state.set_state(JuniorManagerApplicationStates.client_search_id)
-                text = """🆔 Mijoz ID raqamini kiriting:
-
-💡 Masalan: 12345"""
-            else:
-                await callback.answer("Noto'g'ri qidiruv usuli", show_alert=True)
-                return
-
-            await edit_and_track(
-                callback.message.edit_text(text),
-                callback.from_user.id
-            )
-            
-        except Exception as e:
-            print(f"Error in handle_client_search_method: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    @router.message(JuniorManagerApplicationStates.client_search_phone)
-    async def handle_client_search_by_phone(message: Message, state: FSMContext):
-        """Handle client search by phone number"""
+    @router.message(F.text.in_(["🔍 Mijoz qidiruv", "🔍 Поиск клиентов"]))
+    async def view_client_search(message: Message, state: FSMContext):
+        """Junior manager view client search handler"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
                 return
-
+            
             lang = user.get('language', 'uz')
-            phone = message.text.strip()
             
-            # Search for clients
-            clients = await search_clients_by_phone(phone)
+            search_text = (
+                "🔍 <b>Mijoz qidiruv - To'liq ma'lumot</b>\n\n"
+                "📋 <b>Qidirish mumkin bo'lgan ma'lumotlar:</b>\n"
+                "• Mijoz ismi va familiyasi\n"
+                "• Telefon raqami\n"
+                "• Email manzili\n"
+                "• Manzil va hudud\n\n"
+                "Qidiruv so'zini kiriting:"
+                if lang == 'uz' else
+                "🔍 <b>Поиск клиентов - Полная информация</b>\n\n"
+                "📋 <b>Информация для поиска:</b>\n"
+                "• Имя и фамилия клиента\n"
+                "• Номер телефона\n"
+                "• Email адрес\n"
+                "• Адрес и регион\n\n"
+                "Введите поисковый запрос:"
+            )
             
-            if clients:
-                text = f"📱 '{phone}' raqami bo'yicha {len(clients)} ta mijoz topildi:\n\n"
-                
-                await edit_and_track(
-                    message.answer(
-                        text,
-                        reply_markup=get_client_selection_keyboard(clients, lang=lang)
-                    ),
-                    message.from_user.id
-                )
-            else:
-                text = f"""❌ '{phone}' raqami bo'yicha mijoz topilmadi.
-
-🆕 Yangi mijoz qo'shishni xohlaysizmi?"""
-                
-                await edit_and_track(
-                    message.answer(
-                        text,
-                        reply_markup=get_client_search_menu(lang=lang)
-                    ),
-                    message.from_user.id
-                )
+            sent_message = await message.answer(
+                text=search_text,
+                reply_markup=get_client_search_keyboard(lang),
+                parse_mode='HTML'
+            )
+            
+            await state.set_state("waiting_for_search_query")
             
         except Exception as e:
-            print(f"Error in handle_client_search_by_phone: {e}")
-            await message.answer("Xatolik yuz berdi")
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @router.message(JuniorManagerApplicationStates.client_search_name)
-    async def handle_client_search_by_name(message: Message, state: FSMContext):
-        """Handle client search by name"""
+    @router.message(lambda message: message.text and len(message.text) > 2)
+    async def handle_search_query(message: Message, state: FSMContext):
+        """Handle search query"""
         try:
+            current_state = await state.get_state()
+            if current_state != "waiting_for_search_query":
+                return
+            
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
                 return
-
-            lang = user.get('language', 'uz')
-            name = message.text.strip()
             
-            # Search for clients
-            clients = await search_clients_by_name(name)
+            # Perform search
+            search_results = await search_clients(message.text)
             
-            if clients:
-                text = f"👤 '{name}' ismi bo'yicha {len(clients)} ta mijoz topildi:\n\n"
-                
-                await edit_and_track(
-                    message.answer(
-                        text,
-                        reply_markup=get_client_selection_keyboard(clients, lang=lang)
-                    ),
-                    message.from_user.id
+            if not search_results:
+                no_results_text = (
+                    f"📭 '{message.text}' bo'yicha natija topilmadi.\n\n"
+                    f"Boshqa so'z bilan qidirib ko'ring."
+                    if user.get('language', 'uz') == 'uz' else
+                    f"📭 По запросу '{message.text}' ничего не найдено.\n\n"
+                    f"Попробуйте поиск с другими словами."
                 )
+                
+                await message.answer(
+                    text=no_results_text,
+                    reply_markup=get_junior_manager_back_keyboard(user.get('language', 'uz'))
+                )
+                return
+            
+            # Show first result
+            await show_client_details(message, search_results[0], search_results, 0, message.text)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    async def show_client_details(message_or_callback, client, clients, index, query):
+        """Show client details with navigation"""
+        try:
+            # Format date
+            created_date = client['created_at'].strftime('%d.%m.%Y')
+            
+            # To'liq ma'lumot
+            text = (
+                f"👤 <b>Mijoz ma'lumotlari - To'liq ma'lumot</b>\n\n"
+                f"🔎 <b>Qidiruv so'zi:</b> {query}\n"
+                f"🆔 <b>Mijoz ID:</b> {client['id']}\n"
+                f"👤 <b>To'liq ism:</b> {client['full_name']}\n"
+                f"📞 <b>Telefon:</b> {client['phone']}\n"
+                f"📧 <b>Email:</b> {client['email']}\n"
+                f"🏠 <b>Manzil:</b> {client['address']}\n"
+                f"📅 <b>Ro'yxatdan o'tgan:</b> {created_date}\n"
+                f"📊 <b>Jami arizalar:</b> {client['total_applications']}\n"
+                f"📅 <b>Oxirgi ariza:</b> {client['last_application']}\n\n"
+                f"📊 <b>Mijoz #{index + 1} / {len(clients)}</b>"
+            )
+            
+            # Create navigation keyboard
+            keyboard = get_clients_navigation_keyboard(index, len(clients))
+            
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
             else:
-                text = f"""❌ '{name}' ismi bo'yicha mijoz topilmadi.
-
-🆕 Yangi mijoz qo'shishni xohlaysizmi?"""
+                await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
                 
-                await edit_and_track(
-                    message.answer(
-                        text,
-                        reply_markup=get_client_search_menu(lang=lang)
-                    ),
-                    message.from_user.id
-                )
-            
         except Exception as e:
-            print(f"Error in handle_client_search_by_name: {e}")
-            await message.answer("Xatolik yuz berdi")
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            else:
+                await message_or_callback.answer("Xatolik yuz berdi")
 
-    @router.message(JuniorManagerApplicationStates.client_search_id)
-    async def handle_client_search_by_id(message: Message, state: FSMContext):
-        """Handle client search by ID"""
+    @router.callback_query(F.data == "client_prev")
+    async def show_previous_client(callback: CallbackQuery, state: FSMContext):
+        """Show previous client"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                return
-
-            lang = user.get('language', 'uz')
-            client_id = message.text.strip()
+            await callback.answer()
             
-            try:
-                client_id_int = int(client_id)
-                client = await get_client_by_id(client_id_int)
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_client_index', 0)
+            
+            # Get search results from state
+            search_data = await state.get_data()
+            search_results = search_data.get('search_results', [])
+            query = search_data.get('search_query', '')
+            
+            if current_index > 0:
+                new_index = current_index - 1
+                await state.update_data(current_client_index=new_index)
+                await show_client_details(callback, search_results[new_index], search_results, new_index, query)
+            else:
+                await callback.answer("Bu birinchi mijoz")
                 
-                if client:
-                    text = f"""🆔 Mijoz ID: {client_id} topildi:
-
-👤 Ism: {client.get('name', 'N/A')}
-📱 Telefon: {client.get('phone', 'N/A')}
-📍 Manzil: {client.get('address', 'N/A')}"""
-                    
-                    await edit_and_track(
-                        message.answer(
-                            text,
-                            reply_markup=get_client_selection_keyboard([client], lang=lang)
-                        ),
-                        message.from_user.id
-                    )
-                else:
-                    text = f"""❌ Mijoz ID: {client_id} topilmadi.
-
-🆕 Yangi mijoz qo'shishni xohlaysizmi?"""
-                    
-                    await edit_and_track(
-                        message.answer(
-                            text,
-                            reply_markup=get_client_search_menu(lang=lang)
-                        ),
-                        message.from_user.id
-                    )
-            except ValueError:
-                text = "❌ Noto'g'ri ID format. Faqat raqam kiriting."
-                await message.answer(text)
-            
         except Exception as e:
-            print(f"Error in handle_client_search_by_id: {e}")
-            await message.answer("Xatolik yuz berdi")
+            await callback.answer("Xatolik yuz berdi")
 
-    @router.callback_query(F.data.startswith("jm_select_client_"))
-    async def handle_client_selection(callback: CallbackQuery, state: FSMContext):
-        """Handle client selection from search results"""
+    @router.callback_query(F.data == "client_next")
+    async def show_next_client(callback: CallbackQuery, state: FSMContext):
+        """Show next client"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await callback.answer("Ruxsat yo'q", show_alert=True)
-                return
-
-            lang = user.get('language', 'uz')
-            client_id = int(callback.data.split("_")[-1])
+            await callback.answer()
             
-            # Get client details
-            client = await get_client_by_id(client_id)
-            if not client:
-                await callback.answer("Mijoz topilmadi", show_alert=True)
-                return
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_client_index', 0)
             
-            # Store client data in state
-            await state.update_data(
-                selected_client=client,
-                client_id=client_id
-            )
+            # Get search results from state
+            search_data = await state.get_data()
+            search_results = search_data.get('search_results', [])
+            query = search_data.get('search_query', '')
             
-            # Proceed to application creation
-            await _proceed_with_selected_client(callback.message, state, client, lang)
-            
+            if current_index < len(search_results) - 1:
+                new_index = current_index + 1
+                await state.update_data(current_client_index=new_index)
+                await show_client_details(callback, search_results[new_index], search_results, new_index, query)
+            else:
+                await callback.answer("Bu oxirgi mijoz")
+                
         except Exception as e:
-            print(f"Error in handle_client_selection: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            await callback.answer("Xatolik yuz berdi")
 
-    async def _proceed_with_selected_client(message: Message, state: FSMContext, client: Dict[str, Any], lang: str):
-        """Proceed with selected client for application creation"""
-        try:
-            text = f"""✅ Mijoz tanlandi:
+    return router
 
-👤 {client.get('name', 'N/A')}
-📱 {client.get('phone', 'N/A')}
-📍 {client.get('address', 'N/A')}
-
-📝 Endi ariza tafsilotlarini kiriting:"""
-            
-            await state.set_state(JuniorManagerApplicationStates.entering_application_details)
-            await edit_and_track(
-                message.edit_text(text),
-                message.chat.id
-            )
-            
-        except Exception as e:
-            print(f"Error in _proceed_with_selected_client: {e}")
-
-    return router 
+def get_clients_navigation_keyboard(current_index: int, total_clients: int):
+    """Create navigation keyboard for clients"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="client_prev"
+        ))
+    
+    # Next button
+    if current_index < total_clients - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="client_next"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard) 

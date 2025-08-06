@@ -23,20 +23,6 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
-# Using get_role_router from utils.role_system
-
 # Mock workflow and state management
 class MockStateManager:
     """Mock state manager"""
@@ -147,10 +133,7 @@ def get_applications_router():
             
             if not requests:
                 text = "📭 Sizga tayinlangan arizalar yo'q."
-                await send_and_track(
-                    message.answer(text),
-                    message.from_user.id
-                )
+                await message.answer(text)
                 return
             
             # Store requests and initialize navigation
@@ -165,10 +148,7 @@ def get_applications_router():
             
         except Exception as e:
             print(f"Error in show_junior_manager_inbox: {str(e)}")
-            await send_and_track(
-                message.answer("Xatolik yuz berdi"),
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi")
 
     async def display_junior_manager_request(event, state: FSMContext, requests, index, lang, user):
         """Display a single request with junior manager action buttons"""
@@ -184,9 +164,9 @@ def get_applications_router():
             if not request:
                 text = "Ariza tafsilotlari topilmadi"
                 if hasattr(event, 'answer'):
-                    await send_and_track(event.answer(text), user_id)
+                    await event.answer(text)
                 else:
-                    await edit_and_track(event.edit_text(text), user_id)
+                    await event.edit_text(text)
                 return
             
             # Format request display
@@ -272,25 +252,19 @@ def get_applications_router():
             
             keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
             
-            # Send or edit message with inline cleanup
+            # Send or edit message
             if hasattr(event, 'edit_text'):
-                await edit_and_track(
-                    event.edit_text(text, reply_markup=keyboard, parse_mode='HTML'),
-                    user_id
-                )
+                await event.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
             else:
-                await send_and_track(
-                    event.answer(text, reply_markup=keyboard, parse_mode='HTML'),
-                    user_id
-                )
+                await event.answer(text, reply_markup=keyboard, parse_mode='HTML')
                 
         except Exception as e:
             print(f"Error in display_junior_manager_request: {str(e)}")
             text = "Xatolik yuz berdi"
             if hasattr(event, 'answer'):
-                await send_and_track(event.answer(text), user_id)
+                await event.answer(text)
             else:
-                await edit_and_track(event.edit_text(text), user_id)
+                await event.edit_text(text)
 
     @router.callback_query(F.data == "jm_prev")
     async def navigate_prev(callback: CallbackQuery, state: FSMContext):
@@ -312,19 +286,13 @@ def get_applications_router():
                 
                 await display_junior_manager_request(callback, state, requests, new_index, lang, user)
             else:
-                await edit_and_track(
-                    callback.answer("Bu birinchi ariza"),
-                    callback.from_user.id
-                )
+                await callback.answer("Bu birinchi ariza")
             
             await callback.answer()
             
         except Exception as e:
             print(f"Error in navigate_prev: {str(e)}")
-            await edit_and_track(
-                callback.answer("Xatolik yuz berdi", show_alert=True),
-                callback.from_user.id
-            )
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data == "jm_next")
     async def navigate_next(callback: CallbackQuery, state: FSMContext):
@@ -346,19 +314,13 @@ def get_applications_router():
                 
                 await display_junior_manager_request(callback, state, requests, new_index, lang, user)
             else:
-                await edit_and_track(
-                    callback.answer("Bu oxirgi ariza"),
-                    callback.from_user.id
-                )
+                await callback.answer("Bu oxirgi ariza")
             
             await callback.answer()
             
         except Exception as e:
             print(f"Error in navigate_next: {str(e)}")
-            await edit_and_track(
-                callback.answer("Xatolik yuz berdi", show_alert=True),
-                callback.from_user.id
-            )
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("jm_detail_"))
     async def show_detail(callback: CallbackQuery, state: FSMContext):

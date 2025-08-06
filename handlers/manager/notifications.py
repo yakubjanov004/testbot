@@ -1,16 +1,15 @@
 """
-Manager Notifications Handler - Soddalashtirilgan versiya
+Manager Notifications Handler - Simplified Implementation
 
-Bu modul manager uchun xabarnomalar funksionalligini o'z ichiga oladi.
+This module handles manager notifications functionality.
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from keyboards.manager_buttons import get_manager_notifications_keyboard, get_manager_back_keyboard
 from typing import Dict, Any, List, Optional
-
-from keyboards.manager_buttons import get_manager_main_keyboard, get_notifications_keyboard
-from states.manager_states import ManagerNotificationStates
+from datetime import datetime
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -28,326 +27,210 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-# Mock database functions
-async def get_users_by_role(role: str):
-    """Mock get users by role"""
-    if role == 'staff':
-        return [
-            {
-                'id': 2,
-                'full_name': 'Ahmad Toshmatov',
-                'role': 'staff',
-                'phone_number': '+998901234568'
-            },
-            {
-                'id': 3,
-                'full_name': 'Malika Karimova',
-                'role': 'staff',
-                'phone_number': '+998901234569'
-            }
-        ]
-    elif role == 'technician':
-        return [
-            {
-                'id': 4,
-                'full_name': 'Umar Azimov',
-                'role': 'technician',
-                'phone_number': '+998901234570'
-            }
-        ]
-    elif role == 'junior_manager':
-        return [
-            {
-                'id': 5,
-                'full_name': 'Jahongir Karimov',
-                'role': 'junior_manager',
-                'phone_number': '+998901234571'
-            }
-        ]
-    return []
+async def get_manager_notifications(user_id: int):
+    """Mock get manager notifications"""
+    return [
+        {
+            'id': 1,
+            'type': 'new_application',
+            'title': 'Yangi ariza',
+            'message': 'Aziz Karimov tomonidan yangi ulanish arizasi yuborildi',
+            'created_at': datetime.now(),
+            'is_read': False,
+            'priority': 'high'
+        },
+        {
+            'id': 2,
+            'type': 'technician_assigned',
+            'title': 'Texnik tayinlandi',
+            'message': 'Ahmad Karimov TX_12345678 arizasiga tayinlandi',
+            'created_at': datetime.now(),
+            'is_read': True,
+            'priority': 'normal'
+        },
+        {
+            'id': 3,
+            'type': 'application_completed',
+            'title': 'Ariza bajarildi',
+            'message': 'TX_87654321 arizasi muvaffaqiyatli yakunlandi',
+            'created_at': datetime.now(),
+            'is_read': False,
+            'priority': 'low'
+        }
+    ]
 
-# Mock notification system
-class MockNotificationSystem:
-    """Mock notification system"""
-    async def send_notification(self, user_id: int, message_type: str, title: str, message: str):
-        """Mock send notification"""
-        print(f"Mock: Sending notification to user {user_id}: {title} - {message}")
-        return True
-
-# Global mock instance
-notification_system = MockNotificationSystem()
-
-def get_manager_notifications_router():
-    """Get notifications router for manager"""
+def get_notifications_router():
+    """Router for notifications functionality"""
     router = Router()
-    
-    @router.message(F.text.in_(["📢 Xabarnomalar"]))
-    async def manager_notifications_main(message: Message, state: FSMContext):
-        """Manager notifications handler"""
+
+    @router.message(F.text.in_(["🔔 Bildirishnomalar", "🔔 Уведомления"]))
+    async def view_notifications(message: Message, state: FSMContext):
+        """Manager view notifications handler"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
-            
             if not user or user['role'] != 'manager':
-                error_text = "Sizda menejer huquqi yo'q."
-                await message.answer(error_text)
                 return
             
             lang = user.get('language', 'uz')
-            print(f"Manager {user['id']} accessed notifications")
             
+            # Get notifications
+            notifications = await get_manager_notifications(message.from_user.id)
+            
+            if not notifications:
+                no_notifications_text = (
+                    "📭 Hozircha bildirishnomalar yo'q."
+                    if lang == 'uz' else
+                    "📭 Пока нет уведомлений."
+                )
+                
+                await message.answer(
+                    text=no_notifications_text,
+                    reply_markup=get_manager_back_keyboard(lang)
+                )
+                return
+            
+            # Show first notification
+            await show_notification_details(message, notifications[0], notifications, 0)
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    async def show_notification_details(message_or_callback, notification, notifications, index):
+        """Show notification details with navigation"""
+        try:
+            # Format notification type
+            type_emoji = {
+                'new_application': '🆕',
+                'technician_assigned': '👨‍🔧',
+                'application_completed': '✅',
+                'urgent': '🚨',
+                'reminder': '⏰'
+            }.get(notification['type'], '📢')
+            
+            type_text = {
+                'new_application': 'Yangi ariza',
+                'technician_assigned': 'Texnik tayinlandi',
+                'application_completed': 'Ariza bajarildi',
+                'urgent': 'Shoshilinch',
+                'reminder': 'Eslatma'
+            }.get(notification['type'], 'Boshqa')
+            
+            # Format priority
+            priority_emoji = {
+                'high': '🔴',
+                'normal': '🟡',
+                'low': '🟢'
+            }.get(notification.get('priority', 'normal'), '🟡')
+            
+            priority_text = {
+                'high': 'Yuqori',
+                'normal': 'O\'rtacha',
+                'low': 'Past'
+            }.get(notification.get('priority', 'normal'), 'O\'rtacha')
+            
+            # Format date
+            created_date = notification['created_at'].strftime('%d.%m.%Y %H:%M')
+            
+            # Format read status
+            read_status = "✅ O'qilgan" if notification['is_read'] else "❌ O'qilmagan"
+            
+            # To'liq ma'lumot
             text = (
-                "📢 Xabarnomalar bo'limiga xush kelibsiz!\n\n"
-                "Quyidagi funksiyalardan birini tanlang:"
+                f"{type_emoji} <b>{type_text} - To'liq ma'lumot</b>\n\n"
+                f"📋 <b>Sarlavha:</b> {notification['title']}\n"
+                f"📝 <b>Xabar:</b> {notification['message']}\n"
+                f"📅 <b>Sana:</b> {created_date}\n"
+                f"{priority_emoji} <b>Ustuvorlik:</b> {priority_text}\n"
+                f"📊 <b>Holat:</b> {read_status}\n"
+                f"🆔 <b>ID:</b> {notification['id']}\n\n"
+                f"📊 <b>Bildirishnoma #{index + 1} / {len(notifications)}</b>"
             )
             
-            # Use send_and_track for inline cleanup
-            await message.answer(
-                text=text,
-                reply_markup=get_notifications_keyboard(lang)
-            )
+            # Create navigation keyboard
+            keyboard = get_notifications_navigation_keyboard(index, len(notifications))
             
-        except Exception as e:
-            print(f"Error in manager_notifications_main: {str(e)}")
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
-
-    @router.callback_query(F.data == "send_staff_notification")
-    async def send_staff_notification(callback: CallbackQuery, state: FSMContext):
-        """Send notification to staff"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            # Get staff members
-            staff_members = await get_users_by_role('staff')
-            staff_members.extend(await get_users_by_role('technician'))
-            staff_members.extend(await get_users_by_role('junior_manager'))
-            
-            if not staff_members:
-                text = "Hozircha xodimlar mavjud emas."
-                await callback.message.edit_text(
-                    text=text,
-                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-                        InlineKeyboardButton(
-                            text="◀️ Orqaga",
-                            callback_data="back_to_notifications"
-                        )
-                    ]])
-                )
-                return
-            
-            # Create staff selection keyboard
-            buttons = []
-            for staff in staff_members[:10]:  # Limit to 10 staff members
-                buttons.append([InlineKeyboardButton(
-                    text=f"👤 {staff.get('full_name', 'N/A')} ({staff.get('role', 'N/A')})",
-                    callback_data=f"select_staff_{staff['id']}"
-                )])
-            
-            buttons.append([InlineKeyboardButton(
-                text="◀️ Orqaga",
-                callback_data="back_to_notifications"
-            )])
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-            
-            text = "👤 Xabarnoma yuborish uchun xodim tanlang:"
-            
-            await callback.message.edit_text(
-                text=text,
-                reply_markup=keyboard
-            )
-            
-            await callback.answer()
-            
-        except Exception as e:
-            print(f"Error in send_staff_notification: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    @router.callback_query(F.data.startswith("select_staff_"))
-    async def select_staff_for_notification(callback: CallbackQuery, state: FSMContext):
-        """Select staff member for notification"""
-        try:
-            staff_id = int(callback.data.replace("select_staff_", ""))
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            # Get staff details
-            staff_members = await get_users_by_role('staff')
-            staff_members.extend(await get_users_by_role('technician'))
-            staff_members.extend(await get_users_by_role('junior_manager'))
-            
-            selected_staff = next((staff for staff in staff_members if staff['id'] == staff_id), None)
-            
-            if not selected_staff:
-                await callback.answer("Xodim topilmadi", show_alert=True)
-                return
-            
-            # Store selected staff ID in state
-            await state.update_data(selected_staff_id=staff_id)
-            await state.set_state(ManagerNotificationStates.sending_notification_message)
-            
-            text = f"📝 {selected_staff.get('full_name', 'N/A')} uchun xabarnoma matnini kiriting:"
-            
-            await callback.message.edit_text(
-                text=text,
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-                    InlineKeyboardButton(
-                        text="❌ Bekor qilish",
-                        callback_data="cancel_notification"
-                    )
-                ]])
-            )
-            
-            await callback.answer()
-            
-        except Exception as e:
-            print(f"Error in select_staff_for_notification: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    @router.message(ManagerNotificationStates.sending_notification_message)
-    async def handle_notification_message(message: Message, state: FSMContext):
-        """Handle notification message input"""
-        try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            # Get selected staff ID from state
-            data = await state.get_data()
-            staff_id = data.get('selected_staff_id')
-            
-            if not staff_id:
-                await message.answer("Xatolik: Xodim tanlanmagan")
-                await state.clear()
-                return
-            
-            # Get staff details
-            staff_members = await get_users_by_role('staff')
-            staff_members.extend(await get_users_by_role('technician'))
-            staff_members.extend(await get_users_by_role('junior_manager'))
-            
-            selected_staff = next((staff for staff in staff_members if staff['id'] == staff_id), None)
-            
-            if not selected_staff:
-                await message.answer("Xodim topilmadi")
-                await state.clear()
-                return
-            
-            # Send notification
-            success = await notification_system.send_notification(
-                user_id=staff_id,
-                message_type="manager_notification",
-                title="Menejer xabarnomasi",
-                message=message.text
-            )
-            
-            if success:
-                text = (
-                    f"✅ Xabarnoma muvaffaqiyatli yuborildi!\n\n"
-                    f"👤 Kimga: {selected_staff.get('full_name', 'N/A')}\n"
-                    f"📝 Xabar: {message.text[:50]}..."
-                )
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
             else:
-                text = "❌ Xabarnoma yuborishda xatolik yuz berdi."
-            
-            await message.answer(text)
-            await state.clear()
-            
+                await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+                
         except Exception as e:
-            print(f"Error in handle_notification_message: {str(e)}")
-            await message.answer("Xatolik yuz berdi")
-            await state.clear()
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            else:
+                await message_or_callback.answer("Xatolik yuz berdi")
 
-    @router.callback_query(F.data == "send_broadcast_notification")
-    async def send_broadcast_notification(callback: CallbackQuery, state: FSMContext):
-        """Send broadcast notification to all staff"""
+    @router.callback_query(F.data == "mgr_prev_notification")
+    async def show_previous_notification(callback: CallbackQuery, state: FSMContext):
+        """Show previous notification"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            # Set state for broadcast message
-            await state.set_state(ManagerNotificationStates.sending_notification_message)
-            await state.update_data(broadcast=True)
-            
-            text = "📢 Barcha xodimlarga yuboriladigan xabarnoma matnini kiriting:"
-            
-            await callback.message.edit_text(
-                text=text,
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-                    InlineKeyboardButton(
-                        text="❌ Bekor qilish",
-                        callback_data="cancel_notification"
-                    )
-                ]])
-            )
-            
             await callback.answer()
             
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_notification_index', 0)
+            
+            notifications = await get_manager_notifications(callback.from_user.id)
+            
+            if current_index > 0:
+                new_index = current_index - 1
+                await state.update_data(current_notification_index=new_index)
+                await show_notification_details(callback, notifications[new_index], notifications, new_index)
+            else:
+                await callback.answer("Bu birinchi bildirishnoma")
+                
         except Exception as e:
-            print(f"Error in send_broadcast_notification: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            await callback.answer("Xatolik yuz berdi")
 
-    @router.callback_query(F.data == "cancel_notification")
-    async def cancel_notification(callback: CallbackQuery, state: FSMContext):
-        """Cancel notification sending"""
+    @router.callback_query(F.data == "mgr_next_notification")
+    async def show_next_notification(callback: CallbackQuery, state: FSMContext):
+        """Show next notification"""
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            await state.clear()
-            
-            text = "❌ Xabarnoma yuborish bekor qilindi."
-            
-            await callback.message.edit_text(
-                text=text,
-                reply_markup=get_notifications_keyboard(lang)
-            )
-            
             await callback.answer()
             
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_notification_index', 0)
+            
+            notifications = await get_manager_notifications(callback.from_user.id)
+            
+            if current_index < len(notifications) - 1:
+                new_index = current_index + 1
+                await state.update_data(current_notification_index=new_index)
+                await show_notification_details(callback, notifications[new_index], notifications, new_index)
+            else:
+                await callback.answer("Bu oxirgi bildirishnoma")
+                
         except Exception as e:
-            print(f"Error in cancel_notification: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+            await callback.answer("Xatolik yuz berdi")
 
-    @router.callback_query(F.data == "back_to_notifications")
-    async def back_to_notifications(callback: CallbackQuery, state: FSMContext):
-        """Back to notifications menu"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            text = "📢 Xabarnomalar bo'limiga qaytdingiz."
-            
-            await callback.message.edit_text(
-                text=text,
-                reply_markup=get_notifications_keyboard(lang)
-            )
-            
-            await callback.answer()
-            
-        except Exception as e:
-            print(f"Error in back_to_notifications: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+    return router
 
-    @router.callback_query(F.data == "back_to_main_menu")
-    async def back_to_main_menu(callback: CallbackQuery, state: FSMContext):
-        """Back to main menu"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            
-            text = "🏠 Asosiy menyuga qaytdingiz."
-            
-            await callback.message.edit_text(
-                text=text,
-                reply_markup=get_manager_main_keyboard(lang)
-            )
-            
-            await callback.answer()
-            
-        except Exception as e:
-            print(f"Error in back_to_main_menu: {str(e)}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    return router 
+def get_notifications_navigation_keyboard(current_index: int, total_notifications: int):
+    """Create navigation keyboard for notifications"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="mgr_prev_notification"
+        ))
+    
+    # Next button
+    if current_index < total_notifications - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="mgr_next_notification"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard) 

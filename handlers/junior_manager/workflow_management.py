@@ -22,14 +22,6 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
 async def get_junior_manager_dashboard_stats(junior_manager_id: int):
     """Mock dashboard statistics"""
     return {
@@ -166,11 +158,7 @@ def get_junior_manager_workflow_router():
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -203,10 +191,8 @@ Boshqaruv turini tanlang:"""
             keyboard = get_workflow_management_menu(lang)
             
             # Send message
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                message.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -216,11 +202,7 @@ Boshqaruv turini tanlang:"""
             
         except Exception as e:
             print(f"Error in workflow_management_menu: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data.startswith("jm_workflow_"))
     async def handle_workflow_actions(callback: CallbackQuery, state: FSMContext):
@@ -333,10 +315,8 @@ Boshqaruv turini tanlang:"""
             
             keyboard = get_application_tracking_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -370,10 +350,8 @@ Batafsil monitoring tanlang:"""
             
             keyboard = get_task_monitoring_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -420,10 +398,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
                 ]
             ])
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -439,11 +415,7 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             if not applications:
                 text = "Tahlil uchun ma'lumotlar yo'q."
-                await edit_and_track(
-                    callback.message.edit_text,
-                    text,
-                    callback.from_user.id
-                )
+                await callback.message.edit_text(text)
                 return
             
             # Analyze patterns
@@ -488,10 +460,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
                 ]
             ])
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -508,11 +478,7 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             if not applications:
                 text = "Kutilayotgan arizalar yo'q."
-                await edit_and_track(
-                    callback.message.edit_text,
-                    text,
-                    callback.from_user.id
-                )
+                await callback.message.edit_text(text)
                 return
             
             text = f"⏳ **Kutilayotgan arizalar ({len(applications)})**\n\n"
@@ -527,10 +493,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             keyboard = get_application_tracking_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -546,11 +510,7 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             if not applications:
                 text = "Jarayondagi arizalar yo'q."
-                await edit_and_track(
-                    callback.message.edit_text,
-                    text,
-                    callback.from_user.id
-                )
+                await callback.message.edit_text(text)
                 return
             
             text = f"🔄 **Jarayondagi arizalar ({len(applications)})**\n\n"
@@ -566,10 +526,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             keyboard = get_application_tracking_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -585,11 +543,7 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             if not applications:
                 text = "Bajarilgan arizalar yo'q."
-                await edit_and_track(
-                    callback.message.edit_text,
-                    text,
-                    callback.from_user.id
-                )
+                await callback.message.edit_text(text)
                 return
             
             text = f"✅ **Bajarilgan arizalar ({len(applications)})**\n\n"
@@ -604,10 +558,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             keyboard = get_application_tracking_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -623,11 +575,7 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             if not applications:
                 text = "Arizalar yo'q."
-                await edit_and_track(
-                    callback.message.edit_text,
-                    text,
-                    callback.from_user.id
-                )
+                await callback.message.edit_text(text)
                 return
             
             text = f"📋 **Barcha arizalar ({len(applications)})**\n\n"
@@ -643,10 +591,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             keyboard = get_application_tracking_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -684,10 +630,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             keyboard = get_task_monitoring_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -723,10 +667,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             keyboard = get_task_monitoring_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -770,10 +712,8 @@ Hisobot {today.strftime('%d.%m.%Y')} sanasida yaratilgan."""
             
             keyboard = get_task_monitoring_menu(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )

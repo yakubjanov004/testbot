@@ -32,10 +32,6 @@ async def get_role_router(role: str):
     from aiogram import Router
     return Router()
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
 def get_call_center_supervisor_feedback_router():
     """Get router for call center supervisor feedback handlers"""
     from utils.role_system import get_role_router
@@ -45,7 +41,6 @@ def get_call_center_supervisor_feedback_router():
     async def call_center_supervisor_feedback(message: Message, state: FSMContext):
         """Call center supervisor feedback menu"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             
             if not user or user['role'] != 'call_center_supervisor':
@@ -266,7 +261,6 @@ async def _handle_rating_selection(callback: CallbackQuery, state: FSMContext, r
     async def handle_write_feedback_quick(message: Message, state: FSMContext):
         """Quick access to write feedback"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'call_center_supervisor':
                 return
@@ -293,7 +287,6 @@ async def _handle_rating_selection(callback: CallbackQuery, state: FSMContext, r
     async def handle_view_feedback_quick(message: Message, state: FSMContext):
         """Quick access to view feedback"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'call_center_supervisor':
                 return

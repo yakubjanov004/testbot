@@ -110,7 +110,6 @@ def get_applications_actions_router():
             
             text = f"Junior menejer tanlang (Ariza: {request_id_short}):"
             
-            # Use edit_and_track for inline cleanup
             await callback.message.edit_text(text, reply_markup=keyboard)
             
             await callback.answer()
@@ -155,7 +154,6 @@ def get_applications_actions_router():
             if success:
                 text = f"✅ Ariza {request_id_short} junior menejerga biriktirildi!"
                 
-                # Use edit_and_track for inline cleanup
                 await callback.message.edit_text(text)
                 
                 await callback.answer()

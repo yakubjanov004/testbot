@@ -29,18 +29,6 @@ async def get_user_lang(telegram_id: int):
     """Mock user language"""
     return 'uz'
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
 # Using get_role_router from utils.role_system
 
 async def create_new_client(name: str, phone: str):
@@ -133,12 +121,9 @@ def get_junior_manager_application_creation_router():
             
             text = "🔍 Mijozni qidirish usulini tanlang:"
             
-            await edit_and_track(
-                message.answer(
-                    text,
-                    reply_markup=get_client_search_menu(lang=lang)
-                ),
-                message.from_user.id
+            await message.answer(
+                text,
+                reply_markup=get_client_search_menu(lang=lang)
             )
             
         except Exception as e:
@@ -162,10 +147,7 @@ def get_junior_manager_application_creation_router():
             text = f"👤 Mijoz ismi: {client_name}\n\n📱 Endi telefon raqamini kiriting:"
             
             await state.set_state(JuniorManagerApplicationStates.creating_new_client_phone)
-            await edit_and_track(
-                message.answer(text),
-                message.from_user.id
-            )
+            await message.answer(text)
             
         except Exception as e:
             print(f"Error in handle_new_client_name: {e}")
@@ -204,10 +186,7 @@ def get_junior_manager_application_creation_router():
 📝 Endi ariza tafsilotlarini kiriting:"""
                 
                 await state.set_state(JuniorManagerApplicationStates.entering_application_details)
-                await edit_and_track(
-                    message.answer(text),
-                    message.from_user.id
-                )
+                await message.answer(text)
             else:
                 text = "❌ Mijoz yaratishda xatolik yuz berdi. Qaytadan urinib ko'ring."
                 await message.answer(text)
@@ -232,12 +211,9 @@ def get_junior_manager_application_creation_router():
             
             text = "⚡ Ariza ustuvorligini tanlang:"
             
-            await edit_and_track(
-                message.answer(
-                    text,
-                    reply_markup=get_application_priority_keyboard(lang=lang)
-                ),
-                message.from_user.id
+            await message.answer(
+                text,
+                reply_markup=get_application_priority_keyboard(lang=lang)
             )
             
         except Exception as e:
@@ -304,10 +280,7 @@ def get_junior_manager_application_creation_router():
 ⚡ Ustuvorlik: {priority}
 📝 Tafsilotlar: {details}"""
                 
-                await edit_and_track(
-                    callback.message.edit_text(text),
-                    callback.from_user.id
-                )
+                await callback.message.edit_text(text)
                 
                 # Clear state
                 await state.clear()
@@ -346,12 +319,9 @@ def get_junior_manager_application_creation_router():
 
 ✅ Ariza yaratishni tasdiqlaysizmi?"""
             
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=get_application_confirmation_keyboard(lang=lang)
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=get_application_confirmation_keyboard(lang=lang)
             )
             
         except Exception as e:

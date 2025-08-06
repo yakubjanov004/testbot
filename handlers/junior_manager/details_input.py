@@ -24,18 +24,6 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
 # Using get_role_router from utils.role_system
 
 async def get_service_request_details_for_junior_manager(app_id: int):
@@ -117,12 +105,9 @@ Xabar yuboring yoki 'Bekor qilish' tugmasini bosing:"""
             # Create keyboard
             keyboard = _create_details_input_keyboard(app_id, lang)
             
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=keyboard
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=keyboard
             )
             
         except Exception as e:
@@ -175,10 +160,7 @@ Endi arizani controller-ga yuborishingiz mumkin."""
                 # Create keyboard with forward option
                 keyboard = _create_details_confirmation_keyboard(app_id, lang)
                 
-                await send_and_track(
-                    message.answer(text, reply_markup=keyboard),
-                    message.from_user.id
-                )
+                await message.answer(text, reply_markup=keyboard)
                 
                 # Clear state
                 await state.clear()
@@ -223,12 +205,9 @@ Endi arizani controller-ga yuborishingiz mumkin."""
             text = "❌ Tafsilotlarni kiritish bekor qilindi"
             
             # Create back to inbox keyboard
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=get_back_to_inbox_keyboard(lang=lang)
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=get_back_to_inbox_keyboard(lang=lang)
             )
             
             await callback.answer("❌ Bekor qilindi", show_alert=True)
@@ -260,12 +239,9 @@ Endi arizani controller-ga yuborishingiz mumkin."""
 📝 Tafsilotlar ham qo'shildi."""
                 
                 # Create back to inbox keyboard
-                await edit_and_track(
-                    callback.message.edit_text(
-                        text,
-                        reply_markup=get_back_to_inbox_keyboard(lang=lang)
-                    ),
-                    callback.from_user.id
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=get_back_to_inbox_keyboard(lang=lang)
                 )
                 
                 await callback.answer("✅ Yuborildi", show_alert=True)

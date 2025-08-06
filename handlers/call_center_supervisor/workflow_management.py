@@ -38,9 +38,7 @@ async def get_role_router(role: str):
     from aiogram import Router
     return Router()
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
+
 
 async def get_call_center_supervisor_orders(supervisor_id: int, limit: int = 50, status: str = None):
     """Mock supervisor orders"""
@@ -158,7 +156,6 @@ def get_call_center_supervisor_workflow_management_router():
     async def workflow_management_menu(message: Message, state: FSMContext):
         """Main workflow management menu"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             
             if not user or user['role'] != 'call_center_supervisor':
