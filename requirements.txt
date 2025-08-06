@@ -1,0 +1,5 @@
+aiogram
+python-dotenv
+aiohttp
+typing-extensions
+pydantic
