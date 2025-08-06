@@ -88,8 +88,8 @@ async def get_technician_performance(technician_id: int):
         }
     }
 
-def get_technician_router():
-    """Router for technician management functionality"""
+def get_controller_technician_management_router():
+    """Router for controller technician management functionality"""
     router = Router()
 
     @router.message(F.text.in_(["👨‍🔧 Texniklar boshqaruvi", "👨‍🔧 Управление техниками"]))

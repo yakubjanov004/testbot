@@ -32,10 +32,7 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-async def get_role_router(role: str):
-    """Mock role router"""
-    from aiogram import Router
-    return Router()
+# Removed duplicate get_role_router - using centralized version from utils.role_system
 
 def get_controller_main_menu_router():
     """Get controller main menu router"""

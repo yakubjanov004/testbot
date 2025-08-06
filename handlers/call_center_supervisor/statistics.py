@@ -554,3 +554,53 @@ async def _show_data_export_options(message: Message, lang: str):
     ])
     
     await message.answer(text, reply_markup=keyboard)
+
+    # Export handlers
+    @router.callback_query(F.data.startswith("ccs_export_"))
+    async def handle_export_requests(callback: CallbackQuery, state: FSMContext):
+        """Handle export requests"""
+        await callback.answer()
+        
+        try:
+            from utils.export_utils import create_export_file
+            from aiogram.types import BufferedInputFile
+            
+            export_type = callback.data.replace("ccs_export_", "").split("_")[0]
+            format_type = callback.data.split("_")[-1]
+            
+            # Map export types
+            export_mapping = {
+                "orders": "orders",
+                "staff": "users", 
+                "stats": "statistics",
+                "kpi": "statistics"
+            }
+            
+            actual_export_type = export_mapping.get(export_type, "statistics")
+            
+            # Create export file
+            file_content, filename = create_export_file(actual_export_type, format_type)
+            
+            # Send success message
+            await callback.message.answer(
+                f"✅ {export_type.title()} ma'lumotlari {format_type.upper()} formatida export qilindi!\n"
+                f"📁 Fayl: {filename}"
+            )
+            
+            # Send the actual file
+            await callback.message.answer_document(
+                BufferedInputFile(
+                    file_content.read(),
+                    filename=filename
+                ),
+                caption=f"📤 {export_type.title()} export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            )
+            
+        except Exception as e:
+            await callback.message.answer("❌ Export xatoligi yuz berdi")
+
+    @router.callback_query(F.data == "ccs_close_menu")
+    async def close_export_menu(callback: CallbackQuery, state: FSMContext):
+        """Close export menu"""
+        await callback.answer()
+        await callback.message.delete()

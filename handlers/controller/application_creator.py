@@ -22,10 +22,7 @@ async def get_user_lang(user_id: int) -> str:
     """Mock user language"""
     return 'uz'
 
-async def get_role_router(role: str):
-    """Mock role router"""
-    from aiogram import Router
-    return Router()
+# Removed duplicate get_role_router - using centralized version from utils.role_system
 
 async def search_clients_by_phone(phone: str, db):
     """Mock search clients by phone"""
