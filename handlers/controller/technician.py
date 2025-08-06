@@ -1,12 +1,15 @@
 """
-Controller handlers for Technician management - Soddalashtirilgan versiya
+Controller Technician Management - Simplified Implementation
 
-Bu modul controller uchun texniklarni boshqarish handlerlarini o'z ichiga oladi.
+This module handles controller technician management functionality.
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from keyboards.controller_buttons import get_technician_keyboard, get_controller_back_keyboard
+from typing import Dict, Any, List, Optional
+from datetime import datetime
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -20,498 +23,344 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def get_user_lang(user_id: int):
-    """Mock user language"""
+async def get_user_lang(telegram_id: int):
+    """Mock get user language"""
     return 'uz'
 
-async def get_role_router(role: str):
-    """Mock role router"""
-    from aiogram import Router
-    return Router()
-
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
-async def get_all_technicians():
-    """Mock all technicians"""
+async def get_technicians():
+    """Mock get technicians"""
     return [
         {
             'id': 1,
-            'full_name': 'Ahmad Toshmatov',
-            'phone_number': '+998901234567',
-            'specialization': 'Internet',
-            'is_active': True,
-            'current_location': 'Tashkent'
+            'full_name': 'Aziz Karimov',
+            'phone': '+998901234567',
+            'email': 'aziz@example.com',
+            'status': 'active',
+            'specialization': 'Internet va TV',
+            'experience': '3 yil',
+            'rating': 4.5,
+            'completed_orders': 45,
+            'active_orders': 2,
+            'created_at': datetime.now()
         },
         {
             'id': 2,
-            'full_name': 'Bekzod Karimov',
-            'phone_number': '+998901234568',
-            'specialization': 'TV',
-            'is_active': True,
-            'current_location': 'Tashkent'
+            'full_name': 'Malika Toshmatova',
+            'phone': '+998901234568',
+            'email': 'malika@example.com',
+            'status': 'active',
+            'specialization': 'Elektrik ishlar',
+            'experience': '5 yil',
+            'rating': 4.8,
+            'completed_orders': 78,
+            'active_orders': 1,
+            'created_at': datetime.now()
         },
         {
             'id': 3,
-            'full_name': 'Dilshod Mirzayev',
-            'phone_number': '+998901234569',
-            'specialization': 'Telefon',
-            'is_active': False,
-            'current_location': 'Samarkand'
-        },
-        {
-            'id': 4,
-            'full_name': 'Eldor Umarov',
-            'phone_number': '+998901234570',
-            'specialization': 'Internet',
-            'is_active': True,
-            'current_location': 'Tashkent'
+            'full_name': 'Jahongir Azimov',
+            'phone': '+998901234569',
+            'email': 'jahongir@example.com',
+            'status': 'inactive',
+            'specialization': 'Kabel ishlari',
+            'experience': '2 yil',
+            'rating': 4.2,
+            'completed_orders': 23,
+            'active_orders': 0,
+            'created_at': datetime.now()
         }
     ]
 
 async def get_technician_performance(technician_id: int):
-    """Mock technician performance"""
-    performance_data = {
-        1: {'active_orders': 3, 'completed_orders': 45, 'avg_rating': 4.8},
-        2: {'active_orders': 2, 'completed_orders': 38, 'avg_rating': 4.6},
-        3: {'active_orders': 0, 'completed_orders': 12, 'avg_rating': 4.2},
-        4: {'active_orders': 1, 'completed_orders': 52, 'avg_rating': 4.9}
-    }
-    return performance_data.get(technician_id, {'active_orders': 0, 'completed_orders': 0, 'avg_rating': 0})
-
-async def get_orders_by_status(statuses: list):
-    """Mock orders by status"""
-    return [
-        {
-            'id': 'ord_001',
-            'client_name': 'Aziz Karimov',
-            'description': 'Internet tezligi sekin',
-            'status': 'new',
-            'created_at': '2024-01-15 10:30'
-        },
-        {
-            'id': 'ord_002',
-            'client_name': 'Malika Toshmatova',
-            'description': 'TV signal yo\'q',
-            'status': 'pending',
-            'created_at': '2024-01-15 11:45'
-        },
-        {
-            'id': 'ord_003',
-            'client_name': 'Jamshid Mirzayev',
-            'description': 'Telefon ishlamayapti',
-            'status': 'new',
-            'created_at': '2024-01-15 12:15'
+    """Mock get technician performance"""
+    return {
+        'total_orders': 45,
+        'completed_orders': 42,
+        'cancelled_orders': 3,
+        'avg_rating': 4.5,
+        'avg_completion_time': '2.3 soat',
+        'customer_satisfaction': 92,
+        'monthly_stats': {
+            'january': 8,
+            'february': 12,
+            'march': 15,
+            'april': 10
         }
-    ]
+    }
 
-async def assign_zayavka_to_technician(zayavka_id: str, technician_id: int):
-    """Mock assign zayavka to technician"""
-    return True
+def get_technician_router():
+    """Router for technician management functionality"""
+    router = Router()
 
-# Mock keyboards
-def technicians_menu(lang: str):
-    """Mock technicians menu keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="📋 Texniklar ro'yxati", callback_data="show_technicians_list"),
-            InlineKeyboardButton(text="📊 Samaradorlik", callback_data="show_technicians_performance")
-        ],
-        [
-            InlineKeyboardButton(text="🎯 Vazifa tayinlash", callback_data="task_assignment"),
-            InlineKeyboardButton(text="📈 Hisobot", callback_data="technicians_report")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_controllers")
-        ]
-    ])
+    @router.message(F.text.in_(["👨‍🔧 Texniklar boshqaruvi", "👨‍🔧 Управление техниками"]))
+    async def view_technician_management(message: Message, state: FSMContext):
+        """Controller view technician management handler"""
+        try:
+            user = await get_user_by_telegram_id(message.from_user.id)
+            if not user or user['role'] != 'controller':
+                return
+            
+            lang = user.get('language', 'uz')
+            
+            technician_text = (
+                "👨‍🔧 <b>Texniklar boshqaruvi - To'liq ma'lumot</b>\n\n"
+                "📋 <b>Mavjud texniklar:</b>\n"
+                "• Internet va TV texniklari\n"
+                "• Elektrik texniklari\n"
+                "• Kabel texniklari\n"
+                "• Umumiy texniklar\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+                if lang == 'uz' else
+                "👨‍🔧 <b>Управление техниками - Полная информация</b>\n\n"
+                "📋 <b>Существующие техники:</b>\n"
+                "• Техники интернета и ТВ\n"
+                "• Электрики\n"
+                "• Кабельщики\n"
+                "• Общие техники\n\n"
+                "Выберите один из разделов ниже:"
+            )
+            
+            sent_message = await message.answer(
+                text=technician_text,
+                reply_markup=get_technician_keyboard(lang),
+                parse_mode='HTML'
+            )
+            
+        except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-def technician_assignment_keyboard(technicians: list, lang: str):
-    """Mock technician assignment keyboard"""
-    keyboard = []
-    
-    for tech in technicians:
-        if tech['is_active']:
-            status_emoji = "🟢" if tech['is_active'] else "🔴"
-            button_text = f"{status_emoji} {tech['full_name']} ({tech['specialization']})"
-            keyboard.append([
-                InlineKeyboardButton(
-                    text=button_text,
-                    callback_data=f"assign_to_technician_{tech['id']}"
+    @router.callback_query(F.data == "view_technicians")
+    async def view_technicians(callback: CallbackQuery, state: FSMContext):
+        """View technicians list"""
+        try:
+            await callback.answer()
+            
+            # Get technicians
+            technicians = await get_technicians()
+            
+            if not technicians:
+                no_technicians_text = (
+                    "📭 Texniklar mavjud emas."
+                    if callback.from_user.language_code == 'uz' else
+                    "📭 Техники не найдены."
                 )
+                
+                await callback.message.edit_text(
+                    text=no_technicians_text,
+                    reply_markup=get_controller_back_keyboard('uz')
+                )
+                return
+            
+            # Show first technician
+            await show_technician_details(callback, technicians[0], technicians, 0)
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi")
+
+    async def show_technician_details(callback, technician, technicians, index):
+        """Show technician details with navigation"""
+        try:
+            # Format status
+            status_emoji = {
+                'active': '🟢',
+                'inactive': '🔴',
+                'busy': '🟡',
+                'offline': '⚫'
+            }.get(technician['status'], '⚪')
+            
+            status_text = {
+                'active': 'Faol',
+                'inactive': 'Faol emas',
+                'busy': 'Band',
+                'offline': 'Offline'
+            }.get(technician['status'], 'Noma\'lum')
+            
+            # Format date
+            created_date = technician['created_at'].strftime('%d.%m.%Y')
+            
+            # To'liq ma'lumot
+            text = (
+                f"👨‍🔧 <b>Texnik ma'lumotlari - To'liq ma'lumot</b>\n\n"
+                f"🆔 <b>Texnik ID:</b> {technician['id']}\n"
+                f"👤 <b>To'liq ism:</b> {technician['full_name']}\n"
+                f"📞 <b>Telefon:</b> {technician['phone']}\n"
+                f"📧 <b>Email:</b> {technician['email']}\n"
+                f"🔧 <b>Ixtisoslik:</b> {technician['specialization']}\n"
+                f"⏰ <b>Tajriba:</b> {technician['experience']}\n"
+                f"⭐ <b>Reyting:</b> {technician['rating']}/5.0\n"
+                f"{status_emoji} <b>Holat:</b> {status_text}\n"
+                f"📊 <b>Bajarilgan buyurtmalar:</b> {technician['completed_orders']}\n"
+                f"📋 <b>Faol buyurtmalar:</b> {technician['active_orders']}\n"
+                f"📅 <b>Qo'shilgan:</b> {created_date}\n\n"
+                f"📊 <b>Texnik #{index + 1} / {len(technicians)}</b>"
+            )
+            
+            # Create navigation keyboard
+            keyboard = get_technicians_navigation_keyboard(index, len(technicians))
+            
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "technician_prev")
+    async def show_previous_technician(callback: CallbackQuery, state: FSMContext):
+        """Show previous technician"""
+        try:
+            await callback.answer()
+            
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_technician_index', 0)
+            
+            technicians = await get_technicians()
+            
+            if current_index > 0:
+                new_index = current_index - 1
+                await state.update_data(current_technician_index=new_index)
+                await show_technician_details(callback, technicians[new_index], technicians, new_index)
+            else:
+                await callback.answer("Bu birinchi texnik")
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "technician_next")
+    async def show_next_technician(callback: CallbackQuery, state: FSMContext):
+        """Show next technician"""
+        try:
+            await callback.answer()
+            
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_technician_index', 0)
+            
+            technicians = await get_technicians()
+            
+            if current_index < len(technicians) - 1:
+                new_index = current_index + 1
+                await state.update_data(current_technician_index=new_index)
+                await show_technician_details(callback, technicians[new_index], technicians, new_index)
+            else:
+                await callback.answer("Bu oxirgi texnik")
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "view_technician_performance")
+    async def view_technician_performance(callback: CallbackQuery, state: FSMContext):
+        """View technician performance"""
+        try:
+            await callback.answer()
+            
+            # Get current technician from state
+            current_index = await state.get_data()
+            current_index = current_index.get('current_technician_index', 0)
+            
+            technicians = await get_technicians()
+            
+            if current_index >= len(technicians):
+                await callback.answer("Texnik topilmadi")
+                return
+            
+            selected_technician = technicians[current_index]
+            
+            # Get performance data
+            performance = await get_technician_performance(selected_technician['id'])
+            
+            performance_text = (
+                f"📊 <b>Texnik samaradorligi - To'liq ma'lumot</b>\n\n"
+                f"👤 <b>Texnik:</b> {selected_technician['full_name']}\n"
+                f"📋 <b>Ixtisoslik:</b> {selected_technician['specialization']}\n\n"
+                f"📈 <b>Umumiy ko'rsatkichlar:</b>\n"
+                f"• Jami buyurtmalar: {performance['total_orders']}\n"
+                f"• Bajarilgan: {performance['completed_orders']}\n"
+                f"• Bekor qilingan: {performance['cancelled_orders']}\n"
+                f"• O'rtacha reyting: {performance['avg_rating']}/5.0\n"
+                f"• O'rtacha bajarish vaqti: {performance['avg_completion_time']}\n"
+                f"• Mijoz mamnuniyati: {performance['customer_satisfaction']}%\n\n"
+                f"📅 <b>Oylik statistika:</b>\n"
+                f"• Yanvar: {performance['monthly_stats']['january']}\n"
+                f"• Fevral: {performance['monthly_stats']['february']}\n"
+                f"• Mart: {performance['monthly_stats']['march']}\n"
+                f"• Aprel: {performance['monthly_stats']['april']}"
+            )
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_technician")]
             ])
-    
-    keyboard.append([
-        InlineKeyboardButton(
-            text="❌ Bekor qilish",
-            callback_data="cancel_assignment"
-        )
-    ])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-def back_to_controllers_menu(lang: str):
-    """Mock back to controllers menu keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="◀️ Asosiy menyu", callback_data="back_to_main")
-        ]
-    ])
-
-# Mock states
-class ControllerTechnicianStates:
-    technicians_control = "technicians_control"
-    assign_technicians = "assign_technicians"
-    viewing_technician = "viewing_technician"
-
-def get_controller_technician_router():
-    """Get controller technician router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
-
-    @router.message(F.text.in_(["👨‍🔧 Texniklar nazorati"]))
-    async def technicians_control_menu(message: Message, state: FSMContext):
-        """Texniklar nazorati menyusi"""
-        user_id = message.from_user.id
-        
-        try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
             
-            lang = user.get('language', 'uz')
-            await state.set_state(ControllerTechnicianStates.technicians_control)
+            await callback.message.edit_text(performance_text, reply_markup=keyboard, parse_mode='HTML')
             
-            try:
-                # Texniklar ro'yxatini olish
-                technicians = await get_all_technicians()
-                
-                active_count = len([t for t in technicians if t['is_active']])
-                total_count = len(technicians)
-                
-                text = f"""👨‍🔧 <b>Texniklar nazorati</b>
-
-📊 <b>Umumiy ma'lumot:</b>
-• Jami texniklar: {total_count}
-• Faol texniklar: {active_count}
-• Nofaol texniklar: {total_count - active_count}
-
-Kerakli amalni tanlang:"""
-                
-                await send_and_track(
-                    message.answer,
-                    text,
-                    user_id,
-                    reply_markup=technicians_menu(lang),
-                    parse_mode='HTML'
-                )
-                
-            except Exception as e:
-                print(f"Error in technicians_control_menu: {e}")
-                error_text = "Xatolik yuz berdi!"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
-                
         except Exception as e:
-            print(f"Error in technicians_control_menu: {e}")
-            error_text = "Xatolik yuz berdi!"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await callback.answer("❌ Xatolik yuz berdi")
 
-    @router.message(F.text.in_(["📋 Texniklar ro'yxati"]))
-    async def show_technicians_list(message: Message, state: FSMContext):
-        """Texniklar ro'yxatini ko'rsatish"""
-        user_id = message.from_user.id
-        
+    @router.callback_query(F.data == "back_to_technician")
+    async def back_to_technician(callback: CallbackQuery, state: FSMContext):
+        """Back to technician menu"""
         try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
+            await callback.answer()
             
+            user = await get_user_by_telegram_id(callback.from_user.id)
             lang = user.get('language', 'uz')
             
-            try:
-                technicians = await get_all_technicians()
-                
-                text = "📋 <b>Texniklar ro'yxati:</b>\n\n"
-                
-                if technicians:
-                    for tech in technicians:
-                        status_icon = "🟢" if tech['is_active'] else "🔴"
-                        performance = await get_technician_performance(tech['id'])
-                        
-                        text += f"{status_icon} <b>{tech['full_name']}</b>\n"
-                        text += f"📞 {tech.get('phone_number', 'Noma\'lum')}\n"
-                        
-                        text += f"📋 Faol vazifalar: {performance.get('active_orders', 0)}\n"
-                        text += f"✅ Bajarilgan: {performance.get('completed_orders', 0)}\n"
-                        text += f"⭐ Reyting: {performance.get('avg_rating', 0):.1f}\n\n"
-                else:
-                    text += "Texniklar topilmadi"
-                
-                await send_and_track(
-                    message.answer,
-                    text,
-                    user_id,
-                    parse_mode='HTML'
-                )
-                
-            except Exception as e:
-                print(f"Error in show_technicians_list: {e}")
-                error_text = "Xatolik yuz berdi!"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
-                
-        except Exception as e:
-            print(f"Error in show_technicians_list: {e}")
-            error_text = "Xatolik yuz berdi!"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
+            technician_text = (
+                "👨‍🔧 <b>Texniklar boshqaruvi - To'liq ma'lumot</b>\n\n"
+                "📋 <b>Mavjud texniklar:</b>\n"
+                "• Internet va TV texniklari\n"
+                "• Elektrik texniklari\n"
+                "• Kabel texniklari\n"
+                "• Umumiy texniklar\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+                if lang == 'uz' else
+                "👨‍🔧 <b>Управление техниками - Полная информация</b>\n\n"
+                "📋 <b>Существующие техники:</b>\n"
+                "• Техники интернета и ТВ\n"
+                "• Электрики\n"
+                "• Кабельщики\n"
+                "• Общие техники\n\n"
+                "Выберите один из разделов ниже:"
             )
-
-    @router.message(F.text.in_(["📊 Texniklar samaradorligi"]))
-    async def show_technicians_performance(message: Message, state: FSMContext):
-        """Texniklar samaradorligini ko'rsatish"""
-        user_id = message.from_user.id
-        
-        try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
             
-            lang = user.get('language', 'uz')
-            
-            try:
-                technicians = await get_all_technicians()
-                
-                # Samaradorlik bo'yicha tartiblash
-                performance_data = []
-                for tech in technicians:
-                    performance = await get_technician_performance(tech['id'])
-                    performance_data.append({
-                        'name': tech['full_name'],
-                        'completed': performance.get('completed_orders', 0),
-                        'active': performance.get('active_orders', 0),
-                        'rating': performance.get('avg_rating', 0),
-                        'is_active': tech['is_active']
-                    })
-                
-                # Bajarilgan vazifalar bo'yicha tartiblash
-                performance_data.sort(key=lambda x: x['completed'], reverse=True)
-                
-                text = "📊 <b>Texniklar samaradorligi:</b>\n\n"
-                
-                for i, perf in enumerate(performance_data[:10], 1):
-                    status_icon = "🟢" if perf['is_active'] else "🔴"
-                    medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
-                    
-                    text += f"{medal} {status_icon} <b>{perf['name']}</b>\n"
-                    text += f"   ✅ Bajarilgan: {perf['completed']}\n"
-                    text += f"   📋 Faol: {perf['active']}\n"
-                    text += f"   ⭐ Reyting: {perf['rating']:.1f}\n\n"
-                
-                await send_and_track(
-                    message.answer,
-                    text,
-                    user_id,
-                    parse_mode='HTML'
-                )
-                
-            except Exception as e:
-                print(f"Error in show_technicians_performance: {e}")
-                error_text = "Xatolik yuz berdi!"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
-                
-        except Exception as e:
-            print(f"Error in show_technicians_performance: {e}")
-            error_text = "Xatolik yuz berdi!"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
+            await callback.message.edit_text(
+                text=technician_text,
+                reply_markup=get_technician_keyboard(lang),
+                parse_mode='HTML'
             )
-
-    @router.message(F.text.in_(["🎯 Vazifa tayinlash"]))
-    async def task_assignment_menu(message: Message, state: FSMContext):
-        """Vazifa tayinlash menyusi"""
-        user_id = message.from_user.id
-        
-        try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
             
-            lang = user.get('language', 'uz')
-            await state.set_state(ControllerTechnicianStates.assign_technicians)
-            
-            try:
-                # Tayinlanmagan buyurtmalarni olish
-                unassigned_orders = await get_orders_by_status(['new', 'pending'])
-                
-                text = f"""🎯 <b>Vazifa tayinlash</b>
-
-📋 <b>Tayinlanmagan buyurtmalar:</b> {len(unassigned_orders)}
-
-Quyidagi buyurtmalarni texniklarga tayinlashingiz mumkin:"""
-                
-                if unassigned_orders:
-                    text += "\n\n"
-                    for order in unassigned_orders[:5]:  # Faqat 5 tasini ko'rsatish
-                        client_name = order.get('client_name', 'Noma\'lum')
-                        description = order.get('description', '')[:40] + "..." if len(order.get('description', '')) > 40 else order.get('description', '')
-                        
-                        text += f"🔹 <b>#{order['id']}</b> - {client_name}\n"
-                        text += f"📝 {description}\n\n"
-                else:
-                    text += "\n\nTayinlanmagan buyurtmalar yo'q"
-                
-                await send_and_track(
-                    message.answer,
-                    text,
-                    user_id,
-                    parse_mode='HTML'
-                )
-                
-            except Exception as e:
-                print(f"Error in task_assignment_menu: {e}")
-                error_text = "Xatolik yuz berdi!"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
-                
         except Exception as e:
-            print(f"Error in task_assignment_menu: {e}")
-            error_text = "Xatolik yuz berdi!"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
-
-    @router.message(F.text.in_(["📈 Texniklar hisoboti"]))
-    async def technicians_report(message: Message, state: FSMContext):
-        """Texniklar hisoboti"""
-        user_id = message.from_user.id
-        
-        try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
-            
-            lang = user.get('language', 'uz')
-            
-            try:
-                technicians = await get_all_technicians()
-                
-                # Umumiy statistika
-                total_technicians = len(technicians)
-                active_technicians = len([t for t in technicians if t['is_active']])
-                
-                total_completed = 0
-                total_active = 0
-                total_rating = 0
-                rated_count = 0
-                
-                for tech in technicians:
-                    performance = await get_technician_performance(tech['id'])
-                    total_completed += performance.get('completed_orders', 0)
-                    total_active += performance.get('active_orders', 0)
-                    
-                    rating = performance.get('avg_rating', 0)
-                    if rating > 0:
-                        total_rating += rating
-                        rated_count += 1
-                
-                avg_rating = (total_rating / rated_count) if rated_count > 0 else 0
-                
-                text = f"""📈 <b>Texniklar hisoboti</b>
-
-👥 <b>Texniklar soni:</b>
-• Jami: {total_technicians}
-• Faol: {active_technicians}
-• Nofaol: {total_technicians - active_technicians}
-
-📊 <b>Ish samaradorligi:</b>
-• Jami bajarilgan: {total_completed}
-• Hozir jarayonda: {total_active}
-• O'rtacha reyting: {avg_rating:.1f}
-
-📅 <b>Hisobot sanasi:</b> {message.date.strftime('%d.%m.%Y %H:%M')}"""
-                
-                await send_and_track(
-                    message.answer,
-                    text,
-                    user_id,
-                    parse_mode='HTML'
-                )
-                
-            except Exception as e:
-                print(f"Error in technicians_report: {e}")
-                error_text = "Xatolik yuz berdi!"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
-                
-        except Exception as e:
-            print(f"Error in technicians_report: {e}")
-            error_text = "Xatolik yuz berdi!"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await callback.answer("❌ Xatolik yuz berdi")
 
     return router
+
+def get_technicians_navigation_keyboard(current_index: int, total_technicians: int):
+    """Create navigation keyboard for technicians"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="technician_prev"
+        ))
+    
+    # Next button
+    if current_index < total_technicians - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="technician_next"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Performance button
+    keyboard.append([InlineKeyboardButton(text="📊 Samaradorlik", callback_data="view_technician_performance")])
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

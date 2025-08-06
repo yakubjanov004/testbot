@@ -23,18 +23,6 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
 async def search_clients_by_name(query: str, exact_match: bool = False):
     """Mock search clients by name"""
     if "test" in query.lower():
@@ -141,11 +129,7 @@ def get_junior_manager_staff_application_router():
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -161,11 +145,7 @@ def get_junior_manager_staff_application_router():
             )
             
             if not result.get('success'):
-                await send_and_track(
-                    message.answer,
-                    "Ariza yaratishda xatolik yuz berdi.",
-                    message.from_user.id
-                )
+                await message.answer("Ariza yaratishda xatolik yuz berdi.")
                 return
             
             # Show client search menu
@@ -175,10 +155,8 @@ Mijozni topish uchun quyidagi usullardan birini tanlang:"""
             
             keyboard = get_client_search_menu(lang)
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                message.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -188,11 +166,7 @@ Mijozni topish uchun quyidagi usullardan birini tanlang:"""
             
         except Exception as e:
             print(f"Error in junior_manager_create_connection_request: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.message(F.text.in_(["🔧 Texnik xizmat yaratish"]))
     async def junior_manager_technical_service_denied(message: Message, state: FSMContext):
@@ -200,11 +174,7 @@ Mijozni topish uchun quyidagi usullardan birini tanlang:"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -224,21 +194,15 @@ Texnik xizmat arizalarini yaratish uchun controller bilan bog'laning."""
                 ]
             ])
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                message.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
             
         except Exception as e:
             print(f"Error in junior_manager_technical_service_denied: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data.startswith("jm_client_search_"))
     async def handle_junior_manager_client_search_method(callback: CallbackQuery, state: FSMContext):
@@ -280,10 +244,8 @@ Mijoz ID raqamini kiriting:"""
                 ]
             ])
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -312,10 +274,8 @@ Boshqa amallar uchun quyidagi tugmalardan foydalaning:"""
             
             keyboard = get_junior_manager_main_keyboard(lang)
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -332,11 +292,7 @@ Boshqa amallar uchun quyidagi tugmalardan foydalaning:"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -344,11 +300,7 @@ Boshqa amallar uchun quyidagi tugmalardan foydalaning:"""
             
             # Validate phone number
             if not phone or len(phone) < 10:
-                await send_and_track(
-                    message.answer,
-                    "❌ Noto'g'ri telefon raqam. Iltimos, to'g'ri raqam kiriting.",
-                    message.from_user.id
-                )
+                await message.answer("❌ Noto'g'ri telefon raqam. Iltimos, to'g'ri raqam kiriting.")
                 return
             
             # Search for client by phone
@@ -375,21 +327,15 @@ Bu mijoz tizimda mavjud emas. Yangi mijoz qo'shishni xohlaysizmi?"""
                     ]
                 ])
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    message.from_user.id,
                     reply_markup=keyboard,
                     parse_mode="Markdown"
                 )
             
         except Exception as e:
             print(f"Error in handle_junior_manager_client_phone_input: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.message(StaffApplicationStates.entering_client_name)
     async def handle_junior_manager_client_name_input(message: Message, state: FSMContext):
@@ -397,11 +343,7 @@ Bu mijoz tizimda mavjud emas. Yangi mijoz qo'shishni xohlaysizmi?"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -409,11 +351,7 @@ Bu mijoz tizimda mavjud emas. Yangi mijoz qo'shishni xohlaysizmi?"""
             
             # Validate name
             if not name or len(name) < 2:
-                await send_and_track(
-                    message.answer,
-                    "❌ Noto'g'ri ism. Iltimos, to'g'ri ism kiriting.",
-                    message.from_user.id
-                )
+                await message.answer("❌ Noto'g'ri ism. Iltimos, to'g'ri ism kiriting.")
                 return
             
             # Search for client by name
@@ -440,21 +378,15 @@ Bu mijoz tizimda mavjud emas. Yangi mijoz qo'shishni xohlaysizmi?"""
                     ]
                 ])
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    message.from_user.id,
                     reply_markup=keyboard,
                     parse_mode="Markdown"
                 )
             
         except Exception as e:
             print(f"Error in handle_junior_manager_client_name_input: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.message(StaffApplicationStates.entering_client_id)
     async def handle_junior_manager_client_id_input(message: Message, state: FSMContext):
@@ -462,11 +394,7 @@ Bu mijoz tizimda mavjud emas. Yangi mijoz qo'shishni xohlaysizmi?"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -476,11 +404,7 @@ Bu mijoz tizimda mavjud emas. Yangi mijoz qo'shishni xohlaysizmi?"""
             try:
                 client_id_int = int(client_id)
             except ValueError:
-                await send_and_track(
-                    message.answer,
-                    "❌ Noto'g'ri ID. Iltimos, raqam kiriting.",
-                    message.from_user.id
-                )
+                await message.answer("❌ Noto'g'ri ID. Iltimos, raqam kiriting.")
                 return
             
             # Get client by ID
@@ -507,21 +431,15 @@ Bu ID bilan mijoz tizimda mavjud emas."""
                     ]
                 ])
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    message.from_user.id,
                     reply_markup=keyboard,
                     parse_mode="Markdown"
                 )
             
         except Exception as e:
             print(f"Error in handle_junior_manager_client_id_input: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.message(StaffApplicationStates.entering_new_client_name)
     async def handle_new_client_name(message: Message, state: FSMContext):
@@ -529,11 +447,7 @@ Bu ID bilan mijoz tizimda mavjud emas."""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -541,11 +455,7 @@ Bu ID bilan mijoz tizimda mavjud emas."""
             
             # Validate name
             if not name or len(name) < 2:
-                await send_and_track(
-                    message.answer,
-                    "❌ Noto'g'ri ism. Iltimos, to'g'ri ism kiriting.",
-                    message.from_user.id
-                )
+                await message.answer("❌ Noto'g'ri ism. Iltimos, to'g'ri ism kiriting.")
                 return
             
             # Store name in state
@@ -563,10 +473,8 @@ Endi telefon raqamini kiriting:"""
                 ]
             ])
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                message.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -576,11 +484,7 @@ Endi telefon raqamini kiriting:"""
             
         except Exception as e:
             print(f"Error in handle_new_client_name: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.message(StaffApplicationStates.entering_new_client_phone)
     async def handle_new_client_phone(message: Message, state: FSMContext):
@@ -588,11 +492,7 @@ Endi telefon raqamini kiriting:"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await send_and_track(
-                    message.answer,
-                    "Sizda ruxsat yo'q.",
-                    message.from_user.id
-                )
+                await message.answer("Sizda ruxsat yo'q.")
                 return
 
             lang = user.get('language', 'uz')
@@ -600,11 +500,7 @@ Endi telefon raqamini kiriting:"""
             
             # Validate phone
             if not phone or len(phone) < 10:
-                await send_and_track(
-                    message.answer,
-                    "❌ Noto'g'ri telefon raqam. Iltimos, to'g'ri raqam kiriting.",
-                    message.from_user.id
-                )
+                await message.answer("❌ Noto'g'ri telefon raqam. Iltimos, to'g'ri raqam kiriting.")
                 return
             
             # Get stored name
@@ -638,10 +534,8 @@ Endi ariza ma'lumotlarini kiriting:"""
                     ]
                 ])
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    message.from_user.id,
                     reply_markup=keyboard,
                     parse_mode="Markdown"
                 )
@@ -650,19 +544,11 @@ Endi ariza ma'lumotlarini kiriting:"""
                 await state.set_state(StaffApplicationStates.entering_application_details)
                 
             else:
-                await send_and_track(
-                    message.answer,
-                    "❌ Mijoz qo'shishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                    message.from_user.id
-                )
+                await message.answer("❌ Mijoz qo'shishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
             
         except Exception as e:
             print(f"Error in handle_new_client_phone: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data == "jm_create_new_client")
     async def handle_create_new_client_button(callback: CallbackQuery, state: FSMContext):
@@ -685,10 +571,8 @@ Yangi mijoz ismini kiriting:"""
                 ]
             ])
             
-            await edit_and_track(
-                callback.message.edit_text,
+            await callback.message.edit_text(
                 text,
-                callback.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -730,10 +614,8 @@ Endi ariza ma'lumotlarini kiriting:"""
                 ]
             ])
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                message.from_user.id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
@@ -746,10 +628,6 @@ Endi ariza ma'lumotlarini kiriting:"""
             
         except Exception as e:
             print(f"Error in _simulate_junior_manager_client_found: {e}")
-            await send_and_track(
-                message.answer,
-                "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
-                message.from_user.id
-            )
+            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     return router

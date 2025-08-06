@@ -1,7 +1,7 @@
 """
-Client Module - Complete Implementation
+Client Module - Simplified Implementation
 
-This module provides complete client functionality including:
+This module provides core client functionality including:
 - Start and registration
 - Contact management
 - Feedback system

@@ -1,6 +1,14 @@
-from aiogram import F
-from aiogram.types import Message, CallbackQuery
+"""
+Controller Quality Management - Simplified Implementation
+
+This module handles controller quality management functionality.
+"""
+
+from aiogram import F, Router
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from keyboards.controller_buttons import get_quality_keyboard, get_controller_back_keyboard
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 # Mock functions to replace utils and database imports
@@ -15,486 +23,353 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def get_service_quality_metrics():
-    """Mock service quality metrics"""
+async def get_user_lang(telegram_id: int):
+    """Mock get user language"""
+    return 'uz'
+
+async def get_quality_metrics():
+    """Mock get quality metrics"""
     return {
-        'avg_rating': 4.2,
+        'overall_quality_score': 4.2,
+        'customer_satisfaction': 85,
+        'response_time_score': 4.5,
+        'resolution_rate': 92,
+        'technician_ratings': 4.3,
         'total_reviews': 150,
-        'satisfaction_rate': 85,
-        'rating_distribution': {
-            5: 80,
-            4: 45,
-            3: 15,
-            2: 8,
-            1: 2
-        }
+        'positive_reviews': 128,
+        'neutral_reviews': 15,
+        'negative_reviews': 7
     }
 
-async def get_unresolved_issues():
-    """Mock unresolved issues"""
+async def get_quality_issues():
+    """Mock get quality issues"""
     return [
         {
             'id': 1,
-            'client_name': 'Client 1',
-            'description': 'Problem with order 1',
-            'days_pending': 3
+            'type': 'response_time',
+            'severity': 'medium',
+            'description': 'Javob vaqti sekin',
+            'affected_applications': 5,
+            'created_at': datetime.now(),
+            'status': 'open'
         },
         {
             'id': 2,
-            'client_name': 'Client 2',
-            'description': 'Problem with order 2',
-            'days_pending': 5
-        }
-    ]
-
-async def get_recent_feedback(days: int = 7):
-    """Mock recent feedback"""
-    return [
-        {
-            'id': 1,
-            'client_name': 'Client 1',
-            'rating': 5,
-            'comment': 'Ajoyib xizmat!',
-            'created_at': '2024-01-15 10:30:00'
-        },
-        {
-            'id': 2,
-            'client_name': 'Client 2',
-            'rating': 4,
-            'comment': 'Yaxshi ishlagan',
-            'created_at': '2024-01-14 15:20:00'
+            'type': 'technician_skill',
+            'severity': 'low',
+            'description': 'Texnik malakasi past',
+            'affected_applications': 2,
+            'created_at': datetime.now(),
+            'status': 'resolved'
         },
         {
             'id': 3,
-            'client_name': 'Client 3',
-            'rating': 3,
-            'comment': 'O\'rtacha',
-            'created_at': '2024-01-13 09:15:00'
+            'type': 'communication',
+            'severity': 'high',
+            'description': 'Mijoz bilan aloqa muammosi',
+            'affected_applications': 8,
+            'created_at': datetime.now(),
+            'status': 'open'
         }
     ]
 
-async def get_quality_trends():
-    """Mock quality trends"""
-    return [
-        {
-            'period': 'Hafta 1',
-            'avg_rating': 4.1,
-            'change': 0.2,
-            'review_count': 25
-        },
-        {
-            'period': 'Hafta 2',
-            'avg_rating': 4.3,
-            'change': 0.1,
-            'review_count': 30
-        },
-        {
-            'period': 'Hafta 3',
-            'avg_rating': 4.2,
-            'change': -0.1,
-            'review_count': 28
-        }
-    ]
+def get_quality_router():
+    """Router for quality management functionality"""
+    router = Router()
 
-async def get_role_router(role: str):
-    """Mock role router"""
-    from aiogram import Router
-    return Router()
-
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
-# Mock keyboards
-def quality_control_menu(lang: str):
-    """Mock quality control menu keyboard"""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="💬 Mijoz fikrlari", callback_data="customer_feedback"),
-            InlineKeyboardButton(text="⚠️ Muammoli holatlar", callback_data="unresolved_issues")
-        ],
-        [
-            InlineKeyboardButton(text="📊 Sifat baholash", callback_data="quality_assessment"),
-            InlineKeyboardButton(text="📈 Sifat tendensiyalari", callback_data="quality_trends")
-        ],
-        [
-            InlineKeyboardButton(text="📋 Sifat hisoboti", callback_data="quality_report")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_controllers")
-        ]
-    ])
-
-def back_to_controllers_menu():
-    """Mock back to controllers menu keyboard"""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_controllers")]
-    ])
-
-# Mock states
-class ControllerQualityStates:
-    quality_control = "quality_control"
-    viewing_feedback = "viewing_feedback"
-    viewing_issues = "viewing_issues"
-
-def get_controller_quality_router():
-    """Get controller quality router"""
-    from utils.role_system import get_role_router
-    router = get_role_router("controller")
-
-    @router.message(F.text.in_(["🎯 Sifat nazorati"]))
-    async def quality_control_menu_handler(message: Message, state: FSMContext):
-        """Sifat nazorati menyusi"""
-        user_id = message.from_user.id
-        
+    @router.message(F.text.in_(["🏆 Sifat boshqaruvi", "🏆 Управление качеством"]))
+    async def view_quality_management(message: Message, state: FSMContext):
+        """Controller view quality management handler"""
         try:
-            user = await get_user_by_telegram_id(user_id)
+            user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
                 return
             
             lang = user.get('language', 'uz')
-            await state.set_state(ControllerQualityStates.quality_control)
             
-            # Sifat ko'rsatkichlarini olish
-            quality_metrics = await get_service_quality_metrics()
+            # Get quality metrics
+            metrics = await get_quality_metrics()
             
-            text = f"""🎯 <b>Sifat nazorati</b>
-
-⭐ <b>Xizmat sifati ko'rsatkichlari:</b>
-• O'rtacha baho: {quality_metrics.get('avg_rating') or 0:.1f}/5.0
-• Jami sharhlar: {quality_metrics.get('total_reviews', 0)}
-• Mijoz qoniqishi: {quality_metrics.get('satisfaction_rate', 0)}%
-
-Kerakli bo'limni tanlang:"""
+            quality_text = (
+                "🏆 <b>Sifat boshqaruvi - To'liq ma'lumot</b>\n\n"
+                "📊 <b>Asosiy ko'rsatkichlar:</b>\n"
+                f"• Umumiy sifat balli: {metrics['overall_quality_score']}/5.0\n"
+                f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
+                f"• Javob vaqti balli: {metrics['response_time_score']}/5.0\n"
+                f"• Muammo hal qilish: {metrics['resolution_rate']}%\n"
+                f"• Texniklar reytingi: {metrics['technician_ratings']}/5.0\n\n"
+                f"📈 <b>Reytinglar:</b>\n"
+                f"• Jami sharhlar: {metrics['total_reviews']}\n"
+                f"• Ijobiy: {metrics['positive_reviews']}\n"
+                f"• Neytral: {metrics['neutral_reviews']}\n"
+                f"• Salbiy: {metrics['negative_reviews']}\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+                if lang == 'uz' else
+                "🏆 <b>Управление качеством - Полная информация</b>\n\n"
+                "📊 <b>Основные показатели:</b>\n"
+                f"• Общий балл качества: {metrics['overall_quality_score']}/5.0\n"
+                f"• Удовлетворенность клиентов: {metrics['customer_satisfaction']}%\n"
+                f"• Балл времени ответа: {metrics['response_time_score']}/5.0\n"
+                f"• Решение проблем: {metrics['resolution_rate']}%\n"
+                f"• Рейтинг техников: {metrics['technician_ratings']}/5.0\n\n"
+                f"📈 <b>Рейтинги:</b>\n"
+                f"• Всего отзывов: {metrics['total_reviews']}\n"
+                f"• Положительные: {metrics['positive_reviews']}\n"
+                f"• Нейтральные: {metrics['neutral_reviews']}\n"
+                f"• Отрицательные: {metrics['negative_reviews']}\n\n"
+                "Выберите один из разделов ниже:"
+            )
             
-            await send_and_track(
-                message.answer,
-                text,
-                user_id,
-                reply_markup=quality_control_menu(lang),
+            sent_message = await message.answer(
+                text=quality_text,
+                reply_markup=get_quality_keyboard(lang),
                 parse_mode='HTML'
             )
             
         except Exception as e:
-            print(f"Error in quality_control_menu_handler: {e}")
-            error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
-    @router.message(F.text.in_(["💬 Mijoz fikrlari"]))
-    async def customer_feedback_view(message: Message, state: FSMContext):
-        """Mijoz fikrlarini ko'rish"""
-        user_id = message.from_user.id
-        
+    @router.callback_query(F.data == "view_quality_issues")
+    async def view_quality_issues(callback: CallbackQuery, state: FSMContext):
+        """View quality issues"""
         try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
+            await callback.answer()
+            
+            # Get quality issues
+            issues = await get_quality_issues()
+            
+            if not issues:
+                no_issues_text = (
+                    "✅ Sifat muammolari mavjud emas."
+                    if callback.from_user.language_code == 'uz' else
+                    "✅ Проблем с качеством нет."
+                )
+                
+                await callback.message.edit_text(
+                    text=no_issues_text,
+                    reply_markup=get_controller_back_keyboard('uz')
                 )
                 return
             
-            lang = user.get('language', 'uz')
-            feedback_list = await get_recent_feedback(days=7)
+            # Show first issue
+            await show_quality_issue(callback, issues[0], issues, 0)
             
-            text = "💬 <b>So'nggi mijoz fikrlari (7 kun):</b>\n\n"
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi")
+
+    async def show_quality_issue(callback, issue, issues, index):
+        """Show quality issue details with navigation"""
+        try:
+            # Format severity
+            severity_emoji = {
+                'low': '🟢',
+                'medium': '🟡',
+                'high': '🔴',
+                'critical': '🔴'
+            }.get(issue['severity'], '⚪')
             
-            if feedback_list:
-                for feedback in feedback_list[:10]:
-                    stars = "⭐" * feedback['rating']
-                    client_name = feedback.get('client_name', 'Noma\'lum')
-                    comment = feedback.get('comment', '')
-                    created_date = feedback.get('created_at', '')
-                    
-                    text += f"{stars} <b>{client_name}</b>\n"
-                    if comment:
-                        comment_preview = comment[:80] + "..." if len(comment) > 80 else comment
-                        text += f"💭 {comment_preview}\n"
-                    text += f"📅 {created_date}\n\n"
+            severity_text = {
+                'low': 'Past',
+                'medium': 'O\'rtacha',
+                'high': 'Yuqori',
+                'critical': 'Kritik'
+            }.get(issue['severity'], 'Noma\'lum')
+            
+            # Format status
+            status_emoji = {
+                'open': '🔴',
+                'in_progress': '🟡',
+                'resolved': '🟢',
+                'closed': '⚫'
+            }.get(issue['status'], '⚪')
+            
+            status_text = {
+                'open': 'Ochiq',
+                'in_progress': 'Jarayonda',
+                'resolved': 'Hal qilindi',
+                'closed': 'Yopilgan'
+            }.get(issue['status'], 'Noma\'lum')
+            
+            # Format date
+            created_date = issue['created_at'].strftime('%d.%m.%Y %H:%M')
+            
+            # To'liq ma'lumot
+            text = (
+                f"🏆 <b>Sifat muammosi - To'liq ma'lumot</b>\n\n"
+                f"🆔 <b>Muammo ID:</b> {issue['id']}\n"
+                f"📋 <b>Turi:</b> {issue['type']}\n"
+                f"{severity_emoji} <b>Jiddiylik:</b> {severity_text}\n"
+                f"{status_emoji} <b>Holat:</b> {status_text}\n"
+                f"📝 <b>Tavsif:</b> {issue['description']}\n"
+                f"📊 <b>Ta'sir qilgan arizalar:</b> {issue['affected_applications']}\n"
+                f"📅 <b>Yaratilgan:</b> {created_date}\n\n"
+                f"📊 <b>Muammo #{index + 1} / {len(issues)}</b>"
+            )
+            
+            # Create navigation keyboard
+            keyboard = get_quality_issues_navigation_keyboard(index, len(issues))
+            
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "quality_prev_issue")
+    async def show_previous_quality_issue(callback: CallbackQuery, state: FSMContext):
+        """Show previous quality issue"""
+        try:
+            await callback.answer()
+            
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_issue_index', 0)
+            
+            issues = await get_quality_issues()
+            
+            if current_index > 0:
+                new_index = current_index - 1
+                await state.update_data(current_issue_index=new_index)
+                await show_quality_issue(callback, issues[new_index], issues, new_index)
             else:
-                no_feedback_text = "So'nggi fikrlar topilmadi"
-                text += no_feedback_text
-            
-            await send_and_track(
-                message.answer,
-                text,
-                user_id,
-                parse_mode='HTML'
-            )
-            
+                await callback.answer("Bu birinchi muammo")
+                
         except Exception as e:
-            print(f"Error in customer_feedback_view: {e}")
-            error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await callback.answer("Xatolik yuz berdi")
 
-    @router.message(F.text.in_(["⚠️ Muammoli holatlar"]))
-    async def unresolved_issues_view(message: Message, state: FSMContext):
-        """Muammoli holatlarni ko'rish"""
-        user_id = message.from_user.id
-        
+    @router.callback_query(F.data == "quality_next_issue")
+    async def show_next_quality_issue(callback: CallbackQuery, state: FSMContext):
+        """Show next quality issue"""
         try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
+            await callback.answer()
             
-            lang = user.get('language', 'uz')
-            issues = await get_unresolved_issues()
+            # Get current index from state or default to 0
+            current_index = await state.get_data()
+            current_index = current_index.get('current_issue_index', 0)
             
-            text = "⚠️ <b>Hal etilmagan muammolar:</b>\n\n"
+            issues = await get_quality_issues()
             
-            if issues:
-                for issue in issues[:10]:
-                    order_id = issue.get('id', 'N/A')
-                    client_name = issue.get('client_name', 'Noma\'lum')
-                    description = issue.get('description', '')
-                    days_pending = issue.get('days_pending', 0)
-                    
-                    urgency_icon = "🔴" if days_pending > 5 else "🟡" if days_pending > 2 else "🟢"
-                    
-                    text += f"{urgency_icon} <b>#{order_id}</b> - {client_name}\n"
-                    if description:
-                        desc_preview = description[:60] + "..." if len(description) > 60 else description
-                        text += f"📝 {desc_preview}\n"
-                    
-                    pending_text = "kun kutmoqda"
-                    text += f"⏱️ {days_pending} {pending_text}\n\n"
+            if current_index < len(issues) - 1:
+                new_index = current_index + 1
+                await state.update_data(current_issue_index=new_index)
+                await show_quality_issue(callback, issues[new_index], issues, new_index)
             else:
-                no_issues_text = "Hal etilmagan muammolar yo'q"
-                text += no_issues_text
+                await callback.answer("Bu oxirgi muammo")
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "view_quality_metrics")
+    async def view_quality_metrics(callback: CallbackQuery, state: FSMContext):
+        """View detailed quality metrics"""
+        try:
+            await callback.answer()
             
-            await send_and_track(
-                message.answer,
-                text,
-                user_id,
-                parse_mode='HTML'
+            # Get detailed quality metrics
+            metrics = await get_quality_metrics()
+            
+            metrics_text = (
+                "📊 <b>Batafsil sifat ko'rsatkichlari - To'liq ma'lumot</b>\n\n"
+                "🏆 <b>Asosiy ballar:</b>\n"
+                f"• Umumiy sifat: {metrics['overall_quality_score']}/5.0\n"
+                f"• Javob vaqti: {metrics['response_time_score']}/5.0\n"
+                f"• Texniklar: {metrics['technician_ratings']}/5.0\n\n"
+                "📈 <b>Foizli ko'rsatkichlar:</b>\n"
+                f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
+                f"• Muammo hal qilish: {metrics['resolution_rate']}%\n\n"
+                "📊 <b>Reytinglar tahlili:</b>\n"
+                f"• Jami sharhlar: {metrics['total_reviews']}\n"
+                f"• Ijobiy: {metrics['positive_reviews']} ({(metrics['positive_reviews']/max(metrics['total_reviews'], 1)*100):.1f}%)\n"
+                f"• Neytral: {metrics['neutral_reviews']} ({(metrics['neutral_reviews']/max(metrics['total_reviews'], 1)*100):.1f}%)\n"
+                f"• Salbiy: {metrics['negative_reviews']} ({(metrics['negative_reviews']/max(metrics['total_reviews'], 1)*100):.1f}%)"
             )
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_quality")]
+            ])
+            
+            await callback.message.edit_text(metrics_text, reply_markup=keyboard, parse_mode='HTML')
             
         except Exception as e:
-            print(f"Error in unresolved_issues_view: {e}")
-            error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await callback.answer("❌ Xatolik yuz berdi")
 
-    @router.message(F.text.in_(["📊 Sifat baholash"]))
-    async def service_quality_assessment(message: Message, state: FSMContext):
-        """Xizmat sifatini baholash"""
-        user_id = message.from_user.id
-        
+    @router.callback_query(F.data == "back_to_quality")
+    async def back_to_quality(callback: CallbackQuery, state: FSMContext):
+        """Back to quality menu"""
         try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
+            await callback.answer()
             
-            lang = user.get('language', 'uz')
-            quality_metrics = await get_service_quality_metrics()
-            
-            text = f"""📊 <b>Xizmat sifatini baholash</b>
-
-⭐ <b>Umumiy ko'rsatkichlar:</b>
-• O'rtacha baho: {quality_metrics.get('avg_rating') or 0:.1f}/5.0
-• Jami sharhlar: {quality_metrics.get('total_reviews', 0)}
-• Mijoz qoniqishi: {quality_metrics.get('satisfaction_rate', 0)}%
-
-📈 <b>Baholar taqsimoti:</b>"""
-            
-            # Baholar taqsimoti
-            rating_distribution = quality_metrics.get('rating_distribution', {})
-            total_reviews = quality_metrics.get('total_reviews', 0)
-            
-            for rating in range(5, 0, -1):
-                count = rating_distribution.get(rating, 0)
-                percentage = (count / total_reviews * 100) if total_reviews > 0 else 0
-                stars = "⭐" * rating
-                text += f"\n{stars} {count} ({percentage:.1f}%)"
-            
-            # Tavsiyalar
-            recommendations_text = "\n\n💡 <b>Tavsiyalar:</b>"
-            text += recommendations_text
-            
-            avg_rating = float(quality_metrics.get('avg_rating') or 0)
-            if avg_rating < 3.0:
-                rec_text = "\n• Xizmat sifatini yaxshilash zarur"
-                text += rec_text
-            elif avg_rating < 4.0:
-                rec_text = "\n• Yaxshi natija, lekin yaxshilash mumkin"
-                text += rec_text
-            else:
-                rec_text = "\n• A'lo xizmat sifati saqlanmoqda"
-                text += rec_text
-            
-            await send_and_track(
-                message.answer,
-                text,
-                user_id,
-                parse_mode='HTML'
-            )
-            
-        except Exception as e:
-            print(f"Error in service_quality_assessment: {e}")
-            error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
-
-    @router.message(F.text.in_(["📈 Sifat tendensiyalari"]))
-    async def quality_trends_view(message: Message, state: FSMContext):
-        """Sifat tendensiyalarini ko'rish"""
-        user_id = message.from_user.id
-        
-        try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
-            
-            lang = user.get('language', 'uz')
-            trends = await get_quality_trends()
-            
-            text = "📈 <b>Sifat tendensiyalari:</b>\n\n"
-            
-            if trends:
-                for period in trends[:8]:  # So'nggi 8 hafta
-                    period_name = period.get('period', '')
-                    rating = float(period.get('avg_rating') or 0)
-                    change = period.get('change', 0)
-                    review_count = period.get('review_count', 0)
-                    
-                    trend_icon = "📈" if change > 0 else "📉" if change < 0 else "➡️"
-                    
-                    text += f"{trend_icon} <b>{period_name}</b>\n"
-                    text += f"⭐ Baho: {rating:.1f}"
-                    
-                    if change != 0:
-                        change_text = f" ({change:+.1f})"
-                        text += change_text
-                    
-                    reviews_text = "sharh"
-                    text += f"\n💬 {review_count} {reviews_text}\n\n"
-            else:
-                no_trends_text = "Tendensiya ma'lumotlari yo'q"
-                text += no_trends_text
-            
-            await send_and_track(
-                message.answer,
-                text,
-                user_id,
-                parse_mode='HTML'
-            )
-            
-        except Exception as e:
-            print(f"Error in quality_trends_view: {e}")
-            error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
-
-    @router.message(F.text.in_(["📋 Sifat hisoboti"]))
-    async def quality_report(message: Message, state: FSMContext):
-        """Sifat hisoboti yaratish"""
-        user_id = message.from_user.id
-        
-        try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
-                return
-            
+            user = await get_user_by_telegram_id(callback.from_user.id)
             lang = user.get('language', 'uz')
             
-            # Ma'lumotlarni yig'ish
-            quality_metrics = await get_service_quality_metrics()
-            recent_feedback = await get_recent_feedback(days=30)
-            unresolved_issues = await get_unresolved_issues()
+            # Get quality metrics
+            metrics = await get_quality_metrics()
             
-            text = f"""📋 <b>Sifat hisoboti</b>
-📅 <b>Sana:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}
-
-⭐ <b>Umumiy ko'rsatkichlar:</b>
-• O'rtacha baho: {quality_metrics.get('avg_rating') or 0:.1f}/5.0
-• Jami sharhlar: {quality_metrics.get('total_reviews', 0)}
-• Mijoz qoniqishi: {quality_metrics.get('satisfaction_rate', 0)}%
-
-📈 <b>So'nggi 30 kun faolligi:</b>
-• Yangi fikrlar: {len(recent_feedback)}
-• Hal etilmagan muammolar: {len(unresolved_issues)}
-
-💡 <b>Tavsiyalar:</b>"""
+            quality_text = (
+                "🏆 <b>Sifat boshqaruvi - To'liq ma'lumot</b>\n\n"
+                "📊 <b>Asosiy ko'rsatkichlar:</b>\n"
+                f"• Umumiy sifat balli: {metrics['overall_quality_score']}/5.0\n"
+                f"• Mijoz mamnuniyati: {metrics['customer_satisfaction']}%\n"
+                f"• Javob vaqti balli: {metrics['response_time_score']}/5.0\n"
+                f"• Muammo hal qilish: {metrics['resolution_rate']}%\n"
+                f"• Texniklar reytingi: {metrics['technician_ratings']}/5.0\n\n"
+                f"📈 <b>Reytinglar:</b>\n"
+                f"• Jami sharhlar: {metrics['total_reviews']}\n"
+                f"• Ijobiy: {metrics['positive_reviews']}\n"
+                f"• Neytral: {metrics['neutral_reviews']}\n"
+                f"• Salbiy: {metrics['negative_reviews']}\n\n"
+                "Quyidagi bo'limlardan birini tanlang:"
+                if lang == 'uz' else
+                "🏆 <b>Управление качеством - Полная информация</b>\n\n"
+                "📊 <b>Основные показатели:</b>\n"
+                f"• Общий балл качества: {metrics['overall_quality_score']}/5.0\n"
+                f"• Удовлетворенность клиентов: {metrics['customer_satisfaction']}%\n"
+                f"• Балл времени ответа: {metrics['response_time_score']}/5.0\n"
+                f"• Решение проблем: {metrics['resolution_rate']}%\n"
+                f"• Рейтинг техников: {metrics['technician_ratings']}/5.0\n\n"
+                f"📈 <b>Рейтинги:</b>\n"
+                f"• Всего отзывов: {metrics['total_reviews']}\n"
+                f"• Положительные: {metrics['positive_reviews']}\n"
+                f"• Нейтральные: {metrics['neutral_reviews']}\n"
+                f"• Отрицательные: {metrics['negative_reviews']}\n\n"
+                "Выберите один из разделов ниже:"
+            )
             
-            # Tavsiyalar
-            avg_rating = float(quality_metrics.get('avg_rating') or 0)
-            if avg_rating < 3.0:
-                rec_text = "\n• Xizmat sifatini yaxshilash zarur"
-                text += rec_text
-            elif avg_rating < 4.0:
-                rec_text = "\n• Yaxshi natija, lekin yaxshilash mumkin"
-                text += rec_text
-            else:
-                rec_text = "\n• A'lo xizmat sifati saqlanmoqda"
-                text += rec_text
-            
-            if len(unresolved_issues) > 5:
-                urgent_text = "\n• Hal etilmagan muammolarga e'tibor bering"
-                text += urgent_text
-            
-            await send_and_track(
-                message.answer,
-                text,
-                user_id,
+            await callback.message.edit_text(
+                text=quality_text,
+                reply_markup=get_quality_keyboard(lang),
                 parse_mode='HTML'
             )
             
         except Exception as e:
-            print(f"Error in quality_report: {e}")
-            error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await callback.answer("❌ Xatolik yuz berdi")
 
     return router
+
+def get_quality_issues_navigation_keyboard(current_index: int, total_issues: int):
+    """Create navigation keyboard for quality issues"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="quality_prev_issue"
+        ))
+    
+    # Next button
+    if current_index < total_issues - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="quality_next_issue"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

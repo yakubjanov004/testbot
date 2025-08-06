@@ -52,14 +52,6 @@ async def get_role_router(role: str):
     """Mock role router"""
     return Router()
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
 async def get_user_lang(user_id: int) -> str:
     """Mock user language"""
     return 'uz'
@@ -183,11 +175,7 @@ def get_controller_inbox_router():
             
             if not inbox_messages:
                 text = "📭 Inbox bo'sh"
-                await send_and_track(
-                    message.answer,
-                    text,
-                    message.chat.id
-                )
+                await message.answer(text)
                 return
             
             # Find target request index if specified
@@ -226,11 +214,7 @@ def get_controller_inbox_router():
             
             if not requests:
                 text = "📭 Inbox bo'sh"
-                await send_and_track(
-                    message.answer,
-                    text,
-                    message.chat.id
-                )
+                await message.answer(text)
                 return
             
             await state.update_data(
@@ -257,11 +241,7 @@ def get_controller_inbox_router():
         except Exception as e:
             print(f"Error in show_controller_inbox: {str(e)}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                event.answer,
-                error_text,
-                user_id
-            )
+            await event.answer(error_text)
 
     @router.callback_query(F.data == "controller_inbox")
     async def show_controller_inbox_callback(callback: CallbackQuery, state: FSMContext):

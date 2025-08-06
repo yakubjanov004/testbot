@@ -23,9 +23,7 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup user inline messages"""
-    print(f"Mock: Cleaning up inline messages for user {user_id}")
+
 
 # Mock database functions
 async def get_manager_realtime_dashboard(user_id: int):
@@ -165,7 +163,6 @@ def get_manager_realtime_monitoring_router():
     async def show_realtime_dashboard(message: Message, state: FSMContext):
         """Manager realtime monitoring handler"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'manager':
                 error_text = "Sizda ruxsat yo'q."

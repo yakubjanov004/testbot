@@ -1,7 +1,14 @@
+"""
+Client Contact Handler - Simplified Implementation
+
+This module handles client contact functionality.
+"""
+
 from aiogram import F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from keyboards.client_buttons import get_contact_keyboard
+from keyboards.client_buttons import get_contact_keyboard, get_main_menu_keyboard
+from states.client_states import ContactStates
 from utils.role_system import get_role_router
 
 # Mock functions to replace utils and database imports
@@ -20,98 +27,86 @@ async def get_user_lang(user_id: int) -> str:
     """Mock get user language"""
     return 'uz'
 
-async def send_and_track(message: Message, text: str, reply_markup=None):
-    """Mock send and track"""
-    return await message.answer(text, reply_markup=reply_markup)
-
-async def edit_and_track(message: Message, text: str, reply_markup=None):
-    """Mock edit and track"""
-    return await message.edit_text(text, reply_markup=reply_markup)
-
-async def answer_and_cleanup(callback: CallbackQuery, text: str = None):
-    """Mock answer and cleanup"""
-    await callback.answer(text)
-
 def get_client_contact_router():
     router = get_role_router("client")
 
     @router.message(F.text.in_(["📞 Aloqa", "📞 Контакты"]))
     async def client_contact_handler(message: Message, state: FSMContext):
-        """Client contact handler with enhanced workflow tracking"""
+        """Client contact handler"""
         try:
-            # Rate limiting check
-            if not await rate_limiter.check_rate_limit(f"client_contact_{message.from_user.id}", 5, 60):
-                await message.answer("Iltimos, biroz kutib turing.")
-                return
-            
-            # Start enhanced time tracking for contact access
-            await time_tracker.start_role_tracking(
-                request_id=f"client_contact_{message.from_user.id}",
-                user_id=message.from_user.id,
-                role='client',
-                workflow_stage="contact_accessed"
-            )
-            
-            # Track workflow transition for contact access
-            await workflow_manager.track_workflow_transition(
-                request_id=f"client_contact_{message.from_user.id}",
-                from_role="main_menu",
-                to_role="contact",
-                user_id=message.from_user.id,
-                notes='Client accessing contact section'
-            )
-            
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user:
                 await message.answer("Foydalanuvchi topilmadi.")
                 return
             
             lang = user.get('language', 'uz')
+            
             contact_text = (
-                "Aloqa ma'lumotlari:"
+                "📞 <b>Aloqa ma'lumotlari - To'liq ma'lumot</b>\n\n"
+                "🏢 <b>Kompaniya:</b> Alfa Connect\n"
+                "📞 <b>Asosiy telefon:</b> +998901234567\n"
+                "📱 <b>Mobil raqam:</b> +998901234568\n"
+                "📧 <b>Email:</b> info@alfaconnect.uz\n"
+                "🌐 <b>Veb-sayt:</b> www.alfaconnect.uz\n\n"
+                "🏛️ <b>Ofis manzili:</b>\n"
+                "Toshkent shahri, Chorsu tumani,\n"
+                "Alfa Connect binosi, 1-qavat\n\n"
+                "⏰ <b>Ish vaqti:</b>\n"
+                "Dushanba - Shanba: 09:00 - 18:00\n"
+                "Yakshanba: 10:00 - 16:00\n\n"
+                "💬 <b>Telegram kanal:</b> @alfaconnect_uz\n"
+                "📱 <b>Telegram guruh:</b> @alfaconnect_support"
                 if lang == 'uz' else
-                "Контактная информация:"
+                "📞 <b>Контактная информация - Полная информация</b>\n\n"
+                "🏢 <b>Компания:</b> Alfa Connect\n"
+                "📞 <b>Основной телефон:</b> +998901234567\n"
+                "📱 <b>Мобильный номер:</b> +998901234568\n"
+                "📧 <b>Email:</b> info@alfaconnect.uz\n"
+                "🌐 <b>Веб-сайт:</b> www.alfaconnect.uz\n\n"
+                "🏛️ <b>Адрес офиса:</b>\n"
+                "Город Ташкент, Чорсу район,\n"
+                "Здание Alfa Connect, 1-й этаж\n\n"
+                "⏰ <b>Время работы:</b>\n"
+                "Понедельник - Суббота: 09:00 - 18:00\n"
+                "Воскресенье: 10:00 - 16:00\n\n"
+                "💬 <b>Telegram канал:</b> @alfaconnect_uz\n"
+                "📱 <b>Telegram группа:</b> @alfaconnect_support"
             )
             
-            # Use send_and_track for inline cleanup
-            sent_message = await send_and_track(
-                message=message,
+            sent_message = await message.answer(
                 text=contact_text,
-                reply_markup=get_contact_keyboard(lang)
+                reply_markup=get_contact_keyboard(lang),
+                parse_mode='HTML'
             )
             
-            await state.set_state(ContactStates.contact_menu)
-            
-            # Track application handling
-            await application_tracker.track_application_handling(
-                application_id=f"client_contact_{message.from_user.id}",
-                handler_id=message.from_user.id,
-                action="contact_accessed"
-            )
-            
-            # Update enhanced statistics
-            await statistics_manager.generate_role_based_statistics('client', 'daily')
-            
-            # Log contact access
-            await audit_logger.log_user_action(
-                user_id=message.from_user.id,
-                action="contact_accessed",
-                details={"language": lang}
-            )
-            
-            # End enhanced time tracking
-            await time_tracker.end_role_tracking(
-                request_id=f"client_contact_{message.from_user.id}",
-                user_id=message.from_user.id,
-                notes="Contact access completed successfully"
-            )
+            await state.set_state(ContactStates.contact_info)
             
         except Exception as e:
-            await audit_logger.log_system_event(
-                event_type="client_contact_handler_error",
-                description=f"Error in client_contact_handler: {str(e)}",
-                severity="error"
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.callback_query(F.data == "back_to_main_menu")
+    async def back_to_main_menu(callback: CallbackQuery, state: FSMContext):
+        """Back to main menu"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            
+            main_menu_text = (
+                "🏠 Bosh sahifa. Quyidagi menyudan kerakli bo'limni tanlang:"
+                if lang == 'uz' else
+                "🏠 Главная страница. Выберите нужный раздел из меню ниже:"
             )
-            await message.answer("Xatolik yuz berdi")
+            
+            await callback.message.edit_text(
+                text=main_menu_text,
+                reply_markup=get_main_menu_keyboard(lang)
+            )
+            
+            await state.clear()
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi")
 
     return router

@@ -24,18 +24,6 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
 # Using get_role_router from utils.role_system
 
 async def get_junior_manager_applications(junior_manager_id: int, limit: int = 50):
@@ -214,13 +202,6 @@ def get_junior_manager_inbox_viewing_router():
     async def handle_client_contact(callback: CallbackQuery, state: FSMContext):
         """Handle client contact actions"""
         try:
-            # Rate limiting
-            if not await rate_limiter.check_rate_limit(callback.from_user.id, "handle_client_contact"):
-                return
-            
-            # Time tracking start
-            await time_tracker.start_tracking(callback.from_user.id, "handle_client_contact")
-            
             user = await get_user_by_telegram_id(callback.from_user.id)
             if not user or user['role'] != 'junior_manager':
                 await callback.answer("Ruxsat yo'q", show_alert=True)
@@ -228,19 +209,6 @@ def get_junior_manager_inbox_viewing_router():
 
             lang = user.get('language', 'uz')
             action = callback.data.split("_")[-1]
-            
-            # Application tracking
-            await application_tracker.track_application_handling(callback.from_user.id, f"handle_client_contact_{action}")
-            
-            # Statistics tracking
-            await statistics_manager.track_client_contact(callback.from_user.id)
-            
-            # Audit logging
-            await audit_logger.log_user_action(
-                user_id=callback.from_user.id,
-                action="handle_client_contact",
-                details={"action": action, "role": user.get('role'), "language": lang}
-            )
             
             if action == "call":
                 await _handle_call_client(callback, state, lang)
@@ -249,31 +217,13 @@ def get_junior_manager_inbox_viewing_router():
             else:
                 await callback.answer("Noto'g'ri amal", show_alert=True)
             
-            # Time tracking end
-            await time_tracker.end_tracking(callback.from_user.id, "handle_client_contact")
-            
         except Exception as e:
-            logger.error(f"Error in handle_client_contact: {e}", exc_info=True)
-            
-            # System event logging
-            await audit_logger.log_system_event(
-                event_type="error",
-                details={"function": "handle_client_contact", "error": str(e), "user_id": callback.from_user.id}
-            )
-            
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("jm_page_"))
     async def handle_pagination(callback: CallbackQuery, state: FSMContext):
         """Handle pagination in inbox"""
         try:
-            # Rate limiting
-            if not await rate_limiter.check_rate_limit(callback.from_user.id, "handle_pagination"):
-                return
-            
-            # Time tracking start
-            await time_tracker.start_tracking(callback.from_user.id, "handle_pagination")
-            
             user = await get_user_by_telegram_id(callback.from_user.id)
             if not user or user['role'] != 'junior_manager':
                 await callback.answer("Ruxsat yo'q", show_alert=True)
@@ -282,47 +232,16 @@ def get_junior_manager_inbox_viewing_router():
             lang = user.get('language', 'uz')
             page = int(callback.data.split("_")[-1])
             
-            # Application tracking
-            await application_tracker.track_application_handling(callback.from_user.id, f"handle_pagination_page_{page}")
-            
-            # Statistics tracking
-            await statistics_manager.track_pagination(callback.from_user.id)
-            
-            # Audit logging
-            await audit_logger.log_user_action(
-                user_id=callback.from_user.id,
-                action="handle_pagination",
-                details={"page": page, "role": user.get('role'), "language": lang}
-            )
-            
             # Show applications for the selected page
             await _show_applications_page(callback, user['id'], lang, page)
             
-            # Time tracking end
-            await time_tracker.end_tracking(callback.from_user.id, "handle_pagination")
-            
         except Exception as e:
-            logger.error(f"Error in handle_pagination: {e}", exc_info=True)
-            
-            # System event logging
-            await audit_logger.log_system_event(
-                event_type="error",
-                details={"function": "handle_pagination", "error": str(e), "user_id": callback.from_user.id}
-            )
-            
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("jm_bulk_"))
     async def handle_bulk_actions(callback: CallbackQuery, state: FSMContext):
         """Handle bulk actions for applications"""
         try:
-            # Rate limiting
-            if not await rate_limiter.check_rate_limit(callback.from_user.id, "handle_bulk_actions"):
-                return
-            
-            # Time tracking start
-            await time_tracker.start_tracking(callback.from_user.id, "handle_bulk_actions")
-            
             user = await get_user_by_telegram_id(callback.from_user.id)
             if not user or user['role'] != 'junior_manager':
                 await callback.answer("Ruxsat yo'q", show_alert=True)
@@ -331,19 +250,6 @@ def get_junior_manager_inbox_viewing_router():
             lang = user.get('language', 'uz')
             action = callback.data.split("_")[-1]
             
-            # Application tracking
-            await application_tracker.track_application_handling(callback.from_user.id, f"handle_bulk_actions_{action}")
-            
-            # Statistics tracking
-            await statistics_manager.track_bulk_actions(callback.from_user.id)
-            
-            # Audit logging
-            await audit_logger.log_user_action(
-                user_id=callback.from_user.id,
-                action="handle_bulk_actions",
-                details={"action": action, "role": user.get('role'), "language": lang}
-            )
-            
             if action == "call":
                 await _handle_bulk_call(callback, user['id'], lang)
             elif action == "forward":
@@ -351,18 +257,7 @@ def get_junior_manager_inbox_viewing_router():
             else:
                 await callback.answer("Noto'g'ri amal", show_alert=True)
             
-            # Time tracking end
-            await time_tracker.end_tracking(callback.from_user.id, "handle_bulk_actions")
-            
         except Exception as e:
-            logger.error(f"Error in handle_bulk_actions: {e}", exc_info=True)
-            
-            # System event logging
-            await audit_logger.log_system_event(
-                event_type="error",
-                details={"function": "handle_bulk_actions", "error": str(e), "user_id": callback.from_user.id}
-            )
-            
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     async def junior_manager_inbox(event, state: FSMContext, page: int = 1):
@@ -385,7 +280,7 @@ def get_junior_manager_inbox_viewing_router():
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'junior_manager':
                 error_text = "Sizda ruxsat yo'q."
-                await send_and_track(send_method(error_text), user_id)
+                await send_method(error_text)
                 return
 
             lang = user.get('language', 'uz')
@@ -403,10 +298,7 @@ def get_junior_manager_inbox_viewing_router():
             keyboard = _create_inbox_keyboard(lang)
             
             # Send message
-            await send_and_track(
-                send_method(text, reply_markup=keyboard),
-                user_id
-            )
+            await send_method(text, reply_markup=keyboard)
             
         except Exception as e:
             print(f"Error in junior_manager_inbox: {e}")
@@ -422,12 +314,9 @@ def get_junior_manager_inbox_viewing_router():
                 text = "📋 Hozircha arizalar yo'q"
                 
                 # Create back keyboard
-                await edit_and_track(
-                    callback.message.edit_text(
-                        text,
-                        reply_markup=get_back_to_inbox_keyboard(lang=lang)
-                    ),
-                    callback.from_user.id
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=get_back_to_inbox_keyboard(lang=lang)
                 )
             
         except Exception as e:
@@ -445,12 +334,9 @@ def get_junior_manager_inbox_viewing_router():
                 text = "⏳ Kutilayotgan arizalar yo'q"
                 
                 # Create back keyboard
-                await edit_and_track(
-                    callback.message.edit_text(
-                        text,
-                        reply_markup=get_back_to_inbox_keyboard(lang=lang)
-                    ),
-                    callback.from_user.id
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=get_back_to_inbox_keyboard(lang=lang)
                 )
             
         except Exception as e:
@@ -468,12 +354,9 @@ def get_junior_manager_inbox_viewing_router():
                 text = "🔄 Jarayondagi arizalar yo'q"
                 
                 # Create back keyboard
-                await edit_and_track(
-                    callback.message.edit_text(
-                        text,
-                        reply_markup=get_back_to_inbox_keyboard(lang=lang)
-                    ),
-                    callback.from_user.id
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=get_back_to_inbox_keyboard(lang=lang)
                 )
             
         except Exception as e:
@@ -496,12 +379,9 @@ def get_junior_manager_inbox_viewing_router():
                 text = "📋 Arizalar yo'q"
                 
                 # Create back keyboard
-                await edit_and_track(
-                    callback.message.edit_text(
-                        text,
-                        reply_markup=get_back_to_inbox_keyboard(lang=lang)
-                    ),
-                    callback.from_user.id
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=get_back_to_inbox_keyboard(lang=lang)
                 )
                 return
             
@@ -547,17 +427,14 @@ def get_junior_manager_inbox_viewing_router():
             # Create keyboard with pagination
             keyboard = _create_applications_keyboard(page_applications, page, total_pages, lang)
             
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=keyboard,
-                    parse_mode="Markdown"
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
             )
             
         except Exception as e:
-            logger.error(f"Error in _show_applications_page: {e}", exc_info=True)
+            print(f"Error in _show_applications_page: {e}")
 
     async def _show_application_details(callback: CallbackQuery, app_details: Dict, lang: str):
         """Show application details and contact options"""
@@ -590,16 +467,13 @@ def get_junior_manager_inbox_viewing_router():
             # Create contact keyboard
             keyboard = _create_contact_keyboard(app_details['id'], lang)
             
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=keyboard
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=keyboard
             )
             
         except Exception as e:
-            logger.error(f"Error in _show_application_details: {e}", exc_info=True)
+            print(f"Error in _show_application_details: {e}")
 
     async def _handle_call_client(callback: CallbackQuery, state: FSMContext, lang: str):
         """Handle calling client"""
@@ -638,18 +512,15 @@ def get_junior_manager_inbox_viewing_router():
             # Create keyboard with details input option
             keyboard = _create_details_input_keyboard(app_id, lang)
             
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=keyboard
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=keyboard
             )
             
             await callback.answer("📞 Qo'ng'iroq qiling", show_alert=True)
             
         except Exception as e:
-            logger.error(f"Error in _handle_call_client: {e}", exc_info=True)
+            print(f"Error in _handle_call_client: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     async def _handle_forward_to_controller(callback: CallbackQuery, state: FSMContext, lang: str):
@@ -684,18 +555,15 @@ def get_junior_manager_inbox_viewing_router():
             
             # Create back to inbox keyboard
             from keyboards.junior_manager_buttons import get_back_to_inbox_keyboard
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=get_back_to_inbox_keyboard(lang=lang)
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=get_back_to_inbox_keyboard(lang=lang)
             )
             
             await callback.answer("✅ Yuborildi", show_alert=True)
             
         except Exception as e:
-            logger.error(f"Error in _handle_forward_to_controller: {e}", exc_info=True)
+            print(f"Error in _handle_forward_to_controller: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     async def _refresh_inbox(callback: CallbackQuery, junior_manager_id: int, lang: str):
@@ -704,7 +572,7 @@ def get_junior_manager_inbox_viewing_router():
             await junior_manager_inbox(callback, None)
             await callback.answer("✅ Yangilandi" if lang == 'uz' else "✅ Обновлено")
         except Exception as e:
-            logger.error(f"Error in _refresh_inbox: {e}", exc_info=True)
+            print(f"Error in _refresh_inbox: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     async def _handle_bulk_call(callback: CallbackQuery, junior_manager_id: int, lang: str):
@@ -748,13 +616,10 @@ def get_junior_manager_inbox_viewing_router():
             
             # Create back keyboard
             from keyboards.junior_manager_buttons import get_back_to_inbox_keyboard
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=get_back_to_inbox_keyboard(lang=lang),
-                    parse_mode="Markdown"
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=get_back_to_inbox_keyboard(lang=lang),
+                parse_mode="Markdown"
             )
             
             await callback.answer(
@@ -763,7 +628,7 @@ def get_junior_manager_inbox_viewing_router():
             )
             
         except Exception as e:
-            logger.error(f"Error in _handle_bulk_call: {e}", exc_info=True)
+            print(f"Error in _handle_bulk_call: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     async def _handle_bulk_forward(callback: CallbackQuery, junior_manager_id: int, lang: str):
@@ -801,13 +666,10 @@ def get_junior_manager_inbox_viewing_router():
             
             # Create back keyboard
             from keyboards.junior_manager_buttons import get_back_to_inbox_keyboard
-            await edit_and_track(
-                callback.message.edit_text(
-                    text,
-                    reply_markup=get_back_to_inbox_keyboard(lang=lang),
-                    parse_mode="Markdown"
-                ),
-                callback.from_user.id
+            await callback.message.edit_text(
+                text,
+                reply_markup=get_back_to_inbox_keyboard(lang=lang),
+                parse_mode="Markdown"
             )
             
             await callback.answer(
@@ -816,7 +678,7 @@ def get_junior_manager_inbox_viewing_router():
             )
             
         except Exception as e:
-            logger.error(f"Error in _handle_bulk_forward: {e}", exc_info=True)
+            print(f"Error in _handle_bulk_forward: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     def _build_inbox_text(workload: Dict, recent_activity: List, lang: str) -> str:

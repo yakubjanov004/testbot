@@ -28,20 +28,6 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup user inline messages"""
-    print(f"Mock: Cleaning up inline messages for user {user_id}")
-
-# Mock inline message manager
-class MockInlineMessageManager:
-    """Mock inline message manager"""
-    async def track(self, user_id: int, message_id: int):
-        """Mock track message"""
-        print(f"Mock: Tracking message {message_id} for user {user_id}")
-
-# Global mock instance
-inline_message_manager = MockInlineMessageManager()
-
 def get_manager_main_menu_router():
     """Get manager main menu router"""
     from aiogram import Router
@@ -65,7 +51,6 @@ def get_manager_main_menu_router():
             
             await state.update_data(last_message_id=sent_message.message_id)
             await state.set_state(ManagerMainMenuStates.main_menu)
-            await inline_message_manager.track(message.from_user.id, sent_message.message_id)
             
         except Exception as e:
             print(f"Error in manager_main_menu_handler: {str(e)}")

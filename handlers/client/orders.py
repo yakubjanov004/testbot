@@ -1,20 +1,15 @@
 """
-Client Orders Handler - Complete Implementation
+Client Orders Handler - Simplified Implementation
 
 This module handles viewing client orders with pagination.
 """
 
-import logging
 from aiogram import F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
 from datetime import datetime
 from states.client_states import OrderStates
 from utils.role_system import get_role_router
-
-# Logger sozlash
-logger = logging.getLogger(__name__)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -135,7 +130,6 @@ def get_orders_router():
             await show_order_details(message, orders_data['orders'][0], orders_data, 0)
             
         except Exception as e:
-            logger.error(f"Error in show_my_orders - User ID: {message.from_user.id}, Error: {str(e)}", exc_info=True)
             await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data.startswith("order_"))
@@ -156,7 +150,6 @@ def get_orders_router():
                 await show_previous_order(callback, current_index, page)
             
         except Exception as e:
-            logger.error(f"Error in handle_order_navigation - User ID: {callback.from_user.id}, Error: {str(e)}", exc_info=True)
             await callback.answer("Xatolik yuz berdi")
 
     async def show_order_details(message_or_callback, order, orders_data, index):
@@ -197,34 +190,25 @@ def get_orders_router():
                 f"👨‍🔧 <b>Texnik:</b> Ahmad Karimov\n"
                 f"⏰ <b>Taxminiy vaqt:</b> 2-3 kun\n"
                 f"⚡ <b>Ustuvorlik:</b> Normal\n\n"
-                f"📞 <b>Aloqa:</b> +998901234567\n\n"
-                f"📄 {index + 1} / {len(orders_data['orders'])} (Sahifa {orders_data['page']} / {orders_data['total_pages']})"
+                f"📊 <b>Buyurtma #{index + 1} / {len(orders_data['orders'])}</b>"
             )
             
             # Create navigation keyboard
-            keyboard = get_orders_navigation_keyboard(index, orders_data['page'], orders_data['total_pages'], len(orders_data['orders']), order['id'])
+            keyboard = get_orders_navigation_keyboard(
+                index, orders_data['page'], orders_data['total_pages'], 
+                len(orders_data['orders']), order['id']
+            )
             
-            if hasattr(message_or_callback, "message"):
-                # Callback uchun
-                await message_or_callback.message.edit_text(
-                    text,
-                    parse_mode='HTML',
-                    reply_markup=keyboard
-                )
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
             else:
-                # Message uchun
-                await message_or_callback.answer(
-                    text,
-                    parse_mode='HTML',
-                    reply_markup=keyboard
-                )
+                await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
                 
         except Exception as e:
-            logger.error(f"Error in show_order_details - Error: {str(e)}", exc_info=True)
-            if hasattr(message_or_callback, "message"):
-                await message_or_callback.message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
-            else:
+            if isinstance(message_or_callback, Message):
                 await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+            else:
+                await message_or_callback.answer("Xatolik yuz berdi")
 
     async def show_next_order(callback: CallbackQuery, current_index: int, current_page: int):
         """Show next order"""
@@ -239,10 +223,9 @@ def get_orders_router():
                 next_page_data = await get_user_orders(callback.from_user.id, page=current_page + 1)
                 await show_order_details(callback, next_page_data['orders'][0], next_page_data, 0)
             else:
-                await callback.answer("Bu oxirgi buyurtma", show_alert=True)
+                await callback.answer("Bu oxirgi buyurtma")
                 
         except Exception as e:
-            logger.error(f"Error in show_next_order - User ID: {callback.from_user.id}, Error: {str(e)}", exc_info=True)
             await callback.answer("Xatolik yuz berdi")
 
     async def show_previous_order(callback: CallbackQuery, current_index: int, current_page: int):
@@ -258,34 +241,36 @@ def get_orders_router():
                 last_index = len(prev_page_data['orders']) - 1
                 await show_order_details(callback, prev_page_data['orders'][last_index], prev_page_data, last_index)
             else:
-                await callback.answer("Bu birinchi buyurtma", show_alert=True)
+                await callback.answer("Bu birinchi buyurtma")
                 
         except Exception as e:
-            logger.error(f"Error in show_previous_order - User ID: {callback.from_user.id}, Error: {str(e)}", exc_info=True)
             await callback.answer("Xatolik yuz berdi")
-
-
-
-
-
-    return router
 
 def get_orders_navigation_keyboard(current_index: int, current_page: int, total_pages: int, orders_on_page: int, order_id: int):
     """Create navigation keyboard for orders"""
     keyboard = []
     
     # Navigation row
-    nav_row = []
+    nav_buttons = []
     
     # Previous button
     if current_index > 0 or current_page > 1:
-        nav_row.append(InlineKeyboardButton(text="⬅️ Oldingi", callback_data=f"order_prev_{current_index}_{current_page}"))
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data=f"order_prev_{current_index}_{current_page}"
+        ))
     
     # Next button
     if current_index < orders_on_page - 1 or current_page < total_pages:
-        nav_row.append(InlineKeyboardButton(text="Keyingi ➡️", callback_data=f"order_next_{current_index}_{current_page}"))
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data=f"order_next_{current_index}_{current_page}"
+        ))
     
-    if nav_row:
-        keyboard.append(nav_row)
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -36,10 +36,6 @@ async def get_role_router(role: str):
     from aiogram import Router
     return Router()
 
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
 async def get_supervisor_notifications(supervisor_id: int):
     """Mock supervisor notifications"""
     return [
@@ -83,7 +79,6 @@ def get_call_center_supervisor_notification_management_router():
     async def handle_send_announcement(message: Message, state: FSMContext):
         """Handle sending announcements"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'call_center_supervisor':
                 return
@@ -104,7 +99,6 @@ def get_call_center_supervisor_notification_management_router():
     async def handle_team_message(message: Message, state: FSMContext):
         """Handle sending team messages"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'call_center_supervisor':
                 return
@@ -125,7 +119,6 @@ def get_call_center_supervisor_notification_management_router():
     async def handle_individual_message(message: Message, state: FSMContext):
         """Handle sending individual messages"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'call_center_supervisor':
                 return
@@ -168,7 +161,6 @@ def get_call_center_supervisor_notification_management_router():
     async def handle_urgent_alert(message: Message, state: FSMContext):
         """Handle sending urgent alerts"""
         try:
-            await cleanup_user_inline_messages(message.from_user.id)
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'call_center_supervisor':
                 return

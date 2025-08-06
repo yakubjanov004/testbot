@@ -147,7 +147,6 @@ def get_applications_callbacks_router():
             
             keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
             
-            # Use edit_and_track for inline cleanup
             await callback.message.edit_text(
                 text=text,
                 reply_markup=keyboard,
@@ -191,7 +190,6 @@ def get_applications_callbacks_router():
                 ]
                 keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
                 
-                # Use edit_and_track for inline cleanup
                 await callback.message.edit_text(
                     text=text,
                     reply_markup=keyboard,
@@ -347,7 +345,6 @@ def get_applications_callbacks_router():
             await state.update_data(current_application_index=current_index)
             
             try:
-                # Use edit_and_track for inline cleanup
                 await callback.message.edit_text(
                     text=text,
                     reply_markup=keyboard,
@@ -357,7 +354,6 @@ def get_applications_callbacks_router():
                 if "message is not modified" in str(e):
                     await callback.answer()
                 else:
-                    # Use edit_and_track for inline cleanup
                     await callback.message.edit_text(
                         text=text,
                         reply_markup=keyboard,
@@ -392,7 +388,6 @@ def get_applications_callbacks_router():
             ]
             keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
             
-            # Use edit_and_track for inline cleanup
             await callback.message.edit_text(
                 text=text,
                 reply_markup=keyboard,

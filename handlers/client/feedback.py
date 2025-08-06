@@ -1,3 +1,9 @@
+"""
+Client Feedback Handler - Simplified Implementation
+
+This module handles client feedback functionality.
+"""
+
 from aiogram import F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
@@ -22,47 +28,13 @@ async def get_user_lang(user_id: int) -> str:
     """Mock get user language"""
     return 'uz'
 
-async def send_and_track(message: Message, text: str, reply_markup=None):
-    """Mock send and track"""
-    return await message.answer(text, reply_markup=reply_markup)
-
-async def edit_and_track(message, text: str, reply_markup=None):
-    """Mock edit and track"""
-    return await message.edit_text(text, reply_markup=reply_markup)
-
-async def answer_and_cleanup(callback: CallbackQuery, text: str = None):
-    """Mock answer and cleanup"""
-    await callback.answer(text)
-
 def get_client_feedback_router():
     router = get_role_router("client")
 
     @router.message(F.text.in_(["📝 Fikr-mulohaza", "📝 Обратная связь"]))
     async def client_feedback_handler(message: Message, state: FSMContext):
-        """Client feedback handler with enhanced workflow tracking"""
+        """Client feedback handler"""
         try:
-            # Rate limiting check
-            if not await rate_limiter.check_rate_limit(f"client_feedback_{message.from_user.id}", 5, 60):
-                await message.answer("Iltimos, biroz kutib turing.")
-                return
-            
-            # Start enhanced time tracking for feedback access
-            await time_tracker.start_role_tracking(
-                request_id=f"client_feedback_{message.from_user.id}",
-                user_id=message.from_user.id,
-                role='client',
-                workflow_stage="feedback_accessed"
-            )
-            
-            # Track workflow transition for feedback access
-            await workflow_manager.track_workflow_transition(
-                request_id=f"client_feedback_{message.from_user.id}",
-                from_role="main_menu",
-                to_role="feedback",
-                user_id=message.from_user.id,
-                notes='Client accessing feedback section'
-            )
-            
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user:
                 await message.answer("Foydalanuvchi topilmadi.")
@@ -75,101 +47,66 @@ def get_client_feedback_router():
                 "Введите текст для отправки обратной связи:"
             )
             
-            # Use send_and_track for inline cleanup
-            sent_message = await send_and_track(
-                message=message,
+            sent_message = await message.answer(
                 text=feedback_text,
                 reply_markup=get_feedback_keyboard(lang)
             )
             
             await state.set_state(FeedbackStates.waiting_for_feedback)
             
-            # Track application handling
-            await application_tracker.track_application_handling(
-                application_id=f"client_feedback_{message.from_user.id}",
-                handler_id=message.from_user.id,
-                action="feedback_accessed"
-            )
-            
-            # Update enhanced statistics
-            await statistics_manager.generate_role_based_statistics('client', 'daily')
-            
-            # Log feedback access
-            await audit_logger.log_user_action(
-                user_id=message.from_user.id,
-                action="feedback_accessed",
-                details={"language": lang}
-            )
-            
-            # End enhanced time tracking
-            await time_tracker.end_role_tracking(
-                request_id=f"client_feedback_{message.from_user.id}",
-                user_id=message.from_user.id,
-                notes="Feedback access completed successfully"
-            )
-            
         except Exception as e:
-            await audit_logger.log_system_event(
-                event_type="client_feedback_handler_error",
-                description=f"Error in client_feedback_handler: {str(e)}",
-                severity="error"
-            )
-            await message.answer("Xatolik yuz berdi")
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.message(StateFilter(FeedbackStates.waiting_for_feedback))
     async def process_feedback(message: Message, state: FSMContext):
         """Process feedback message"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
-            if not user:
-                await message.answer("Foydalanuvchi topilmadi.")
-                return
-            
             lang = user.get('language', 'uz')
-            feedback_text = message.text.strip()
             
-            if len(feedback_text) < 10:
-                error_text = (
-                    "Fikr-mulohaza juda qisqa. Kamida 10 ta belgi kiriting."
-                    if lang == 'uz' else
-                    "Обратная связь слишком короткая. Введите минимум 10 символов."
-                )
-                await message.answer(error_text)
-                return
-            
-            # Track feedback submission
-            await application_tracker.track_application_handling(
-                application_id=f"client_feedback_{message.from_user.id}",
-                handler_id=message.from_user.id,
-                action="feedback_submitted"
-            )
-            
-            # Log feedback submission
-            await audit_logger.log_user_action(
-                user_id=message.from_user.id,
-                action="feedback_submitted",
-                details={"feedback_length": len(feedback_text), "language": lang}
-            )
+            # Save feedback (mock)
+            feedback_text = message.text
+            user_name = message.from_user.full_name or message.from_user.first_name
             
             success_text = (
-                "✅ Fikr-mulohazangiz qabul qilindi!\n\n"
-                "Rahmat, fikr-mulohazangiz uchun."
-            ) if lang == 'uz' else (
-                "✅ Ваша обратная связь принята!\n\n"
-                "Спасибо за вашу обратную связь."
+                f"✅ Fikr-mulohaza muvaffaqiyatli yuborildi!\n\n"
+                f"📝 Sizning fikringiz: {feedback_text[:100]}{'...' if len(feedback_text) > 100 else ''}\n\n"
+                f"Rahmat, {user_name}! Sizning fikringiz biz uchun muhim."
+                if lang == 'uz' else
+                f"✅ Обратная связь успешно отправлена!\n\n"
+                f"📝 Ваш отзыв: {feedback_text[:100]}{'...' if len(feedback_text) > 100 else ''}\n\n"
+                f"Спасибо, {user_name}! Ваше мнение важно для нас."
             )
             
-            await message.answer(success_text)
+            await message.answer(success_text, reply_markup=get_main_menu_keyboard(lang))
             await state.clear()
             
         except Exception as e:
-            await audit_logger.log_system_event(
-                event_type="process_feedback_error",
-                description=f"Error in process_feedback: {str(e)}",
-                severity="error"
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.callback_query(F.data == "cancel_feedback")
+    async def cancel_feedback(callback: CallbackQuery, state: FSMContext):
+        """Cancel feedback"""
+        try:
+            await callback.answer()
+            
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            
+            cancel_text = (
+                "❌ Fikr-mulohaza bekor qilindi."
+                if lang == 'uz' else
+                "❌ Обратная связь отменена."
             )
-            lang = await get_user_lang(message.from_user.id)
-            error_text = "Xatolik yuz berdi" if lang == 'uz' else "Произошла ошибка"
-            await message.answer(error_text)
+            
+            await callback.message.edit_text(
+                text=cancel_text,
+                reply_markup=get_main_menu_keyboard(lang)
+            )
+            
+            await state.clear()
+            
+        except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi")
 
     return router

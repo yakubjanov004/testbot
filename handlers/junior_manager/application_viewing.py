@@ -4,7 +4,6 @@ Junior Manager Application Viewing - Complete Implementation
 This module handles application viewing for junior managers.
 """
 
-from loader import logger
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
@@ -29,18 +28,6 @@ async def get_user_by_telegram_id(telegram_id: int):
 async def get_user_lang(telegram_id: int):
     """Mock user language"""
     return 'uz'
-
-async def cleanup_user_inline_messages(user_id: int):
-    """Mock cleanup function"""
-    pass
-
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
 
 # Using get_role_router from utils.role_system
 
@@ -165,12 +152,9 @@ def get_junior_manager_application_viewing_router():
             if applications:
                 text = f"📋 Sizning arizalaringiz ({len(applications)} ta):\n\n"
                 
-                await edit_and_track(
-                    message.answer(
-                        text,
-                        reply_markup=get_application_list_keyboard(applications, lang=lang)
-                    ),
-                    message.from_user.id
+                await message.answer(
+                    text,
+                    reply_markup=get_application_list_keyboard(applications, lang=lang)
                 )
             else:
                 text = """📋 Hozircha arizalar yo'q.
@@ -180,7 +164,6 @@ def get_junior_manager_application_viewing_router():
                 await message.answer(text)
             
         except Exception as e:
-            logger.error(f"Error in view_applications - User ID: {message.from_user.id}, Error: {str(e)}", exc_info=True)
             print(f"Error in view_applications: {e}")
             await message.answer("Xatolik yuz berdi")
 
@@ -235,7 +218,6 @@ def get_junior_manager_application_viewing_router():
                 await callback.answer(text, show_alert=True)
             
         except Exception as e:
-            logger.error(f"Error in handle_application_view - User ID: {callback.from_user.id}, Error: {str(e)}", exc_info=True)
             print(f"Error in handle_application_view: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
@@ -281,7 +263,6 @@ def get_junior_manager_application_viewing_router():
             await callback.answer()
             
         except Exception as e:
-            logger.error(f"Error cancelling application - User ID: {callback.from_user.id}, Error: {str(e)}", exc_info=True)
             print(f"Error cancelling application: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 

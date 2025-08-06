@@ -95,14 +95,6 @@ async def get_role_router(role: str):
     from aiogram import Router
     return Router()
 
-async def send_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock send and track"""
-    return await message_func(text, **kwargs)
-
-async def edit_and_track(message_func, text: str, user_id: int, **kwargs):
-    """Mock edit and track"""
-    return await message_func(text, **kwargs)
-
 # Mock keyboards
 def reports_menu(lang: str):
     """Mock reports menu keyboard"""
@@ -150,11 +142,7 @@ def get_controller_reports_router():
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -172,10 +160,8 @@ Quyidagi hisobotlarni olishingiz mumkin:
 
 Kerakli hisobotni tanlang:"""
             
-            await send_and_track(
-                message.answer,
+            await message.answer(
                 text,
-                user_id,
                 reply_markup=reports_menu(lang),
                 parse_mode='HTML'
             )
@@ -183,11 +169,7 @@ Kerakli hisobotni tanlang:"""
         except Exception as e:
             print(f"Error in reports menu handler: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["📈 Tizim hisoboti"]))
     async def system_report(message: Message, state: FSMContext):
@@ -197,11 +179,7 @@ Kerakli hisobotni tanlang:"""
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -229,30 +207,20 @@ Kerakli hisobotni tanlang:"""
 📊 <b>Samaradorlik:</b>
 • Bajarish foizi: {(stats.get('completed_orders', 0) / max(stats.get('total_orders', 1), 1) * 100):.1f}%"""
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    user_id,
                     parse_mode='HTML'
                 )
                 
             except Exception as e:
                 print(f"Error in system report: {e}")
                 error_text = "Hisobotni olishda xatolik"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
+                await message.answer(error_text)
                 
         except Exception as e:
             print(f"Error in system report: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["👨‍🔧 Texniklar hisoboti"]))
     async def technicians_report(message: Message, state: FSMContext):
@@ -262,11 +230,7 @@ Kerakli hisobotni tanlang:"""
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -326,30 +290,20 @@ Kerakli hisobotni tanlang:"""
                 for i, perf in enumerate(performance_data[:5], 1):
                     text += f"\n{i}. {perf['name']} - {perf['completed']} vazifa (⭐{perf['rating']:.1f})"
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    user_id,
                     parse_mode='HTML'
                 )
                 
             except Exception as e:
                 print(f"Error in technicians report: {e}")
                 error_text = "Hisobotni olishda xatolik"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
+                await message.answer(error_text)
                 
         except Exception as e:
             print(f"Error in technicians report: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["⭐ Sifat hisoboti"]))
     async def quality_report(message: Message, state: FSMContext):
@@ -359,11 +313,7 @@ Kerakli hisobotni tanlang:"""
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -392,30 +342,20 @@ Kerakli hisobotni tanlang:"""
                     stars = "⭐" * rating
                     text += f"\n{stars} {count} ({percentage:.1f}%)"
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    user_id,
                     parse_mode='HTML'
                 )
                 
             except Exception as e:
                 print(f"Error in quality report: {e}")
                 error_text = "Hisobotni olishda xatolik"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
+                await message.answer(error_text)
                 
         except Exception as e:
             print(f"Error in quality report: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["📅 Kunlik hisobot"]))
     async def daily_report(message: Message, state: FSMContext):
@@ -425,11 +365,7 @@ Kerakli hisobotni tanlang:"""
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -458,30 +394,20 @@ Kerakli hisobotni tanlang:"""
 
 ⏰ <b>Hisobot vaqti:</b> {datetime.now().strftime('%H:%M')}"""
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    user_id,
                     parse_mode='HTML'
                 )
                 
             except Exception as e:
                 print(f"Error in daily report: {e}")
                 error_text = "Hisobotni olishda xatolik"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
+                await message.answer(error_text)
                 
         except Exception as e:
             print(f"Error in daily report: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     @router.message(F.text.in_(["📊 Haftalik hisobot"]))
     async def weekly_report(message: Message, state: FSMContext):
@@ -491,11 +417,7 @@ Kerakli hisobotni tanlang:"""
         try:
             user = await get_user_by_telegram_id(user_id)
             if not user or user['role'] != 'controller':
-                await send_and_track(
-                    message.answer,
-                    "Sizda controller huquqi yo'q.",
-                    user_id
-                )
+                await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
@@ -525,29 +447,19 @@ Kerakli hisobotni tanlang:"""
 
 ⏰ <b>Hisobot vaqti:</b> {datetime.now().strftime('%H:%M')}"""
                 
-                await send_and_track(
-                    message.answer,
+                await message.answer(
                     text,
-                    user_id,
                     parse_mode='HTML'
                 )
                 
             except Exception as e:
                 print(f"Error in weekly report: {e}")
                 error_text = "Hisobotni olishda xatolik"
-                await send_and_track(
-                    message.answer,
-                    error_text,
-                    user_id
-                )
+                await message.answer(error_text)
                 
         except Exception as e:
             print(f"Error in weekly report: {e}")
             error_text = "Xatolik yuz berdi"
-            await send_and_track(
-                message.answer,
-                error_text,
-                user_id
-            )
+            await message.answer(error_text)
 
     return router
