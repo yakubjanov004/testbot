@@ -287,29 +287,52 @@ def get_manager_statistics_router():
         """Handle export requests"""
         try:
             await callback.answer()
+            
+            from utils.export_utils import create_export_file
+            from aiogram.types import BufferedInputFile
+            
             export_type = callback.data.replace("mgr_export_", "")
+            
+            # Map export types to available types
+            export_mapping = {
+                "menu": "statistics",
+                "history": "orders", 
+                "team_stats": "statistics",
+                "daily": "statistics",
+                "employees": "users",
+                "requests": "orders",
+                "full_history": "orders"
+            }
+            
+            actual_export_type = export_mapping.get(export_type, "statistics")
             
             await callback.message.answer(
                 "📊 Export tayyorlanmoqda..."
             )
             
-            # Mock export success
-            success = True
+            # Create export file
+            file_content, filename = create_export_file(actual_export_type, "csv")
             
-            if success:
-                await callback.message.answer(
-                    "✅ Export tayyor!\n\n"
-                    f"📄 Fayl turi: {export_type}\n"
-                    "📅 Sana: " + date.today().strftime('%d.%m.%Y') + "\n"
-                    "📊 Ma'lumotlar soni: 150"
-                )
-            else:
-                await callback.message.answer(
-                    "❌ Export qilishda xatolik!"
-                )
+            # Send success message
+            await callback.message.answer(
+                "✅ Export tayyor!\n\n"
+                f"📄 Fayl turi: {actual_export_type}\n"
+                f"📁 Fayl: {filename}\n"
+                "📅 Sana: " + date.today().strftime('%d.%m.%Y') + "\n"
+                "📊 Ma'lumotlar soni: 150"
+            )
+            
+            # Send the actual file
+            await callback.message.answer_document(
+                BufferedInputFile(
+                    file_content.read(),
+                    filename=filename
+                ),
+                caption=f"📤 {actual_export_type.title()} export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            )
                 
         except Exception as e:
-            await callback.message.answer("Xatolik yuz berdi!")
+            await callback.message.answer("❌ Export xatoligi yuz berdi!")
     
     @router.callback_query(F.data == "mgr_stats_back")
     async def manager_stats_back(callback: CallbackQuery):

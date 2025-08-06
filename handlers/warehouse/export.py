@@ -121,6 +121,38 @@ def get_warehouse_export_router():
         except Exception as e:
             await callback.message.answer("❌ Export xatoligi yuz berdi")
 
+    @router.callback_query(F.data == "warehouse_export_stats")
+    async def handle_warehouse_export_stats(callback: CallbackQuery, state: FSMContext):
+        """Handle warehouse export stats button"""
+        try:
+            await callback.answer()
+            
+            from utils.export_utils import create_export_file
+            from aiogram.types import BufferedInputFile
+            
+            await callback.message.answer("📊 Statistika export tayyorlanmoqda...")
+            
+            # Create export file
+            file_content, filename = create_export_file("statistics", "csv")
+            
+            # Send success message
+            await callback.message.answer(
+                "✅ Statistika export tayyor!\n"
+                f"📁 Fayl: {filename}"
+            )
+            
+            # Send the actual file
+            await callback.message.answer_document(
+                BufferedInputFile(
+                    file_content.read(),
+                    filename=filename
+                ),
+                caption=f"📤 Statistika export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            )
+            
+        except Exception as e:
+            await callback.message.answer("❌ Export xatoligi yuz berdi")
+
     @router.callback_query(F.data == "export_back")
     async def handle_export_back(callback: CallbackQuery, state: FSMContext):
         """Handle export back button"""
