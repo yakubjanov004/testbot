@@ -606,9 +606,200 @@ def get_technician_inbox_router():
                 current_application_data=application
             )
             
-            # Show warehouse input prompt
+            # Get warehouse items
+            warehouse_items = await get_warehouse_items()
+            
+            # Create selection keyboard
+            buttons = []
+            for item in warehouse_items:
+                buttons.append([InlineKeyboardButton(
+                    text=f"📦 {item['name']} - {item['price']} ({item['quantity']} dona)",
+                    callback_data=f"tech_select_item_{item['id']}"
+                )])
+            
+            # Add custom input button
+            buttons.append([InlineKeyboardButton(
+                text="✏️ Boshqa mahsulot kiritish",
+                callback_data="tech_custom_warehouse_item"
+            )])
+            
+            # Add cancel button
+            buttons.append([InlineKeyboardButton(
+                text="❌ Bekor qilish",
+                callback_data="tech_back_to_application"
+            )])
+            
+            text = (
+                f"📦 <b>Ombor jihozlari</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📍 <b>Manzil:</b> {application['location']}\n\n"
+                f"Kerakli jihozlarni tanlang yoki boshqa mahsulot kiritish:"
+            )
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+        except Exception as e:
+            print(f"Error in warehouse_yes_handler: {e}")
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data.startswith("tech_select_item_"))
+    async def select_warehouse_item_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle warehouse item selection"""
+        try:
+            await callback.answer()
+            
+            item_id = int(callback.data.replace("tech_select_item_", ""))
+            
+            # Get application data from state
+            data = await state.get_data()
+            application = data.get('current_application_data')
+            
+            if not application:
+                await callback.answer("Ariza ma'lumotlari topilmadi")
+                return
+            
+            # Get warehouse items
+            warehouse_items = await get_warehouse_items()
+            selected_item = next((item for item in warehouse_items if item['id'] == item_id), None)
+            
+            if not selected_item:
+                await callback.answer("Jihoz topilmadi")
+                return
+            
+            # Store selected item info in state
+            await state.update_data(
+                selected_warehouse_item=selected_item,
+                waiting_for_quantity=True
+            )
+            
+            # Show quantity input prompt
             input_text = (
-                f"📦 <b>Ombor mahsulotini kiriting</b>\n\n"
+                f"📦 <b>Miqdorni kiriting</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📍 <b>Manzil:</b> {application['location']}\n"
+                f"📦 <b>Tanlangan mahsulot:</b> {selected_item['name']}\n"
+                f"💰 <b>Narx:</b> {selected_item['price']}\n"
+                f"📊 <b>Mavjud:</b> {selected_item['quantity']} dona\n\n"
+                f"📝 Iltimos, olinadigan miqdorni kiriting:\n"
+                f"• Faqat raqam (masalan: 2)\n"
+                f"• Yoki miqdor + o'lchov (masalan: 5 metr, 3 kg)\n\n"
+                f"<i>Maksimal: {selected_item['quantity']} dona</i>"
+            )
+            
+            # Create cancel button
+            cancel_button = InlineKeyboardButton(
+                text="❌ Bekor qilish",
+                callback_data="tech_back_to_application"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            
+            await callback.message.edit_text(
+                input_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+            # Set state to wait for quantity input
+            await state.set_state(TechnicianStates.waiting_for_warehouse_quantity)
+            
+        except Exception as e:
+            print(f"Error in select_warehouse_item_handler: {e}")
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.message(TechnicianStates.waiting_for_warehouse_quantity)
+    async def handle_warehouse_quantity_input(message: Message, state: FSMContext):
+        """Handle warehouse quantity input"""
+        try:
+            # Get the quantity text
+            quantity_text = message.text.strip()
+            
+            if len(quantity_text) < 1:
+                await message.answer(
+                    "⚠️ Iltimos, miqdorni kiriting."
+                )
+                return
+            
+            # Get application data from state
+            data = await state.get_data()
+            application = data.get('current_application_data')
+            selected_item = data.get('selected_warehouse_item')
+            
+            if not application or not selected_item:
+                await message.answer("❌ Ariza ma'lumotlari topilmadi. Iltimos, qaytadan urinib ko'ring.")
+                return
+            
+            # Create warehouse item text
+            warehouse_item_text = f"{selected_item['name']} - {quantity_text}"
+            
+            # Update application warehouse info
+            applications = data.get('applications', [])
+            current_index = data.get('current_app_index', 0)
+            
+            if applications and current_index < len(applications):
+                applications[current_index]['warehouse_needed'] = True
+                applications[current_index]['warehouse_item'] = warehouse_item_text
+                await state.update_data(applications=applications)
+            
+            # Show confirmation
+            confirmation_text = (
+                f"✅ <b>Ombor so'rovi yuborildi!</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                f"📍 <b>Manzil:</b> {application['location']}\n"
+                f"📦 <b>Olinadigan mahsulot:</b>\n"
+                f"<i>{warehouse_item_text}</i>\n"
+                f"💰 <b>Narx:</b> {selected_item['price']}\n\n"
+                f"📦 Mahsulot ombordan olinadi va sizga yetkazib beriladi."
+            )
+            
+            # Create complete work button
+            complete_button = InlineKeyboardButton(
+                text="✅ Ishni yakunlash",
+                callback_data="tech_complete_work"
+            )
+            back_button = InlineKeyboardButton(
+                text="⬅️ Orqaga qaytish",
+                callback_data="tech_back_to_application"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[complete_button], [back_button]])
+            
+            await message.answer(
+                confirmation_text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+            
+            # Clear the waiting state
+            await state.clear()
+            
+        except Exception as e:
+            print(f"Error in handle_warehouse_quantity_input: {e}")
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.callback_query(F.data == "tech_custom_warehouse_item")
+    async def custom_warehouse_item_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle custom warehouse item input"""
+        try:
+            await callback.answer()
+            
+            # Get application data from state
+            data = await state.get_data()
+            application = data.get('current_application_data')
+            
+            if not application:
+                await callback.answer("Ariza ma'lumotlari topilmadi")
+                return
+            
+            # Show custom input prompt
+            input_text = (
+                f"📦 <b>Boshqa mahsulot kiritish</b>\n\n"
                 f"🆔 <b>Ariza ID:</b> {application['id']}\n"
                 f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
                 f"📍 <b>Manzil:</b> {application['location']}\n\n"
@@ -632,16 +823,16 @@ def get_technician_inbox_router():
                 parse_mode='HTML'
             )
             
-            # Set state to wait for warehouse input
+            # Set state to wait for custom warehouse input
             await state.set_state(TechnicianStates.waiting_for_warehouse_item)
             
         except Exception as e:
-            print(f"Error in warehouse_yes_handler: {e}")
+            print(f"Error in custom_warehouse_item_handler: {e}")
             await callback.answer("Xatolik yuz berdi")
 
     @router.message(TechnicianStates.waiting_for_warehouse_item)
     async def handle_warehouse_item_input(message: Message, state: FSMContext):
-        """Handle warehouse item input"""
+        """Handle custom warehouse item input"""
         try:
             # Get the warehouse item text
             warehouse_item_text = message.text.strip()
