@@ -12,6 +12,10 @@ import asyncio
 import json
 from datetime import datetime
 from filters.role_filter import RoleFilter
+from keyboards.junior_manager_buttons import (
+    get_application_list_keyboard,
+    get_application_action_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -69,61 +73,6 @@ async def get_junior_manager_applications(user_id: int, limit: int = 50):
 async def update_application_status_as_junior_manager(app_id: int, status: str):
     """Mock update application status"""
     return True
-
-# Mock keyboard functions
-def get_application_list_keyboard(applications: List[Dict], page: int = 1, lang: str = 'uz'):
-    """Mock application list keyboard"""
-    keyboard_buttons = []
-    
-    for app in applications:
-        status_emoji = {
-            'pending': '⏳',
-            'in_progress': '🔄',
-            'completed': '✅',
-            'cancelled': '❌'
-        }.get(app.get('status', 'pending'), '⏳')
-        
-        priority_emoji = {
-            'low': '🟢',
-            'medium': '🟡',
-            'high': '🟠',
-            'urgent': '🔴'
-        }.get(app.get('priority', 'medium'), '🟡')
-        
-        button_text = f"{status_emoji} {priority_emoji} #{app['id']} - {app.get('client_name', 'N/A')}"
-        keyboard_buttons.append([
-            InlineKeyboardButton(
-                text=button_text,
-                callback_data=f"jm_view_app_{app['id']}"
-            )
-        ])
-    
-    # Navigation buttons
-    keyboard_buttons.append([
-        InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main"),
-        InlineKeyboardButton(text="❌ Yopish", callback_data="jm_close_menu")
-    ])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
-
-def get_application_action_keyboard(app_id: int, status: str, lang: str = 'uz'):
-    """Mock application action keyboard"""
-    keyboard_buttons = []
-    
-    if status != 'cancelled':
-        keyboard_buttons.append([
-            InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data=f"jm_cancel_app_{app_id}"
-            )
-        ])
-    
-    keyboard_buttons.append([
-        InlineKeyboardButton(text="📋 Batafsil", callback_data=f"jm_details_app_{app_id}"),
-        InlineKeyboardButton(text="◀️ Orqaga", callback_data="jm_view_applications")
-    ])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
 
 # Mock states
 from aiogram.fsm.state import State, StatesGroup

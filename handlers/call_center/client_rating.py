@@ -14,6 +14,13 @@ from typing import Optional, Dict, Any
 
 # Keyboard imports
 from keyboards.call_center_buttons import rating_keyboard
+from keyboards.call_center_buttons import (
+    get_rating_statistics_keyboard,
+    get_feedback_complaints_keyboard,
+    get_top_operators_keyboard,
+    get_rating_dynamics_keyboard,
+    get_rating_settings_keyboard
+)
 
 # States imports
 from states.call_center_states import CallCenterMainMenuStates
@@ -71,20 +78,7 @@ def get_call_center_client_rating_router():
             f"📅 <b>Bu oy:</b> 890 ta reyting"
         )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📈 Batafsil hisobot",
-                    callback_data="detailed_rating_report"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📊 Reyting grafigi",
-                    callback_data="rating_chart"
-                )
-            ]
-        ])
+        keyboard = get_rating_statistics_keyboard(lang)
         
         await message.answer(text, reply_markup=keyboard)
 
@@ -135,20 +129,7 @@ def get_call_center_client_rating_router():
                 f"   📅 {feedback['date']}\n\n"
             )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📋 Barcha fikrlar",
-                    callback_data="view_all_feedback"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📊 Fikrlar statistikasi",
-                    callback_data="feedback_statistics"
-                )
-            ]
-        ])
+        keyboard = get_feedback_complaints_keyboard(lang)
         
         await message.answer(text, reply_markup=keyboard)
 
@@ -199,20 +180,7 @@ def get_call_center_client_rating_router():
                 f"   ⏱ Javob vaqti: {operator['response_time']}\n\n"
             )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📊 Batafsil reyting",
-                    callback_data="detailed_operator_rating"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🏆 Mukofotlar",
-                    callback_data="operator_rewards"
-                )
-            ]
-        ])
+        keyboard = get_top_operators_keyboard(lang)
         
         await message.answer(text, reply_markup=keyboard)
 
@@ -252,20 +220,7 @@ def get_call_center_client_rating_router():
         for area in dynamics['improvement_areas']:
             text += f"• {area}\n"
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📊 Grafik ko'rinish",
-                    callback_data="rating_dynamics_chart"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📈 Batafsil tahlil",
-                    callback_data="detailed_rating_analysis"
-                )
-            ]
-        ])
+        keyboard = get_rating_dynamics_keyboard(lang)
         
         await message.answer(text, reply_markup=keyboard)
 
@@ -295,20 +250,7 @@ def get_call_center_client_rating_router():
             f"💡 Sozlamalarni o'zgartirish uchun admin bilan bog'laning."
         )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📝 Reyting shablonlari",
-                    callback_data="rating_templates"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔧 Boshqa sozlamalar",
-                    callback_data="other_rating_settings"
-                )
-            ]
-        ])
+        keyboard = get_rating_settings_keyboard(lang)
         
         await message.answer(text, reply_markup=keyboard)
 

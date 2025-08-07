@@ -9,7 +9,10 @@ from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from filters.role_filter import RoleFilter
-from keyboards.controllers_buttons import get_realtime_monitoring_keyboard
+from keyboards.controllers_buttons import (
+    get_realtime_monitoring_keyboard,
+    get_realtime_refresh_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -404,15 +407,7 @@ def get_realtime_monitoring_router():
                 f"⏰ <b>Yangilangan:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="🔄 Yangilash", callback_data="ctrl_refresh_status"),
-                    InlineKeyboardButton(text="📊 Batafsil", callback_data="ctrl_detailed_status")
-                ],
-                [
-                    InlineKeyboardButton(text="⬅️ Orqaga", callback_data="ctrl_back_to_realtime")
-                ]
-            ])
+            keyboard = get_realtime_refresh_keyboard(lang)
             
             await callback.message.edit_text(status_text, reply_markup=keyboard, parse_mode='HTML')
             

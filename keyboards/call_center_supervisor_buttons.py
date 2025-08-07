@@ -1752,22 +1752,6 @@ def get_language_selection_inline_menu() -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-
-def _get_status_emoji(status: str) -> str:
-    """Get status emoji for order status"""
-    status_emojis = {
-        'new': '🆕',
-        'pending': '⏳',
-        'in_progress': '🔄',
-        'completed': '✅',
-        'cancelled': '❌',
-        'urgent': '🚨',
-        'high_priority': '⚡',
-        'normal_priority': '📋',
-        'low_priority': '📝'
-    }
-    return status_emojis.get(status, '📋')
-
 def get_supervisor_inbox_keyboard(lang='uz'):
     """Generate inbox keyboard for supervisor with locale support"""
     new_messages_text = "🆕 Yangi xabarlar" if lang == "uz" else "🆕 Новые сообщения"
@@ -1798,3 +1782,408 @@ def get_supervisor_back_keyboard(lang='uz'):
         keyboard=[[KeyboardButton(text=back_text)]],
         resize_keyboard=True
     )
+
+# New centralized keyboard functions for call center supervisor module
+def get_supervisor_operator_assignment_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor operator assignment keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="✅ Ha, yuborish" if lang == 'uz' else "✅ Да, отправить",
+                callback_data="supervisor_confirm_assign"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="❌ Bekor qilish" if lang == 'uz' else "❌ Отмена",
+                callback_data="supervisor_back_to_application"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_back_to_inbox_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor back to inbox keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📥 Inbox'ga qaytish" if lang == 'uz' else "📥 Вернуться в inbox",
+                callback_data="supervisor_back_to_inbox"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_export_types_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor export types keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📑 Buyurtmalar" if lang == 'uz' else "📑 Заказы",
+                callback_data="ccs_export_main_orders"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Statistika" if lang == 'uz' else "📊 Статистика",
+                callback_data="ccs_export_main_statistics"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="👥 Xodimlar" if lang == 'uz' else "👥 Сотрудники",
+                callback_data="ccs_export_main_users"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⭐ Fikr-mulohazalar" if lang == 'uz' else "⭐ Отзывы",
+                callback_data="ccs_export_main_feedback"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⚙️ Workflow" if lang == 'uz' else "⚙️ Процессы",
+                callback_data="ccs_export_main_workflow"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
+                callback_data="ccs_export_main_back_main"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_export_formats_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor export formats keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="CSV",
+                callback_data="ccs_format_main_csv"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Excel",
+                callback_data="ccs_format_main_xlsx"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Word",
+                callback_data="ccs_format_main_docx"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="PDF",
+                callback_data="ccs_format_main_pdf"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
+                callback_data="ccs_export_main_back_types"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_export_back_types_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor export back to types keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
+                callback_data="ccs_export_main_back_types"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_feedback_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor feedback keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📝 Fikr yozish" if lang == 'uz' else "📝 Написать отзыв",
+                callback_data="ccs_write_feedback"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Fikrlarni ko'rish" if lang == 'uz' else "📊 Просмотр отзывов",
+                callback_data="ccs_view_feedback"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⭐ Baholash" if lang == 'uz' else "⭐ Оценить",
+                callback_data="ccs_rate_service"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="❌ Yopish" if lang == 'uz' else "❌ Закрыть",
+                callback_data="ccs_close_menu"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_notification_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor notification keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="🔔 Yangi bildirishnomalar" if lang == 'uz' else "🔔 Новые уведомления",
+                callback_data="ccs_new_notifications"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📨 Xodimga xabar yuborish" if lang == 'uz' else "📨 Отправить сообщение сотруднику",
+                callback_data="ccs_send_staff_message"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📢 Umumiy e'lon" if lang == 'uz' else "📢 Общее объявление",
+                callback_data="ccs_broadcast_message"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⚠️ Ogohlantirish yuborish" if lang == 'uz' else "⚠️ Отправить предупреждение",
+                callback_data="ccs_send_warning"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📋 Bildirishnomalar tarixi" if lang == 'uz' else "📋 История уведомлений",
+                callback_data="ccs_notifications_history"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="❌ Yopish" if lang == 'uz' else "❌ Закрыть",
+                callback_data="ccs_close_menu"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_orders_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor orders keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📋 Yangi buyurtmalar" if lang == 'uz' else "📋 Новые заказы",
+                callback_data="ccs_new_orders"
+            ),
+            InlineKeyboardButton(
+                text="⏳ Jarayondagi" if lang == 'uz' else "⏳ В процессе",
+                callback_data="ccs_in_progress_orders"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="✅ Bajarilgan" if lang == 'uz' else "✅ Выполненные",
+                callback_data="ccs_completed_orders"
+            ),
+            InlineKeyboardButton(
+                text="❌ Bekor qilingan" if lang == 'uz' else "❌ Отмененные",
+                callback_data="ccs_cancelled_orders"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🔴 Muammoli" if lang == 'uz' else "🔴 Проблемные",
+                callback_data="ccs_problem_orders"
+            ),
+            InlineKeyboardButton(
+                text="⬆️ Yuqoriga ko'tarilgan" if lang == 'uz' else "⬆️ Эскалированные",
+                callback_data="ccs_escalated_orders"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🔍 Qidirish" if lang == 'uz' else "🔍 Поиск",
+                callback_data="ccs_search_orders"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="❌ Yopish" if lang == 'uz' else "❌ Закрыть",
+                callback_data="ccs_close_menu"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_application_management_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor application management keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📋 Yangi arizalar" if lang == 'uz' else "📋 Новые заявки",
+                callback_data="ccs_app_new"
+            ),
+            InlineKeyboardButton(
+                text="⏳ Jarayondagi" if lang == 'uz' else "⏳ В процессе",
+                callback_data="ccs_app_in_progress"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="✅ Bajarilgan" if lang == 'uz' else "✅ Выполненные",
+                callback_data="ccs_app_completed"
+            ),
+            InlineKeyboardButton(
+                text="❌ Bekor qilingan" if lang == 'uz' else "❌ Отмененные",
+                callback_data="ccs_app_cancelled"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🔍 Qidirish" if lang == 'uz' else "🔍 Поиск",
+                callback_data="ccs_app_search"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="❌ Yopish" if lang == 'uz' else "❌ Закрыть",
+                callback_data="ccs_close_menu"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_staff_creation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor staff creation keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📱 Telefon" if lang == 'uz' else "📱 Телефон",
+                callback_data="ccs_client_search_phone"
+            ),
+            InlineKeyboardButton(
+                text="👤 Ism" if lang == 'uz' else "👤 Имя",
+                callback_data="ccs_client_search_name"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🆔 ID" if lang == 'uz' else "🆔 ID",
+                callback_data="ccs_client_search_id"
+            ),
+            InlineKeyboardButton(
+                text="➕ Yangi mijoz" if lang == 'uz' else "➕ Новый клиент",
+                callback_data="ccs_client_search_new"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="❌ Bekor qilish" if lang == 'uz' else "❌ Отмена",
+                callback_data="ccs_cancel_application_creation"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_statistics_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor statistics keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📊 Bugungi statistika" if lang == 'uz' else "📊 Статистика за сегодня",
+                callback_data="ccs_stats_daily"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📈 Haftalik hisobot" if lang == 'uz' else "📈 Недельный отчет",
+                callback_data="ccs_stats_weekly"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📉 Oylik hisobot" if lang == 'uz' else "📉 Месячный отчет",
+                callback_data="ccs_stats_monthly"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="👥 Xodimlar samaradorligi" if lang == 'uz' else "👥 Эффективность персонала",
+                callback_data="ccs_stats_staff_performance"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📋 Buyurtmalar tahlili" if lang == 'uz' else "📋 Анализ заказов",
+                callback_data="ccs_stats_orders_analysis"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="❌ Yopish" if lang == 'uz' else "❌ Закрыть",
+                callback_data="ccs_close_menu"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_supervisor_navigation_keyboard(current_index: int, total_applications: int, application_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Supervisor navigation keyboard"""
+    keyboard = []
+    
+    # Action buttons row
+    action_buttons = []
+    
+    # Assign to operator button
+    action_buttons.append(InlineKeyboardButton(
+        text="📞 Operator'ga yuborish" if lang == 'uz' else "📞 Отправить оператору",
+        callback_data=f"supervisor_assign_operator_{application_id}"
+    ))
+    
+    keyboard.append(action_buttons)
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi" if lang == 'uz' else "⬅️ Предыдущая",
+            callback_data="supervisor_prev_application"
+        ))
+    
+    # Next button
+    if current_index < total_applications - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️" if lang == 'uz' else "Следующая ➡️",
+            callback_data="supervisor_next_application"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def _get_status_emoji(status: str) -> str:
+    """Get status emoji for order status"""
+    status_emojis = {
+        'new': '🆕',
+        'pending': '⏳',
+        'in_progress': '🔄',
+        'completed': '✅',
+        'cancelled': '❌',
+        'urgent': '🚨',
+        'high_priority': '⚡',
+        'normal_priority': '📋',
+        'low_priority': '📝'
+    }
+    return status_emojis.get(status, '📋')

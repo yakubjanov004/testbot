@@ -11,6 +11,7 @@ from keyboards.junior_manager_buttons import get_client_search_keyboard, get_jun
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
+from keyboards.junior_manager_buttons import get_clients_navigation_keyboard
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -247,35 +248,6 @@ def get_client_search_router():
             await callback.answer("Xatolik yuz berdi")
 
     return router
-
-def get_clients_navigation_keyboard(current_index: int, total_clients: int):
-    """Create navigation keyboard for clients"""
-    keyboard = []
-    
-    # Navigation row
-    nav_buttons = []
-    
-    # Previous button
-    if current_index > 0:
-        nav_buttons.append(InlineKeyboardButton(
-            text="⬅️ Oldingi",
-            callback_data="client_prev"
-        ))
-    
-    # Next button
-    if current_index < total_clients - 1:
-        nav_buttons.append(InlineKeyboardButton(
-            text="Keyingi ➡️",
-            callback_data="client_next"
-        ))
-    
-    if nav_buttons:
-        keyboard.append(nav_buttons)
-    
-    # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifaclientsearch", callback_data="back_to_main_menu")])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard) 
 
 def get_junior_manager_client_search_router():
     """Get junior manager client search router - alias for get_client_search_router"""

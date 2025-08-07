@@ -6,14 +6,15 @@ including sending messages, announcements, and managing notifications.
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
-    get_notification_management_keyboard, get_communication_menu
+    get_notification_management_keyboard, get_communication_menu,
+    get_supervisor_notification_keyboard
 )
 
 # States imports
@@ -140,22 +141,7 @@ def get_call_center_supervisor_notification_management_router():
                 "Xabar yubormoqchi bo'lgan xodimni tanlang:"
             )
             
-            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text=f"👤 {staff['full_name']} ({staff['role']})",
-                        callback_data=f"ccs_select_staff_msg_{staff['id']}"
-                    )
-                ] for staff in staff_list[:8]
-            ] + [
-                [
-                    InlineKeyboardButton(
-                        text="❌ Bekor qilish",
-                        callback_data="ccs_cancel_individual_message"
-                    )
-                ]
-            ])
+            keyboard = get_supervisor_notification_keyboard(lang)
             
             await message.answer(text, reply_markup=keyboard)
             
@@ -289,7 +275,6 @@ async def _show_staff_selection_for_message(callback: CallbackQuery, supervisor_
             "Xabar yubormoqchi bo'lgan xodimni tanlang:"
         )
         
-        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [
                 InlineKeyboardButton(

@@ -4,12 +4,18 @@ Client Orders Handler - Simplified Implementation
 This module handles viewing client orders with pagination.
 """
 
-from aiogram import F
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
 from datetime import datetime
 from states.client_states import OrderStates
 from filters.role_filter import RoleFilter
+from keyboards.client_buttons import (
+    get_orders_menu_keyboard,
+    get_back_to_orders_menu_keyboard,
+    get_client_orders_navigation_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -107,7 +113,6 @@ async def get_order_details(order_id: int):
     }
 
 def get_orders_router():
-    from aiogram import Router
     router = Router()
     
     # Apply role filter
@@ -204,7 +209,7 @@ def get_orders_router():
             )
             
             # Create navigation keyboard
-            keyboard = get_orders_navigation_keyboard(
+            keyboard = get_client_orders_navigation_keyboard(
                 index, orders_data['page'], orders_data['total_pages'], 
                 len(orders_data['orders']), order['id']
             )
@@ -257,29 +262,3 @@ def get_orders_router():
             await callback.answer("Xatolik yuz berdi")
 
     return router
-
-def get_orders_navigation_keyboard(current_index: int, current_page: int, total_pages: int, orders_on_page: int, order_id: int):
-    """Create navigation keyboard for orders"""
-    keyboard = []
-    
-    # Navigation row
-    nav_buttons = []
-    
-    # Previous button
-    if current_index > 0 or current_page > 1:
-        nav_buttons.append(InlineKeyboardButton(
-            text="⬅️ Oldingi",
-            callback_data=f"order_prev_{current_index}_{current_page}_{order_id}"
-        ))
-    
-    # Next button
-    if current_index < orders_on_page - 1 or current_page < total_pages:
-        nav_buttons.append(InlineKeyboardButton(
-            text="Keyingi ➡️",
-            callback_data=f"order_next_{current_index}_{current_page}_{order_id}"
-        ))
-    
-    if nav_buttons:
-        keyboard.append(nav_buttons)
-        
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)

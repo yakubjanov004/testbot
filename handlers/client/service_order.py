@@ -12,7 +12,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter
 from datetime import datetime
 from keyboards.client_buttons import (
-    zayavka_type_keyboard, geolocation_keyboard, confirmation_keyboard, media_attachment_keyboard
+    zayavka_type_keyboard, geolocation_keyboard, confirmation_keyboard, media_attachment_keyboard,
+    get_client_regions_keyboard
 )
 from states.client_states import OrderStates
 from filters.role_filter import RoleFilter
@@ -82,7 +83,7 @@ def get_service_order_router():
             # Hududni so'rash
             await message.answer(
                 "Hududni tanlang:",
-                reply_markup=get_regions_keyboard()
+                reply_markup=get_client_regions_keyboard('uz')
             )
             
             await state.set_state(OrderStates.selecting_region)
@@ -362,37 +363,5 @@ def get_service_order_router():
             await callback.answer("Xatolik yuz berdi")
 
     return router
-def get_regions_keyboard():
-    """Hududlar keyboard"""
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="Toshkent shahri", callback_data="region_tashkent_city"),
-            InlineKeyboardButton(text="Toshkent viloyati", callback_data="region_tashkent_region")
-        ],
-        [
-            InlineKeyboardButton(text="Andijon", callback_data="region_andijon"),
-            InlineKeyboardButton(text="Farg'ona", callback_data="region_fergana")
-        ],
-        [
-            InlineKeyboardButton(text="Namangan", callback_data="region_namangan"),
-            InlineKeyboardButton(text="Sirdaryo", callback_data="region_sirdaryo")
-        ],
-        [
-            InlineKeyboardButton(text="Jizzax", callback_data="region_jizzax"),
-            InlineKeyboardButton(text="Samarqand", callback_data="region_samarkand")
-        ],
-        [
-            InlineKeyboardButton(text="Buxoro", callback_data="region_bukhara"),
-            InlineKeyboardButton(text="Navoiy", callback_data="region_navoi")
-        ],
-        [
-            InlineKeyboardButton(text="Qashqadaryo", callback_data="region_kashkadarya"),
-            InlineKeyboardButton(text="Surxondaryo", callback_data="region_surkhandarya")
-        ],
-        [
-            InlineKeyboardButton(text="Xorazm", callback_data="region_khorezm"),
-            InlineKeyboardButton(text="Qoraqalpog'iston", callback_data="region_karakalpakstan")
-        ]
-    ])
-    return keyboard
+
 

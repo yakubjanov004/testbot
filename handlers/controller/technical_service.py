@@ -6,7 +6,11 @@ Manages technical service for controller
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import get_technical_service_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import (
+    get_technical_service_keyboard, 
+    get_controller_back_keyboard,
+    get_technical_service_navigation_keyboard
+)
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
@@ -174,7 +178,7 @@ def get_technical_service_router():
             )
             
             # Create navigation keyboard
-            keyboard = get_services_navigation_keyboard(index, len(services))
+            keyboard = get_technical_service_navigation_keyboard(lang)
             
             if isinstance(message_or_callback, Message):
                 await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')

@@ -2,7 +2,12 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, BufferedInputFile, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
-from keyboards.warehouse_buttons import get_warehouse_main_keyboard
+from keyboards.warehouse_buttons import (
+    get_warehouse_main_keyboard,
+    get_warehouse_export_types_keyboard,
+    get_warehouse_export_formats_keyboard,
+    get_warehouse_export_back_types_keyboard
+)
 from states.warehouse_states import WarehouseExportStates, WarehouseMainMenuStates
 from utils.export_utils import create_export_file, get_available_export_types, get_available_export_formats
 from filters.role_filter import RoleFilter
@@ -38,18 +43,7 @@ def get_warehouse_export_router():
             text = "Export qilish\n\nQaysi ma'lumotlarni export qilmoqchisiz?"
             
             # Create inline keyboard for export types
-            keyboard = []
-            for export_type in export_types:
-                keyboard.append([
-                    InlineKeyboardButton(
-                        text=export_type_names.get(export_type, export_type),
-                        callback_data=f"warehouse_export_{export_type}"
-                    )
-                ])
-            
-
-            
-            markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            markup = get_warehouse_export_types_keyboard(lang)
             
             await message.answer(text, reply_markup=markup)
             await state.set_state(WarehouseExportStates.selecting_type)
@@ -91,20 +85,7 @@ def get_warehouse_export_router():
                 
                 text = "Export qilish\n\nQaysi ma'lumotlarni export qilmoqchisiz?"
                 
-                keyboard = []
-                for export_type in export_types:
-                    keyboard.append([
-                        InlineKeyboardButton(
-                            text=export_type_names.get(export_type, export_type),
-                            callback_data=f"warehouse_export_{export_type}"
-                        )
-                    ])
-                
-                keyboard.append([
-                    InlineKeyboardButton(text="◀️ Orqaga", callback_data="warehouse_export_back_main")
-                ])
-                
-                markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+                markup = get_warehouse_export_back_types_keyboard(lang)
                 await callback.message.edit_text(text, reply_markup=markup)
                 await state.set_state(WarehouseExportStates.selecting_type)
                 return
@@ -135,28 +116,7 @@ def get_warehouse_export_router():
             text += "Word - Microsoft Word formati\n"
             text += "PDF - Chop etish uchun qulay format"
             
-            keyboard = []
-            format_icons = {
-                'csv': 'CSV',
-                'xlsx': 'Excel',
-                'docx': 'Word',
-                'pdf': 'PDF'
-            }
-            
-            for fmt in formats:
-                keyboard.append([
-                    InlineKeyboardButton(
-                        text=format_icons.get(fmt, fmt.upper()),
-                        callback_data=f"warehouse_format_{fmt}"
-                    )
-                ])
-            
-            # Add back button
-            keyboard.append([
-                InlineKeyboardButton(text="◀️ Orqaga", callback_data="warehouse_export_back_types")
-            ])
-            
-            markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            markup = get_warehouse_export_formats_keyboard(lang)
             await callback.message.edit_text(text, reply_markup=markup)
             await state.set_state(WarehouseExportStates.selecting_format)
             

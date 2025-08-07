@@ -10,6 +10,11 @@ from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
+from keyboards.junior_manager_buttons import (
+    get_workflow_management_menu_updated,
+    get_application_tracking_menu_updated,
+    get_task_monitoring_menu_updated
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -95,51 +100,15 @@ async def update_application_status_as_junior_manager(application_id: int, statu
 # Mock keyboard functions
 def get_workflow_management_menu(lang: str = 'uz'):
     """Mock workflow management menu keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="📋 Arizalar kuzatuvi", callback_data="jm_workflow_tracking"),
-            InlineKeyboardButton(text="📊 Vazifalar monitoringi", callback_data="jm_workflow_monitoring")
-        ],
-        [
-            InlineKeyboardButton(text="📈 Hisobotlar", callback_data="jm_workflow_reports"),
-            InlineKeyboardButton(text="📊 Tahlil", callback_data="jm_workflow_analytics")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
-        ]
-    ])
+    return get_workflow_management_menu_updated(lang)
 
 def get_application_tracking_menu(lang: str = 'uz'):
     """Mock application tracking menu keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="⏳ Kutilmoqda", callback_data="jm_track_pending"),
-            InlineKeyboardButton(text="🔄 Jarayonda", callback_data="jm_track_progress")
-        ],
-        [
-            InlineKeyboardButton(text="✅ Bajarilgan", callback_data="jm_track_completed"),
-            InlineKeyboardButton(text="📋 Barchasi", callback_data="jm_track_all")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="jm_workflow_back")
-        ]
-    ])
+    return get_application_tracking_menu_updated(lang)
 
 def get_task_monitoring_menu(lang: str = 'uz'):
     """Mock task monitoring menu keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="📅 Kunlik", callback_data="jm_monitor_daily"),
-            InlineKeyboardButton(text="📊 Haftalik", callback_data="jm_monitor_weekly")
-        ],
-        [
-            InlineKeyboardButton(text="📈 Samaradorlik", callback_data="jm_monitor_performance"),
-            InlineKeyboardButton(text="📋 Barchasi", callback_data="jm_monitor_all")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="jm_workflow_back")
-        ]
-    ])
+    return get_task_monitoring_menu_updated(lang)
 
 # Mock states
 from aiogram.fsm.state import State, StatesGroup

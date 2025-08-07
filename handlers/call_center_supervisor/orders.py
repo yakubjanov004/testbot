@@ -14,6 +14,9 @@ from keyboards.call_center_supervisor_buttons import get_orders_menu, get_order_
 # States imports
 from states.call_center_supervisor_states import CallCenterSupervisorOrdersStates
 from filters.role_filter import RoleFilter
+from keyboards.call_center_supervisor_buttons import (
+    get_supervisor_orders_keyboard
+)
 
 def get_call_center_supervisor_orders_router():
     """Get call center supervisor orders router"""
@@ -174,26 +177,7 @@ def get_call_center_supervisor_orders_router():
             f"Amalni tanlang:"
         )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="👨‍💼 Mas'ul tayinlash",
-                    callback_data=f"assign_supervisor_{order_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📊 Status o'zgartirish",
-                    callback_data=f"change_status_{order_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📞 Call Center ga yuborish",
-                    callback_data=f"transfer_to_call_center_{order_id}"
-                )
-            ]
-        ])
+        keyboard = get_supervisor_orders_keyboard(lang)
         
         await call.message.edit_text(text, reply_markup=keyboard)
 

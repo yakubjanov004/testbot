@@ -8,7 +8,14 @@ Mijoz bilan bog'lanish va controllerga yuborish funksiyalari bilan.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_junior_manager_back_keyboard
+from aiogram.fsm.state import State, StatesGroup
+from keyboards.junior_manager_buttons import (
+    get_contact_note_keyboard,
+    get_controller_note_keyboard,
+    get_send_to_controller_confirmation_keyboard,
+    get_edit_controller_note_keyboard,
+    get_back_to_application_keyboard
+)
 from datetime import datetime, timedelta
 from filters.role_filter import RoleFilter
 from states.junior_manager_states import JuniorManagerStates
@@ -208,7 +215,7 @@ def get_junior_manager_inbox_router():
                 
                 await message.answer(
                     text=no_applications_text,
-                    reply_markup=get_junior_manager_back_keyboard(lang)
+                    reply_markup=get_back_to_application_keyboard(lang)
                 )
                 return
             
@@ -495,11 +502,7 @@ def get_junior_manager_inbox_router():
             )
             
             # Create cancel button
-            cancel_button = InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="jm_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            keyboard = get_contact_note_keyboard(lang)
             
             await callback.message.edit_text(
                 input_text,
@@ -554,11 +557,7 @@ def get_junior_manager_inbox_router():
             )
             
             # Create back button
-            back_button = InlineKeyboardButton(
-                text="⬅️ Ariza'ga qaytish",
-                callback_data="jm_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+            keyboard = get_back_to_application_keyboard(lang)
             
             await message.answer(
                 confirmation_text,
@@ -668,19 +667,7 @@ def get_junior_manager_inbox_router():
             )
             
             # Create confirmation buttons
-            confirm_button = InlineKeyboardButton(
-                text="✅ Ha, yuborish",
-                callback_data="jm_confirm_send_to_controller"
-            )
-            edit_button = InlineKeyboardButton(
-                text="✏️ Qayta yozish",
-                callback_data="jm_edit_controller_note"
-            )
-            cancel_button = InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="jm_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[confirm_button], [edit_button], [cancel_button]])
+            keyboard = get_send_to_controller_confirmation_keyboard(lang)
             
             await message.answer(
                 review_text,
@@ -720,11 +707,7 @@ def get_junior_manager_inbox_router():
             )
             
             # Create cancel button
-            cancel_button = InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="jm_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            keyboard = get_edit_controller_note_keyboard(lang)
             
             await callback.message.edit_text(
                 input_text,

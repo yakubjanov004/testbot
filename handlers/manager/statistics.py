@@ -10,6 +10,11 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from datetime import date, datetime, timedelta
 from filters.role_filter import RoleFilter
+from keyboards.manager_buttons import (
+    get_statistics_main_keyboard,
+    get_statistics_navigation_keyboard,
+    get_export_menu_keyboard
+)
 
 def get_manager_statistics_router():
     """Get manager statistics router"""
@@ -33,32 +38,7 @@ def get_manager_statistics_router():
             }
             
             # Create inline keyboard
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(
-                    text="📈 Mening samaradorligim",
-                    callback_data="mgr_my_performance"
-                )],
-                [InlineKeyboardButton(
-                    text="👥 Jamoa statistikasi",
-                    callback_data="mgr_team_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="📊 Zayavkalar statistikasi",
-                    callback_data="mgr_request_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="📅 Kunlik hisobot",
-                    callback_data="mgr_daily_report"
-                )],
-                [InlineKeyboardButton(
-                    text="📥 Excel export",
-                    callback_data="mgr_export_menu"
-                )],
-                [InlineKeyboardButton(
-                    text="📋 Export tarixi",
-                    callback_data="mgr_export_history"
-                )]
-            ])
+            keyboard = get_statistics_main_keyboard(lang=user.get('language', 'uz'))
             
             await message.answer(
                 "📊 Statistika bo'limini tanlang:",
@@ -95,12 +75,7 @@ def get_manager_statistics_router():
             text += f"⚡ **Samaradorlik:** {efficiency:.1f}%\n"
             
             # Add back button
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="mgr_stats_back"
-                )]
-            ])
+            keyboard = get_statistics_navigation_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
             
@@ -158,16 +133,7 @@ def get_manager_statistics_router():
                 text += "\n"
             
             # Add buttons
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(
-                    text="📊 To'liq hisobot",
-                    callback_data="mgr_export_team_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="mgr_stats_back"
-                )]
-            ])
+            keyboard = get_statistics_navigation_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
             
@@ -204,20 +170,7 @@ def get_manager_statistics_router():
             text += f"⭐ **O'rtacha baho:** {today_stats['avg_rating']:.2f}/5\n"
             
             # Add buttons
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(
-                    text="📊 Haftalik",
-                    callback_data="mgr_weekly_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="📊 Oylik",
-                    callback_data="mgr_monthly_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="mgr_stats_back"
-                )]
-            ])
+            keyboard = get_statistics_navigation_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
             
@@ -342,28 +295,7 @@ def get_manager_statistics_router():
             await callback.answer()
             
             # Recreate statistics menu
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(
-                    text="📈 Mening samaradorligim",
-                    callback_data="mgr_my_performance"
-                )],
-                [InlineKeyboardButton(
-                    text="👥 Jamoa statistikasi",
-                    callback_data="mgr_team_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="📊 Zayavkalar statistikasi",
-                    callback_data="mgr_request_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="📅 Kunlik hisobot",
-                    callback_data="mgr_daily_report"
-                )],
-                [InlineKeyboardButton(
-                    text="📥 Excel export",
-                    callback_data="mgr_export_menu"
-                )]
-            ])
+            keyboard = get_statistics_main_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.edit_text(
                 "📊 Statistika bo'limini tanlang:",
@@ -435,20 +367,7 @@ def get_manager_statistics_router():
             text += f"\n📊 *Jami:* {total_exports} ta export\n"
             
             # Buttons
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(
-                    text="📥 To'liq tarix (CSV)",
-                    callback_data="mgr_export_full_history"
-                )],
-                [InlineKeyboardButton(
-                    text="🔄 Yangilash",
-                    callback_data="mgr_export_history"
-                )],
-                [InlineKeyboardButton(
-                    text="◀️ Orqaga",
-                    callback_data="mgr_stats_menu"
-                )]
-            ])
+            keyboard = get_statistics_navigation_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.edit_text(
                 text,
@@ -465,32 +384,7 @@ def get_manager_statistics_router():
             await callback.answer()
             
             # Create inline keyboard
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(
-                    text="📈 Mening samaradorligim",
-                    callback_data="mgr_my_performance"
-                )],
-                [InlineKeyboardButton(
-                    text="👥 Jamoa statistikasi",
-                    callback_data="mgr_team_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="📊 Zayavkalar statistikasi",
-                    callback_data="mgr_request_stats"
-                )],
-                [InlineKeyboardButton(
-                    text="📅 Kunlik hisobot",
-                    callback_data="mgr_daily_report"
-                )],
-                [InlineKeyboardButton(
-                    text="📥 Excel export",
-                    callback_data="mgr_export_menu"
-                )],
-                [InlineKeyboardButton(
-                    text="📋 Export tarixi",
-                    callback_data="mgr_export_history"
-                )]
-            ])
+            keyboard = get_statistics_main_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.edit_text(
                 "📊 *Statistika bo'limi*\n\n"

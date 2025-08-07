@@ -5,14 +5,16 @@ This module handles application creation, management and workflow for call cente
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
     get_client_search_menu, get_client_selection_keyboard, get_application_type_menu,
-    get_application_priority_keyboard, get_application_confirmation_keyboard
+    get_application_priority_keyboard, get_application_confirmation_keyboard,
+    get_supervisor_application_management_keyboard,
+    get_supervisor_staff_creation_keyboard
 )
 
 # States imports
@@ -191,27 +193,7 @@ def get_call_center_supervisor_application_management_router():
                 await state.update_data(new_client_phone=phone)
                 await state.set_state(CallCenterSupervisorApplicationStates.creating_new_client)
                 
-                from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="✅ Ha, yaratish" if lang == 'uz' else "✅ Да, создать",
-                            callback_data="ccs_create_new_client"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="🔍 Boshqa qidirish" if lang == 'uz' else "🔍 Другой поиск",
-                            callback_data="ccs_search_again"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="❌ Bekor qilish" if lang == 'uz' else "❌ Отмена",
-                            callback_data="ccs_cancel_application_creation"
-                        )
-                    ]
-                ])
+                keyboard = get_supervisor_staff_creation_keyboard(lang)
                 
                 await message.answer(text, reply_markup=keyboard)
                 return
@@ -257,27 +239,7 @@ def get_call_center_supervisor_application_management_router():
                     "Попробуйте другое имя или создайте нового клиента."
                 )
                 
-                from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="🔍 Boshqa qidirish" if lang == 'uz' else "🔍 Другой поиск",
-                            callback_data="ccs_search_again"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="➕ Yangi mijoz" if lang == 'uz' else "➕ Новый клиент",
-                            callback_data="ccs_client_search_new"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="❌ Bekor qilish" if lang == 'uz' else "❌ Отмена",
-                            callback_data="ccs_cancel_application_creation"
-                        )
-                    ]
-                ])
+                keyboard = get_supervisor_staff_creation_keyboard(lang)
                 
                 await message.answer(text, reply_markup=keyboard)
                 return

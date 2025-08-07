@@ -8,7 +8,11 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from states.manager_states import ManagerApplicationStates
-from keyboards.manager_buttons import get_manager_main_keyboard
+from keyboards.manager_buttons import (
+    get_manager_main_keyboard,
+    get_application_actions_keyboard,
+    get_application_navigation_keyboard
+)
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
@@ -151,7 +155,7 @@ def get_manager_applications_callbacks_router():
                 ]
             ]
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            keyboard = get_application_navigation_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.edit_text(
                 text=text,
@@ -194,7 +198,7 @@ def get_manager_applications_callbacks_router():
                         )
                     ]
                 ]
-                keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+                keyboard = get_application_navigation_keyboard(lang=user.get('language', 'uz'))
                 
                 await callback.message.edit_text(
                     text=text,
@@ -346,7 +350,7 @@ def get_manager_applications_callbacks_router():
                     )
                 ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            keyboard = get_application_navigation_keyboard(lang=user.get('language', 'uz'))
             
             # State'da joriy indeksni saqlash
             await state.update_data(current_application_index=current_index)
@@ -393,7 +397,7 @@ def get_manager_applications_callbacks_router():
                     )
                 ]
             ]
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            keyboard = get_application_navigation_keyboard(lang=user.get('language', 'uz'))
             
             await callback.message.edit_text(
                 text=text,

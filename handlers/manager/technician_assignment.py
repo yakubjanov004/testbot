@@ -8,7 +8,11 @@ allowing managers to assign technicians to applications and track their work.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
-from keyboards.manager_buttons import get_manager_main_keyboard
+from keyboards.manager_buttons import (
+    get_manager_main_keyboard,
+    get_technician_assignment_keyboard,
+    get_technician_confirmation_keyboard
+)
 from states.manager_states import ManagerTechnicianAssignmentStates
 from datetime import datetime
 from filters.role_filter import RoleFilter
@@ -62,20 +66,7 @@ def get_manager_technician_assignment_router():
                 return
             
             # Create technician selection keyboard
-            buttons = []
-            for tech in technicians:
-                if tech['status'] == 'available':
-                    buttons.append([InlineKeyboardButton(
-                        text=f"👨‍🔧 {tech.get('full_name', 'N/A')}",
-                        callback_data=f"select_tech_{tech['id']}"
-                    )])
-            
-            buttons.append([InlineKeyboardButton(
-                text="◀️ Orqaga",
-                callback_data="back_to_main_menu"
-            )])
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_technician_assignment_keyboard(technicians, lang=user.get('language', 'uz'))
             
             text = "👨‍🔧 Texnik tanlang:"
             
@@ -250,12 +241,7 @@ def get_manager_technician_assignment_router():
             
             await callback.message.edit_text(
                 text,
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-                    InlineKeyboardButton(
-                        text="◀️ Orqaga",
-                        callback_data="back_to_main_menu"
-                    )
-                ]])
+                reply_markup=get_technician_confirmation_keyboard(technician_id, application_id, lang=user.get('language', 'uz'))
             )
             
             await callback.answer()

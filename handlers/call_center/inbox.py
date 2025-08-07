@@ -13,6 +13,13 @@ from datetime import datetime
 # States imports
 from states.call_center import CallCenterInboxStates
 from filters.role_filter import RoleFilter
+from aiogram.filters import StateFilter
+from keyboards.call_center_buttons import (
+    get_operator_resolve_keyboard,
+    get_operator_cancel_keyboard,
+    get_operator_back_to_inbox_keyboard,
+    get_operator_navigation_keyboard
+)
 
 # Mock functions for call center operator
 async def get_operator_applications(operator_id: int):
@@ -203,7 +210,7 @@ def get_call_center_inbox_router():
             )
             
             # Create navigation keyboard
-            keyboard = get_operator_navigation_keyboard(index, len(applications), application['id'])
+            keyboard = get_operator_navigation_keyboard(index, len(applications), application['id'], 'uz')
             
             if isinstance(message_or_callback, Message):
                 await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
@@ -296,7 +303,7 @@ def get_call_center_inbox_router():
                         text="⬅️ Orqaga qaytish",
                         callback_data="operator_back_to_application"
                     )
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[[resolve_button], [back_button]])
+                    keyboard = get_operator_resolve_keyboard(lang)
                     
                     await callback.message.edit_text(
                         contact_text,
@@ -348,12 +355,7 @@ def get_call_center_inbox_router():
                     current_resolve_application_data=application
                 )
                 
-                # Create cancel button
-                cancel_button = InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="operator_back_to_application"
-                )
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+                keyboard = get_operator_cancel_keyboard(lang)
                 
                 await callback.message.edit_text(
                     resolution_text,
@@ -410,12 +412,7 @@ def get_call_center_inbox_router():
                     f"✅ Ariza yakunlandi va mijozga xabar yuborildi."
                 )
                 
-                # Create back to inbox button
-                back_button = InlineKeyboardButton(
-                    text="📥 Inbox'ga qaytish",
-                    callback_data="operator_back_to_inbox"
-                )
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+                keyboard = get_operator_back_to_inbox_keyboard(lang)
                 
                 await message.answer(
                     completion_text,
@@ -489,49 +486,3 @@ def get_call_center_inbox_router():
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     return router
-
-def get_operator_navigation_keyboard(current_index: int, total_applications: int, application_id: str):
-    """Create navigation keyboard for operator applications"""
-    keyboard = []
-    
-    # Action buttons row
-    action_buttons = []
-    
-    # Contact client button
-    action_buttons.append(InlineKeyboardButton(
-        text="📞 Mijoz bilan bog'lanish",
-        callback_data=f"operator_contact_client_{application_id}"
-    ))
-    
-    # Resolve issue button
-    action_buttons.append(InlineKeyboardButton(
-        text="✅ Muammoni hal qilish",
-        callback_data=f"operator_resolve_issue_{application_id}"
-    ))
-    
-    keyboard.append(action_buttons)
-    
-    # Navigation row
-    nav_buttons = []
-    
-    # Previous button
-    if current_index > 0:
-        nav_buttons.append(InlineKeyboardButton(
-            text="⬅️ Oldingi",
-            callback_data="operator_prev_application"
-        ))
-    
-    # Next button
-    if current_index < total_applications - 1:
-        nav_buttons.append(InlineKeyboardButton(
-            text="Keyingi ➡️",
-            callback_data="operator_next_application"
-        ))
-    
-    if nav_buttons:
-        keyboard.append(nav_buttons)
-    
-    # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)

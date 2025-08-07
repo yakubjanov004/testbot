@@ -7,7 +7,11 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 from filters.role_filter import RoleFilter
-from keyboards.manager_buttons import get_manager_realtime_keyboard
+from keyboards.manager_buttons import (
+    get_manager_realtime_keyboard,
+    get_realtime_navigation_keyboard,
+    get_realtime_refresh_keyboard
+)
 
 def calculate_time_duration(start_time: datetime, end_time: datetime = None) -> str:
     """Calculate time duration between start and end time"""
@@ -481,7 +485,7 @@ def get_manager_realtime_monitoring_router():
                     )
                 ])
                 
-                keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+                keyboard = get_realtime_navigation_keyboard(lang=user.get('language', 'uz'))
                 
                 # State'da joriy indeksni saqlash
                 await state.update_data(current_request_index=current_index)
@@ -638,7 +642,7 @@ def get_manager_realtime_monitoring_router():
                 )
             ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            keyboard = get_realtime_navigation_keyboard(lang=user.get('language', 'uz'))
             
             # State'da joriy indeksni saqlash
             await state.update_data(current_urgent_index=current_index)
@@ -748,7 +752,7 @@ def get_manager_realtime_monitoring_router():
                 )
             ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            keyboard = get_realtime_navigation_keyboard(lang=user.get('language', 'uz'))
             
             # State'da joriy indeksni saqlash
             await state.update_data(current_time_index=current_index)
@@ -903,7 +907,7 @@ def get_manager_realtime_monitoring_router():
                 )
             ])
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            keyboard = get_realtime_navigation_keyboard(lang=user.get('language', 'uz'))
             
             # State'da joriy indeksni saqlash
             await state.update_data(current_workflow_index=current_index)

@@ -536,4 +536,305 @@ def get_client_search_keyboard(lang='uz'):
     """Alias for get_client_search_menu for compatibility"""
     return get_client_search_menu(lang)
 
+def get_details_input_keyboard(app_id: int, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for details input"""
+    keyboard = [
+        [InlineKeyboardButton(
+            text="❌ Bekor qilish",
+            callback_data=f"jm_details_cancel_{app_id}"
+        )]
+    ]
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_details_confirmation_keyboard(app_id: int, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for details confirmation"""
+    keyboard = [
+        [InlineKeyboardButton(
+            text="📤 Controller-ga yuborish",
+            callback_data=f"jm_details_forward_{app_id}"
+        )],
+        [InlineKeyboardButton(
+            text="🔙 Inbox-ga qaytish",
+            callback_data="jm_inbox_back"
+        )]
+    ]
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_contact_note_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for contact note input"""
+    cancel_button = InlineKeyboardButton(
+        text="❌ Bekor qilish",
+        callback_data="jm_back_to_application"
+    )
+    return InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+
+def get_controller_note_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for controller note input"""
+    cancel_button = InlineKeyboardButton(
+        text="❌ Bekor qilish",
+        callback_data="jm_back_to_application"
+    )
+    return InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+
+def get_send_to_controller_confirmation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for send to controller confirmation"""
+    confirm_button = InlineKeyboardButton(
+        text="✅ Yuborish",
+        callback_data="jm_confirm_send_to_controller"
+    )
+    edit_button = InlineKeyboardButton(
+        text="📝 Tahrirlash",
+        callback_data="jm_edit_controller_note"
+    )
+    cancel_button = InlineKeyboardButton(
+        text="❌ Bekor qilish",
+        callback_data="jm_back_to_application"
+    )
+    return InlineKeyboardMarkup(inline_keyboard=[[confirm_button], [edit_button], [cancel_button]])
+
+def get_edit_controller_note_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for editing controller note"""
+    cancel_button = InlineKeyboardButton(
+        text="❌ Bekor qilish",
+        callback_data="jm_back_to_application"
+    )
+    return InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+
+def get_back_to_application_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for back to application"""
+    back_button = InlineKeyboardButton(
+        text="⬅️ Orqaga qaytish",
+        callback_data="jm_back_to_application"
+    )
+    return InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+
+def get_orders_navigation_keyboard(current_index: int, total_orders: int, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create navigation keyboard for orders"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="jm_prev_order"
+        ))
+    
+    # Next button
+    if current_index < total_orders - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="jm_next_order"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_clients_navigation_keyboard(current_index: int, total_clients: int, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create navigation keyboard for clients"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data="client_prev"
+        ))
+    
+    # Next button
+    if current_index < total_clients - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data="client_next"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Back to menu
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_detailed_statistics_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create keyboard for detailed statistics"""
+    keyboard = [
+        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_statistics")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_workflow_management_menu_updated(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Updated workflow management menu keyboard for junior manager"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📋 Arizalar kuzatuvi" if lang == 'uz' else "📋 Отслеживание заявок",
+                callback_data="jm_workflow_tracking"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Vazifalar monitoringi" if lang == 'uz' else "📊 Мониторинг задач",
+                callback_data="jm_workflow_monitoring"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📈 Hisobotlar" if lang == 'uz' else "📈 Отчеты",
+                callback_data="jm_workflow_reports"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Analitika" if lang == 'uz' else "📊 Аналитика",
+                callback_data="jm_workflow_analytics"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
+                callback_data="back_to_main"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_application_tracking_menu_updated(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Updated application tracking menu keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="⏳ Kutilmoqda" if lang == 'uz' else "⏳ Ожидающие",
+                callback_data="jm_track_pending"
+            ),
+            InlineKeyboardButton(
+                text="🔄 Jarayonda" if lang == 'uz' else "🔄 В процессе",
+                callback_data="jm_track_progress"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="✅ Bajarilgan" if lang == 'uz' else "✅ Выполненные",
+                callback_data="jm_track_completed"
+            ),
+            InlineKeyboardButton(
+                text="📋 Barchasi" if lang == 'uz' else "📋 Все",
+                callback_data="jm_track_all"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
+                callback_data="jm_workflow_back"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_task_monitoring_menu_updated(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Updated task monitoring menu keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📅 Kunlik" if lang == 'uz' else "📅 Дневной",
+                callback_data="jm_monitor_daily"
+            ),
+            InlineKeyboardButton(
+                text="📊 Haftalik" if lang == 'uz' else "📊 Недельный",
+                callback_data="jm_monitor_weekly"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📈 Samaradorlik" if lang == 'uz' else "📈 Эффективность",
+                callback_data="jm_monitor_performance"
+            ),
+            InlineKeyboardButton(
+                text="📋 Barchasi" if lang == 'uz' else "📋 Все",
+                callback_data="jm_monitor_all"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
+                callback_data="jm_workflow_back"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_junior_manager_main_keyboard_updated(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Updated junior manager main keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="🔌 Ulanish arizasi yaratish", callback_data="create_connection"),
+            InlineKeyboardButton(text="🔧 Texnik xizmat yaratish", callback_data="create_technical")
+        ],
+        [
+            InlineKeyboardButton(text="📥 Inbox", callback_data="view_inbox"),
+            InlineKeyboardButton(text="📋 Buyurtmalar", callback_data="view_orders")
+        ],
+        [
+            InlineKeyboardButton(text="🔍 Mijoz qidiruv", callback_data="search_clients"),
+            InlineKeyboardButton(text="📊 Statistika", callback_data="view_statistics")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_client_search_menu_updated(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Updated client search menu"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="📱 Telefon raqami", callback_data="search_by_phone"),
+            InlineKeyboardButton(text="👤 Ism", callback_data="search_by_name")
+        ],
+        [
+            InlineKeyboardButton(text="🆔 ID", callback_data="search_by_id"),
+            InlineKeyboardButton(text="➕ Yangi mijoz", callback_data="create_new_client")
+        ],
+        [
+            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_application_priority_keyboard_updated(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Updated application priority keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="🟢 Past", callback_data="priority_low"),
+            InlineKeyboardButton(text="🟡 O'rta", callback_data="priority_medium")
+        ],
+        [
+            InlineKeyboardButton(text="🟠 Yuqori", callback_data="priority_high"),
+            InlineKeyboardButton(text="🔴 Shoshilinch", callback_data="priority_urgent")
+        ],
+        [
+            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_details")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_application_confirmation_keyboard_updated(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Updated application confirmation keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="confirm_application"),
+            InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_application")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
 

@@ -1,5 +1,6 @@
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from keyboards.technician_buttons import get_reports_back_keyboard
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 from keyboards.technician_buttons import get_reports_keyboard
@@ -86,14 +87,7 @@ Kerakli hisobotni tanlang:
 • O'rtacha vaqt: {stats.get('avg_time', 0)} soat
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_reports"
-                )
-            ]]
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_reports_back_keyboard('uz')
             await callback.message.edit_text(
                 text.strip(),
                 reply_markup=keyboard,
@@ -141,14 +135,7 @@ Kerakli hisobotni tanlang:
 • O'rtacha vaqt: {stats.get('avg_time', 0)} soat
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_reports"
-                )
-            ]]
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_reports_back_keyboard('uz')
             await callback.message.edit_text(
                 text.strip(),
                 reply_markup=keyboard,
@@ -251,14 +238,7 @@ Kerakli hisobotni tanlang:
 • Samaradorlik: {performance.get('efficiency_rating', 0)}%
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_reports"
-                )
-            ]]
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_reports_back_keyboard('uz')
             await callback.message.edit_text(
                 text.strip(),
                 reply_markup=keyboard,

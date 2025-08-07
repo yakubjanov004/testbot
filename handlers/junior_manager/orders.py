@@ -6,7 +6,7 @@ Manages orders for junior manager
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_orders_keyboard, get_junior_manager_back_keyboard
+from keyboards.junior_manager_buttons import get_orders_keyboard, get_junior_manager_back_keyboard, get_orders_navigation_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
@@ -220,33 +220,4 @@ def get_junior_manager_orders_router():
         except Exception as e:
             await callback.answer("Xatolik yuz berdi")
 
-    return router
-
-def get_orders_navigation_keyboard(current_index: int, total_orders: int):
-    """Create navigation keyboard for orders"""
-    keyboard = []
-    
-    # Navigation row
-    nav_buttons = []
-    
-    # Previous button
-    if current_index > 0:
-        nav_buttons.append(InlineKeyboardButton(
-            text="⬅️ Oldingi",
-            callback_data="jm_prev_order"
-        ))
-    
-    # Next button
-    if current_index < total_orders - 1:
-        nav_buttons.append(InlineKeyboardButton(
-            text="Keyingi ➡️",
-            callback_data="jm_next_order"
-        ))
-    
-    if nav_buttons:
-        keyboard.append(nav_buttons)
-    
-    # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard) 
+    return router 

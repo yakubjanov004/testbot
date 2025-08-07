@@ -384,14 +384,105 @@ def equipment_preparation_keyboard(request_id: str, lang: str = "uz") -> InlineK
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 def get_language_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
-    """Warehouse uchun til tanlash inline keyboard"""
-    uz_text = "🇺🇿 O‘zbekcha" if lang == "uz" else "🇺🇿 Узбекский"
-    ru_text = "🇷🇺 Ruscha" if lang == "uz" else "🇷🇺 Русский"
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=uz_text, callback_data="warehouse_lang_uz")],
-            [InlineKeyboardButton(text=ru_text, callback_data="warehouse_lang_ru")]
+    """Language selection keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="set_language_uz"),
+            InlineKeyboardButton(text="🇷🇺 Русский", callback_data="set_language_ru")
         ]
-    )
-    return keyboard
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+# New centralized keyboard functions for warehouse handlers
+
+def get_warehouse_inbox_navigation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Navigation keyboard for warehouse inbox"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="⬅️ Oldingi", callback_data="wh_prev"),
+            InlineKeyboardButton(text="Keyingisi ➡️", callback_data="wh_next")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_request_actions_keyboard(request_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Action buttons for warehouse requests"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"wh_approve_{request_id}"),
+            InlineKeyboardButton(text="❌ Rad etish", callback_data=f"wh_reject_{request_id}")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_back_to_inbox_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Back to inbox keyboard"""
+    keyboard = [
+        [InlineKeyboardButton(text="📥 Inbox'ga qaytish", callback_data="wh_back_to_inbox")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_cancel_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Cancel action keyboard"""
+    keyboard = [
+        [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="wh_back_to_inbox")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_application_actions_keyboard(app_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Action buttons for warehouse applications"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="✅ Yakunlash", callback_data=f"wh_complete_{app_id}"),
+            InlineKeyboardButton(text="🔧 Texnikka qaytarish", callback_data=f"wh_return_tech_{app_id}")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_export_types_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Export types selection keyboard"""
+    keyboard = [
+        [InlineKeyboardButton(text="📦 Inventarizatsiya", callback_data="warehouse_export_inventory")],
+        [InlineKeyboardButton(text="📋 Berilgan materiallar", callback_data="warehouse_export_issued_items")],
+        [InlineKeyboardButton(text="📑 Buyurtmalar", callback_data="warehouse_export_orders")],
+        [InlineKeyboardButton(text="📊 Statistika", callback_data="warehouse_export_statistics")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_export_formats_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Export formats selection keyboard"""
+    keyboard = [
+        [InlineKeyboardButton(text="CSV", callback_data="warehouse_format_csv")],
+        [InlineKeyboardButton(text="Excel", callback_data="warehouse_format_xlsx")],
+        [InlineKeyboardButton(text="Word", callback_data="warehouse_format_docx")],
+        [InlineKeyboardButton(text="PDF", callback_data="warehouse_format_pdf")],
+        [InlineKeyboardButton(text="◀️ Orqaga", callback_data="warehouse_export_back_types")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_export_back_types_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Back to export types keyboard"""
+    keyboard = [
+        [InlineKeyboardButton(text="📦 Inventarizatsiya", callback_data="warehouse_export_inventory")],
+        [InlineKeyboardButton(text="📋 Berilgan materiallar", callback_data="warehouse_export_issued_items")],
+        [InlineKeyboardButton(text="📑 Buyurtmalar", callback_data="warehouse_export_orders")],
+        [InlineKeyboardButton(text="📊 Statistika", callback_data="warehouse_export_statistics")],
+        [InlineKeyboardButton(text="◀️ Orqaga", callback_data="warehouse_export_back_main")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_warehouse_back_to_main_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Back to main menu keyboard"""
+    keyboard = [
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="warehouse_back_to_main")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

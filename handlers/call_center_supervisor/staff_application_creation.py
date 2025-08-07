@@ -13,6 +13,9 @@ from typing import Dict, Any, Optional
 
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import get_call_center_supervisor_main_menu
+from keyboards.call_center_supervisor_buttons import (
+    get_supervisor_staff_creation_keyboard
+)
 
 # States imports
 from states.staff_application_states import StaffApplicationStates
@@ -49,34 +52,7 @@ def get_call_center_supervisor_staff_application_creation_router():
         )
         
         # Create inline keyboard for client search options
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📱 Telefon",
-                    callback_data="ccs_client_search_phone"
-                ),
-                InlineKeyboardButton(
-                    text="👤 Ism",
-                    callback_data="ccs_client_search_name"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🆔 ID",
-                    callback_data="ccs_client_search_id"
-                ),
-                InlineKeyboardButton(
-                    text="➕ Yangi",
-                    callback_data="ccs_client_search_new"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="ccs_cancel_application_creation"
-                )
-            ]
-        ])
+        keyboard = get_supervisor_staff_creation_keyboard(lang)
         
         await message.answer(prompt_text, reply_markup=keyboard)
         await state.set_state(StaffApplicationStates.selecting_client_search_method)
@@ -103,34 +79,7 @@ def get_call_center_supervisor_staff_application_creation_router():
         )
         
         # Create inline keyboard for client search options
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📱 Telefon",
-                    callback_data="ccs_client_search_phone"
-                ),
-                InlineKeyboardButton(
-                    text="👤 Ism",
-                    callback_data="ccs_client_search_name"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🆔 ID",
-                    callback_data="ccs_client_search_id"
-                ),
-                InlineKeyboardButton(
-                    text="➕ Yangi",
-                    callback_data="ccs_client_search_new"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="ccs_cancel_application_creation"
-                )
-            ]
-        ])
+        keyboard = get_supervisor_staff_creation_keyboard(lang)
         
         await message.answer(prompt_text, reply_markup=keyboard)
         await state.set_state(StaffApplicationStates.selecting_client_search_method)
@@ -271,26 +220,7 @@ def get_call_center_supervisor_staff_application_creation_router():
         )
         
         # Show application type selection
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🔌 Ulanish arizasi",
-                    callback_data="ccs_app_type_connection"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔧 Texnik xizmat",
-                    callback_data="ccs_app_type_technical"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="ccs_cancel_application_creation"
-                )
-            ]
-        ])
+        keyboard = get_supervisor_staff_creation_keyboard(lang)
         
         await message.answer(success_text, reply_markup=keyboard)
         await state.set_state(StaffApplicationStates.selecting_application_type)

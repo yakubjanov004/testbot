@@ -14,12 +14,14 @@ from typing import Dict, Any, List, Optional
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
     get_statistics_menu, get_analytics_dashboard_keyboard, 
-    get_performance_dashboard_keyboard, get_analytics_menu
+    get_performance_dashboard_keyboard, get_analytics_menu,
+    get_supervisor_statistics_keyboard
 )
 
 # States imports
 from states.call_center_supervisor_states import CallCenterSupervisorStatisticsStates
 from filters.role_filter import RoleFilter
+from states.call_center_supervisor_states import CallCenterSupervisorMainMenuStates
 
 def get_call_center_supervisor_statistics_router():
     """Get router for call center supervisor statistics handlers"""
@@ -532,34 +534,7 @@ async def _show_data_export_options(message: Message, lang: str):
         f"Eksport qilish uchun tegishli tugmani bosing:"
     )
     
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(
-                text="📋 Buyurtmalar CSV",
-                callback_data="ccs_export_orders_csv"
-            ),
-            InlineKeyboardButton(
-                text="👥 Xodimlar hisoboti",
-                callback_data="ccs_export_staff_report"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="📊 Statistika PDF",
-                callback_data="ccs_export_stats_pdf"
-            ),
-            InlineKeyboardButton(
-                text="🎯 KPI hisobot",
-                callback_data="ccs_export_kpi_report"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="❌ Yopish",
-                callback_data="ccs_close_menu"
-            )
-        ]
-    ])
+    keyboard = get_supervisor_statistics_keyboard(lang)
     
     await message.answer(text, reply_markup=keyboard)
 

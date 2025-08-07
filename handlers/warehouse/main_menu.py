@@ -1,7 +1,10 @@
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
-from keyboards.warehouse_buttons import get_warehouse_main_keyboard
+from keyboards.warehouse_buttons import (
+    get_warehouse_main_keyboard,
+    get_warehouse_back_to_main_keyboard
+)
 from states.warehouse_states import WarehouseMainMenuStates
 from filters.role_filter import RoleFilter
 
@@ -273,9 +276,7 @@ Kerakli bo'limni tanlang:
             success_text = "✅ Til muvaffaqiyatli o'zgartirildi!"
             
             # Create inline keyboard for back to main menu
-            back_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="warehouse_back_to_main")]
-            ])
+            back_keyboard = get_warehouse_back_to_main_keyboard(lang)
             
             await callback.message.edit_text(
                 text=success_text,

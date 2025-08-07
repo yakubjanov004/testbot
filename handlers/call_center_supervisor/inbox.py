@@ -7,10 +7,18 @@ This module handles call center supervisor inbox functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.call_center_supervisor_buttons import get_supervisor_inbox_keyboard, get_supervisor_back_keyboard
-from typing import Dict, Any, List, Optional
+from typing import Optional, Dict, Any, List
 from datetime import datetime
+
+# States imports
+from states.call_center_supervisor_states import CallCenterSupervisorMainMenuStates
 from filters.role_filter import RoleFilter
+from aiogram.filters import StateFilter
+from keyboards.call_center_supervisor_buttons import (
+    get_supervisor_operator_assignment_keyboard,
+    get_supervisor_back_to_inbox_keyboard,
+    get_supervisor_navigation_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -201,7 +209,7 @@ def get_supervisor_inbox_router():
                 
                 await message.answer(
                     text=no_applications_text,
-                    reply_markup=get_supervisor_back_keyboard(lang)
+                    reply_markup=get_supervisor_back_to_inbox_keyboard(lang)
                 )
                 return
             
@@ -289,7 +297,7 @@ def get_supervisor_inbox_router():
             )
             
             # Create navigation keyboard
-            keyboard = get_applications_navigation_keyboard(index, len(applications), application['id'])
+            keyboard = get_supervisor_navigation_keyboard(index, len(applications), application['id'], 'uz')
             
             if isinstance(message_or_callback, Message):
                 await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
@@ -449,19 +457,7 @@ def get_supervisor_inbox_router():
                     f"✅ Operator'ga yuborilsinmi?"
                 )
                 
-                # Create confirmation buttons
-                buttons = [
-                    [InlineKeyboardButton(
-                        text="✅ Ha, yuborish",
-                        callback_data=f"supervisor_confirm_assign_{application_id}_{operator_id}"
-                    )],
-                    [InlineKeyboardButton(
-                        text="❌ Bekor qilish",
-                        callback_data="supervisor_back_to_application"
-                    )]
-                ]
-                
-                keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+                keyboard = get_supervisor_operator_assignment_keyboard(lang)
                 
                 await callback.message.edit_text(
                     text,
@@ -518,12 +514,7 @@ def get_supervisor_inbox_router():
                         f"✅ Operator mijoz bilan bog'lanadi."
                     )
                     
-                    # Create back to inbox button
-                    back_button = InlineKeyboardButton(
-                        text="📥 Inbox'ga qaytish",
-                        callback_data="supervisor_back_to_inbox"
-                    )
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+                    keyboard = get_supervisor_back_to_inbox_keyboard(lang)
                     
                     await callback.message.edit_text(
                         success_text,
@@ -594,45 +585,7 @@ def get_supervisor_inbox_router():
 
     return router
 
-def get_applications_navigation_keyboard(current_index: int, total_applications: int, application_id: str):
-    """Create navigation keyboard for applications"""
-    keyboard = []
-    
-    # Action buttons row
-    action_buttons = []
-    
-    # Assign to operator button
-    action_buttons.append(InlineKeyboardButton(
-        text="📞 Operator'ga yuborish",
-        callback_data=f"supervisor_assign_operator_{application_id}"
-    ))
-    
-    keyboard.append(action_buttons)
-    
-    # Navigation row
-    nav_buttons = []
-    
-    # Previous button
-    if current_index > 0:
-        nav_buttons.append(InlineKeyboardButton(
-            text="⬅️ Oldingi",
-            callback_data="supervisor_prev_application"
-        ))
-    
-    # Next button
-    if current_index < total_applications - 1:
-        nav_buttons.append(InlineKeyboardButton(
-            text="Keyingi ➡️",
-            callback_data="supervisor_next_application"
-        ))
-    
-    if nav_buttons:
-        keyboard.append(nav_buttons)
-    
-    # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
 
 def get_call_center_supervisor_inbox_router():
     """Get call center supervisor inbox router - alias for get_supervisor_inbox_router"""

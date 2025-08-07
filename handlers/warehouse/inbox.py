@@ -10,6 +10,13 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 
 from states.warehouse_states import WarehouseWorkflowStates
 from filters.role_filter import RoleFilter
+from keyboards.warehouse_buttons import (
+    get_warehouse_inbox_navigation_keyboard,
+    get_warehouse_request_actions_keyboard,
+    get_warehouse_back_to_inbox_keyboard,
+    get_warehouse_cancel_keyboard,
+    get_warehouse_application_actions_keyboard
+)
 
 class WarehouseWorkflowFSM(StatesGroup):
     viewing_request = State()
@@ -249,7 +256,10 @@ def get_warehouse_inbox_router():
             if nav_buttons:
                 buttons.append(nav_buttons)
 
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_warehouse_application_actions_keyboard(app_id, lang)
+            # Add navigation buttons if needed
+            if nav_buttons:
+                keyboard.inline_keyboard.append(nav_buttons)
             
             await message.answer(
                 text,
@@ -342,7 +352,10 @@ def get_warehouse_inbox_router():
             if nav_buttons:
                 buttons.append(nav_buttons)
 
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_warehouse_application_actions_keyboard(app_id, lang)
+            # Add navigation buttons if needed
+            if nav_buttons:
+                keyboard.inline_keyboard.append(nav_buttons)
             
             # Edit the current message instead of sending a new one
             await message.edit_text(text, parse_mode='HTML', reply_markup=keyboard)
@@ -461,11 +474,7 @@ def get_warehouse_inbox_router():
                     )
                     
                     # Create back to inbox button
-                    back_button = InlineKeyboardButton(
-                        text="📥 Inbox'ga qaytish",
-                        callback_data="wh_back_to_inbox"
-                    )
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+                    keyboard = get_warehouse_back_to_inbox_keyboard(lang)
                     
                     await callback.message.edit_text(
                         approval_text,
@@ -529,11 +538,7 @@ def get_warehouse_inbox_router():
                 )
                 
                 # Create cancel button
-                cancel_button = InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="wh_back_to_inbox"
-                )
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+                keyboard = get_warehouse_cancel_keyboard(lang)
                 
                 await callback.message.edit_text(
                     rejection_text,
@@ -597,11 +602,7 @@ def get_warehouse_inbox_router():
                 )
                 
                 # Create back to inbox button
-                back_button = InlineKeyboardButton(
-                    text="📥 Inbox'ga qaytish",
-                    callback_data="wh_back_to_inbox"
-                )
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+                keyboard = get_warehouse_back_to_inbox_keyboard(lang)
                 
                 await message.answer(
                     rejection_text,
@@ -840,7 +841,10 @@ def get_warehouse_inbox_router():
             if nav_buttons:
                 buttons.append(nav_buttons)
 
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_warehouse_request_actions_keyboard(request['id'], lang)
+            # Add navigation buttons if needed
+            if nav_buttons:
+                keyboard.inline_keyboard.append(nav_buttons)
             
             await message.answer(
                 text,
@@ -917,7 +921,10 @@ def get_warehouse_inbox_router():
             if nav_buttons:
                 buttons.append(nav_buttons)
 
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_warehouse_request_actions_keyboard(request['id'], lang)
+            # Add navigation buttons if needed
+            if nav_buttons:
+                keyboard.inline_keyboard.append(nav_buttons)
             
             await message.edit_text(
                 text,

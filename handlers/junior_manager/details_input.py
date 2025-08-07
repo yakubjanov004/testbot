@@ -11,6 +11,10 @@ from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
+from keyboards.junior_manager_buttons import (
+    get_details_input_keyboard,
+    get_details_confirmation_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -260,28 +264,10 @@ Endi arizani controller-ga yuborishingiz mumkin."""
 
     def _create_details_input_keyboard(app_id: int, lang: str) -> InlineKeyboardMarkup:
         """Create keyboard for details input"""
-        keyboard = [
-            [InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data=f"jm_details_cancel_{app_id}"
-            )]
-        ]
-        
-        return InlineKeyboardMarkup(inline_keyboard=keyboard)
+        return get_details_input_keyboard(app_id, lang)
 
     def _create_details_confirmation_keyboard(app_id: int, lang: str) -> InlineKeyboardMarkup:
         """Create keyboard for details confirmation"""
-        keyboard = [
-            [InlineKeyboardButton(
-                text="📤 Controller-ga yuborish",
-                callback_data=f"jm_details_forward_{app_id}"
-            )],
-            [InlineKeyboardButton(
-                text="🔙 Inbox-ga qaytish",
-                callback_data="jm_inbox_back"
-            )]
-        ]
-        
-        return InlineKeyboardMarkup(inline_keyboard=keyboard)
+        return get_details_confirmation_keyboard(app_id, lang)
 
     return router 

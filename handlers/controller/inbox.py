@@ -197,7 +197,7 @@ async def get_controller_applications():
     ]
 
 # Mock assignment functions
-async def assign_to_technician(application_id: str, technician_id: int):
+async def assign_to_technician_mock(application_id: str, technician_id: int):
     """Mock assign to technician"""
     print(f"Mock: Assigning application {application_id} to technician {technician_id}")
     return True
@@ -627,7 +627,7 @@ def get_controller_inbox_router():
                 return
             
             # Mock assignment
-            success = await assign_to_technician(full_id, technician_id)
+            success = await assign_to_technician_mock(full_id, technician_id)
             
             if success:
                 # Update application status

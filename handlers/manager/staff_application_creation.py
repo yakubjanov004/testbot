@@ -11,6 +11,12 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from states.staff_application_states import StaffApplicationStates
 from filters.role_filter import RoleFilter
+from keyboards.manager_buttons import (
+    get_staff_creation_keyboard,
+    get_client_search_keyboard,
+    get_application_type_keyboard,
+    get_client_confirmation_keyboard
+)
 
 def get_manager_staff_application_router():
     """Get router for manager staff application creation handlers"""
@@ -60,34 +66,7 @@ def get_manager_staff_application_router():
             )
             
             # Create inline keyboard for client search options
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="📱 Telefon",
-                        callback_data="manager_client_search_phone"
-                    ),
-                    InlineKeyboardButton(
-                        text="👤 Ism",
-                        callback_data="manager_client_search_name"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🆔 ID",
-                        callback_data="manager_client_search_id"
-                    ),
-                    InlineKeyboardButton(
-                        text="➕ Yangi",
-                        callback_data="manager_client_search_new"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="❌ Bekor qilish",
-                        callback_data="manager_cancel_application_creation"
-                    )
-                ]
-            ])
+            keyboard = get_staff_creation_keyboard(lang=user.get('language', 'uz'))
             
             await message.answer(prompt_text, reply_markup=keyboard)
             
@@ -134,34 +113,7 @@ def get_manager_staff_application_router():
             )
             
             # Create inline keyboard for client search options
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="📱 Telefon",
-                        callback_data="manager_client_search_phone"
-                    ),
-                    InlineKeyboardButton(
-                        text="👤 Ism",
-                        callback_data="manager_client_search_name"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🆔 ID",
-                        callback_data="manager_client_search_id"
-                    ),
-                    InlineKeyboardButton(
-                        text="➕ Yangi",
-                        callback_data="manager_client_search_new"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="❌ Bekor qilish",
-                        callback_data="manager_cancel_application_creation"
-                    )
-                ]
-            ])
+            keyboard = get_client_search_keyboard(lang=user.get('language', 'uz'))
             
             await message.answer(prompt_text, reply_markup=keyboard)
             
@@ -509,26 +461,7 @@ async def _search_client_by_phone(message: Message, state: FSMContext, search_ms
             f"Bu mijoz uchun ariza yaratishni xohlaysizmi?"
         )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="✅ Ha, davom etish",
-                    callback_data="confirm_client_selection"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔍 Boshqa mijoz qidirish",
-                    callback_data="search_another_client"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="cancel_application_creation"
-                )
-            ]
-        ])
+        keyboard = get_client_confirmation_keyboard(lang=user.get('language', 'uz'))
         
         await search_msg.edit_text(found_text, reply_markup=keyboard)
         
@@ -560,26 +493,7 @@ async def _search_client_by_name(message: Message, state: FSMContext, search_msg
             f"Bu mijoz uchun ariza yaratishni xohlaysizmi?"
         )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="✅ Ha, davom etish",
-                    callback_data="confirm_client_selection"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔍 Boshqa mijoz qidirish",
-                    callback_data="search_another_client"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="cancel_application_creation"
-                )
-            ]
-        ])
+        keyboard = get_client_confirmation_keyboard(lang=user.get('language', 'uz'))
         
         await search_msg.edit_text(found_text, reply_markup=keyboard)
         
@@ -611,26 +525,7 @@ async def _search_client_by_id(message: Message, state: FSMContext, search_msg: 
             f"Bu mijoz uchun ariza yaratishni xohlaysizmi?"
         )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="✅ Ha, davom etish",
-                    callback_data="confirm_client_selection"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔍 Boshqa mijoz qidirish",
-                    callback_data="search_another_client"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish",
-                    callback_data="cancel_application_creation"
-                )
-            ]
-        ])
+        keyboard = get_client_confirmation_keyboard(lang=user.get('language', 'uz'))
         
         await search_msg.edit_text(found_text, reply_markup=keyboard)
         
@@ -640,21 +535,4 @@ async def _search_client_by_id(message: Message, state: FSMContext, search_msg: 
 
 def _create_application_type_keyboard():
     """Create keyboard for application type selection"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(
-                text="🔌 Ulanish arizasi",
-                callback_data="application_type_connection"
-            ),
-            InlineKeyboardButton(
-                text="🔧 Texnik xizmat",
-                callback_data="application_type_technical"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="cancel_application_creation"
-            )
-        ]
-    ])
+    return get_application_type_keyboard(lang='uz')

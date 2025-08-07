@@ -985,3 +985,177 @@ def get_order_actions_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
         [KeyboardButton(text=back_text)]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+# New centralized keyboard functions for call center module
+def get_rating_statistics_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Rating statistics keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📈 Batafsil hisobot" if lang == 'uz' else "📈 Подробный отчет",
+                callback_data="detailed_rating_report"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Reyting grafigi" if lang == 'uz' else "📊 График рейтинга",
+                callback_data="rating_chart"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_feedback_complaints_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Feedback and complaints keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📋 Barcha fikrlar" if lang == 'uz' else "📋 Все отзывы",
+                callback_data="view_all_feedback"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Fikrlar statistikasi" if lang == 'uz' else "📊 Статистика отзывов",
+                callback_data="feedback_statistics"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_top_operators_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Top operators keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📊 Batafsil reyting" if lang == 'uz' else "📊 Подробный рейтинг",
+                callback_data="detailed_operator_rating"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🏆 Mukofotlar" if lang == 'uz' else "🏆 Награды",
+                callback_data="operator_rewards"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_rating_dynamics_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Rating dynamics keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📊 Grafik ko'rinish" if lang == 'uz' else "📊 Графический вид",
+                callback_data="rating_dynamics_chart"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📈 Batafsil tahlil" if lang == 'uz' else "📈 Подробный анализ",
+                callback_data="detailed_rating_analysis"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_rating_settings_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Rating settings keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📝 Reyting shablonlari" if lang == 'uz' else "📝 Шаблоны рейтинга",
+                callback_data="rating_templates"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🔧 Boshqa sozlamalar" if lang == 'uz' else "🔧 Другие настройки",
+                callback_data="other_rating_settings"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_operator_resolve_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Operator resolve issue keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="✅ Muammoni hal qilish" if lang == 'uz' else "✅ Решить проблему",
+                callback_data="operator_resolve_issue"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Orqaga qaytish" if lang == 'uz' else "⬅️ Вернуться назад",
+                callback_data="operator_back_to_application"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_operator_cancel_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Operator cancel keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="❌ Bekor qilish" if lang == 'uz' else "❌ Отмена",
+                callback_data="operator_back_to_application"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_operator_back_to_inbox_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Operator back to inbox keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="📥 Inbox'ga qaytish" if lang == 'uz' else "📥 Вернуться в inbox",
+                callback_data="operator_back_to_inbox"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_operator_navigation_keyboard(current_index: int, total_applications: int, application_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Operator navigation keyboard"""
+    keyboard = []
+    
+    # Action buttons row
+    action_buttons = []
+    
+    # Contact client button
+    action_buttons.append(InlineKeyboardButton(
+        text="📞 Mijoz bilan bog'lanish" if lang == 'uz' else "📞 Связаться с клиентом",
+        callback_data=f"operator_contact_client_{application_id}"
+    ))
+    
+    # Resolve issue button
+    action_buttons.append(InlineKeyboardButton(
+        text="✅ Muammoni hal qilish" if lang == 'uz' else "✅ Решить проблему",
+        callback_data=f"operator_resolve_issue_{application_id}"
+    ))
+    
+    keyboard.append(action_buttons)
+    
+    # Navigation buttons row
+    nav_buttons = []
+    
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi" if lang == 'uz' else "⬅️ Предыдущая",
+            callback_data="operator_prev_application"
+        ))
+    
+    if current_index < total_applications - 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️" if lang == 'uz' else "Следующая ➡️",
+            callback_data="operator_next_application"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

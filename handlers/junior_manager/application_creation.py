@@ -53,47 +53,24 @@ async def create_junior_manager_application(junior_manager_id: int, client_id: i
         'created_at': datetime.now()
     }
 
+from keyboards.junior_manager_buttons import (
+    get_client_search_menu as get_client_search_menu_keyboard,
+    get_application_priority_keyboard as get_application_priority_keyboard_func,
+    get_application_confirmation_keyboard as get_application_confirmation_keyboard_func
+)
+
 # Mock keyboard functions
 def get_client_search_menu(lang: str):
     """Mock client search menu keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="🔍 Telefon raqami bilan qidirish", callback_data="search_by_phone"),
-            InlineKeyboardButton(text="👤 Ism bilan qidirish", callback_data="search_by_name")
-        ],
-        [
-            InlineKeyboardButton(text="➕ Yangi mijoz qo'shish", callback_data="add_new_client"),
-            InlineKeyboardButton(text="🆔 ID bilan qidirish", callback_data="search_by_id")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
-        ]
-    ])
+    return get_client_search_menu_keyboard(lang)
 
 def get_application_priority_keyboard(lang: str):
     """Mock application priority keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="🟢 Past", callback_data="jm_priority_low"),
-            InlineKeyboardButton(text="🟡 O'rta", callback_data="jm_priority_medium")
-        ],
-        [
-            InlineKeyboardButton(text="🟠 Yuqori", callback_data="jm_priority_high"),
-            InlineKeyboardButton(text="🔴 Shoshilinch", callback_data="jm_priority_urgent")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_details")
-        ]
-    ])
+    return get_application_priority_keyboard_func(lang)
 
 def get_application_confirmation_keyboard(lang: str):
     """Mock application confirmation keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="jm_confirm_application"),
-            InlineKeyboardButton(text="❌ Bekor qilish", callback_data="jm_cancel_application")
-        ]
-    ])
+    return get_application_confirmation_keyboard_func(lang)
 
 # Mock states
 from aiogram.fsm.state import State, StatesGroup

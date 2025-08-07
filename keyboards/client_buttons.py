@@ -358,3 +358,82 @@ def get_back_to_orders_menu_keyboard(lang="uz"):
 def get_client_main_keyboard(lang="uz"):
     """Client main keyboard - returns main menu keyboard"""
     return get_main_menu_keyboard(lang)
+
+# New centralized keyboard functions for client module
+def get_client_regions_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Regions selection keyboard for client"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Toshkent shahri", callback_data="region_tashkent_city"),
+            InlineKeyboardButton(text="Toshkent viloyati", callback_data="region_tashkent_region")
+        ],
+        [
+            InlineKeyboardButton(text="Andijon", callback_data="region_andijon"),
+            InlineKeyboardButton(text="Farg'ona", callback_data="region_fergana")
+        ],
+        [
+            InlineKeyboardButton(text="Namangan", callback_data="region_namangan"),
+            InlineKeyboardButton(text="Sirdaryo", callback_data="region_sirdaryo")
+        ],
+        [
+            InlineKeyboardButton(text="Jizzax", callback_data="region_jizzax"),
+            InlineKeyboardButton(text="Samarqand", callback_data="region_samarkand")
+        ],
+        [
+            InlineKeyboardButton(text="Buxoro", callback_data="region_bukhara"),
+            InlineKeyboardButton(text="Navoiy", callback_data="region_navoi")
+        ],
+        [
+            InlineKeyboardButton(text="Qashqadaryo", callback_data="region_kashkadarya"),
+            InlineKeyboardButton(text="Surxondaryo", callback_data="region_surkhandarya")
+        ],
+        [
+            InlineKeyboardButton(text="Xorazm", callback_data="region_khorezm"),
+            InlineKeyboardButton(text="Qoraqalpog'iston", callback_data="region_karakalpakstan")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_client_tariff_selection_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Tariff selection keyboard for client"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Standard", callback_data="tariff_standard"),
+            InlineKeyboardButton(text="Yangi", callback_data="tariff_new")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_client_profile_back_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Back to profile keyboard for client"""
+    back_text = "⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"
+    keyboard = [
+        [InlineKeyboardButton(text=back_text, callback_data="client_profile_back")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_client_orders_navigation_keyboard(current_index: int, current_page: int, total_pages: int, orders_on_page: int, order_id: int, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Create navigation keyboard for orders"""
+    keyboard = []
+    
+    # Navigation row
+    nav_buttons = []
+    
+    # Previous button
+    if current_index > 0 or current_page > 1:
+        nav_buttons.append(InlineKeyboardButton(
+            text="⬅️ Oldingi",
+            callback_data=f"order_prev_{current_index}_{current_page}_{order_id}"
+        ))
+    
+    # Next button
+    if current_index < orders_on_page - 1 or current_page < total_pages:
+        nav_buttons.append(InlineKeyboardButton(
+            text="Keyingi ➡️",
+            callback_data=f"order_next_{current_index}_{current_page}_{order_id}"
+        ))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+        
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

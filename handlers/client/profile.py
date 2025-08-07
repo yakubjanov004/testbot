@@ -7,7 +7,7 @@ This module handles client profile functionality.
 from aiogram import F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.client_buttons import get_client_profile_menu, get_edit_profile_keyboard
+from keyboards.client_buttons import get_client_profile_menu, get_edit_profile_keyboard, get_client_profile_back_keyboard
 from states.client_states import ProfileStates
 from filters.role_filter import RoleFilter
 from utils.logger import get_logger
@@ -144,9 +144,7 @@ def get_client_profile_router():
                 f"📅 <b>So'nggi faoliyat:</b> 2024-01-15"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="client_profile_back")]
-            ])
+            keyboard = get_client_profile_back_keyboard('uz')
             
             await callback.message.edit_text(stats_text, reply_markup=keyboard, parse_mode='HTML')
             

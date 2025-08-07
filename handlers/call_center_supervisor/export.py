@@ -2,10 +2,15 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, BufferedInputFile, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
-from keyboards.call_center_supervisor_buttons import get_call_center_supervisor_main_keyboard
-from states.call_center_supervisor_states import CallCenterSupervisorMainMenuStates
-from utils.export_utils import create_export_file, get_available_export_types, get_available_export_formats
 from filters.role_filter import RoleFilter
+from states.call_center_supervisor_states import CallCenterSupervisorMainMenuStates
+from keyboards.call_center_supervisor_buttons import (
+    get_call_center_supervisor_main_keyboard,
+    get_supervisor_export_types_keyboard,
+    get_supervisor_export_formats_keyboard,
+    get_supervisor_export_back_types_keyboard
+)
+from utils.export_utils import create_export_file, get_available_export_types, get_available_export_formats
 
 def get_call_center_supervisor_export_router():
     """Call Center Supervisor export router"""
@@ -117,23 +122,7 @@ def get_call_center_supervisor_export_router():
                 
                 text = "Export qilish\n\nQaysi ma'lumotlarni export qilmoqchisiz?" if lang == 'uz' else "Экспорт\n\nКакие данные вы хотите экспортировать?"
                 
-                keyboard = []
-                for export_type in export_types:
-                    keyboard.append([
-                        InlineKeyboardButton(
-                            text=export_type_names[lang].get(export_type, export_type),
-                            callback_data=f"ccs_export_main_{export_type}"
-                        )
-                    ])
-                
-                keyboard.append([
-                    InlineKeyboardButton(
-                        text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
-                        callback_data="ccs_export_main_back_main"
-                    )
-                ])
-                
-                markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+                markup = get_supervisor_export_types_keyboard(lang)
                 await callback.message.edit_text(text, reply_markup=markup)
                 await state.set_state(CallCenterSupervisorMainMenuStates.export_selection)
                 return
@@ -174,31 +163,7 @@ def get_call_center_supervisor_export_router():
             text += "Word - Microsoft Word formati\n" if lang == 'uz' else "Word - Формат Microsoft Word\n"
             text += "PDF - Chop etish uchun qulay format" if lang == 'uz' else "PDF - Удобный формат для печати"
             
-            keyboard = []
-            format_icons = {
-                'csv': 'CSV',
-                'xlsx': 'Excel',
-                'docx': 'Word',
-                'pdf': 'PDF'
-            }
-            
-            for fmt in formats:
-                keyboard.append([
-                    InlineKeyboardButton(
-                        text=format_icons.get(fmt, fmt.upper()),
-                        callback_data=f"ccs_format_main_{fmt}"
-                    )
-                ])
-            
-            # Add back button
-            keyboard.append([
-                InlineKeyboardButton(
-                    text="◀️ Orqaga" if lang == 'uz' else "◀️ Назад",
-                    callback_data="ccs_export_main_back_types"
-                )
-            ])
-            
-            markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            markup = get_supervisor_export_formats_keyboard(lang)
             await callback.message.edit_text(text, reply_markup=markup)
             await state.set_state(CallCenterSupervisorMainMenuStates.export_format_selection)
             

@@ -10,6 +10,12 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
 from states.staff_application_states import StaffApplicationStates
+from keyboards.junior_manager_buttons import (
+    get_junior_manager_main_keyboard_updated,
+    get_client_search_menu_updated,
+    get_application_priority_keyboard_updated,
+    get_application_confirmation_keyboard_updated
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -64,61 +70,19 @@ class RoleBasedApplicationHandler:
 
 def get_junior_manager_main_keyboard(lang: str = 'uz'):
     """Mock junior manager main keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="🔌 Ulanish arizasi yaratish", callback_data="create_connection"),
-            InlineKeyboardButton(text="🔧 Texnik xizmat yaratish", callback_data="create_technical")
-        ],
-        [
-            InlineKeyboardButton(text="📥 Inbox", callback_data="view_inbox"),
-            InlineKeyboardButton(text="📋 Buyurtmalar", callback_data="view_orders")
-        ],
-        [
-            InlineKeyboardButton(text="🔍 Mijoz qidiruv", callback_data="search_clients"),
-            InlineKeyboardButton(text="📊 Statistika", callback_data="view_statistics")
-        ]
-    ])
+    return get_junior_manager_main_keyboard_updated(lang)
 
 def get_client_search_menu(lang: str = 'uz'):
     """Mock client search menu"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="📱 Telefon raqami", callback_data="search_by_phone"),
-            InlineKeyboardButton(text="👤 Ism", callback_data="search_by_name")
-        ],
-        [
-            InlineKeyboardButton(text="🆔 ID", callback_data="search_by_id"),
-            InlineKeyboardButton(text="➕ Yangi mijoz", callback_data="create_new_client")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_main")
-        ]
-    ])
+    return get_client_search_menu_updated(lang)
 
 def get_application_priority_keyboard(lang: str = 'uz'):
     """Mock application priority keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="🟢 Past", callback_data="priority_low"),
-            InlineKeyboardButton(text="🟡 O'rta", callback_data="priority_medium")
-        ],
-        [
-            InlineKeyboardButton(text="🟠 Yuqori", callback_data="priority_high"),
-            InlineKeyboardButton(text="🔴 Shoshilinch", callback_data="priority_urgent")
-        ],
-        [
-            InlineKeyboardButton(text="◀️ Orqaga", callback_data="back_to_details")
-        ]
-    ])
+    return get_application_priority_keyboard_updated(lang)
 
 def get_application_confirmation_keyboard(lang: str = 'uz'):
     """Mock application confirmation keyboard"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="confirm_application"),
-            InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_application")
-        ]
-    ])
+    return get_application_confirmation_keyboard_updated(lang)
 
 def get_junior_manager_staff_application_router():
     """Get junior manager staff application router"""

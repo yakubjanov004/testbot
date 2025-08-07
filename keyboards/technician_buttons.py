@@ -226,3 +226,136 @@ def equipment_documentation_keyboard(request_id: str, lang: str = "uz") -> Inlin
         )]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+# New centralized keyboard functions for technician module
+def get_diagnostic_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Diagnostic keyboard for technician"""
+    diagnostic_text = "🔍 Diagnostika boshlash" if lang == "uz" else "🔍 Начать диагностику"
+    back_text = "⬅️ Orqaga" if lang == "uz" else "⬅️ Назад"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=diagnostic_text, callback_data="tech_start_diagnostic")],
+        [InlineKeyboardButton(text=back_text, callback_data="tech_back_to_application")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_cancel_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Cancel keyboard for technician"""
+    cancel_text = "❌ Bekor qilish" if lang == "uz" else "❌ Отмена"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=cancel_text, callback_data="tech_cancel")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_warehouse_confirmation_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Warehouse confirmation keyboard for technician"""
+    yes_text = "✅ Ha" if lang == "uz" else "✅ Да"
+    no_text = "❌ Yo'q" if lang == "uz" else "❌ Нет"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=yes_text, callback_data="tech_warehouse_yes")],
+        [InlineKeyboardButton(text=no_text, callback_data="tech_warehouse_no")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_warehouse_items_keyboard(items: list, lang: str = "uz") -> InlineKeyboardMarkup:
+    """Warehouse items selection keyboard for technician"""
+    keyboard = []
+    for item in items:
+        keyboard.append([
+            InlineKeyboardButton(
+                text=f"{item['name']} ({item['quantity']} dona)",
+                callback_data=f"tech_select_item_{item['id']}"
+            )
+        ])
+    
+    custom_text = "✏️ Boshqa jihoz" if lang == "uz" else "✏️ Другое оборудование"
+    keyboard.append([InlineKeyboardButton(text=custom_text, callback_data="tech_custom_warehouse_item")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_warehouse_quantity_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Warehouse quantity input keyboard for technician"""
+    cancel_text = "❌ Bekor qilish" if lang == "uz" else "❌ Отмена"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=cancel_text, callback_data="tech_cancel")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_work_completion_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Work completion keyboard for technician"""
+    complete_text = "✅ Ishni yakunlash" if lang == "uz" else "✅ Завершить работу"
+    back_text = "⬅️ Orqaga" if lang == "uz" else "⬅️ Назад"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=complete_text, callback_data="tech_complete_work")],
+        [InlineKeyboardButton(text=back_text, callback_data="tech_back_to_application")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_work_notes_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Work notes input keyboard for technician"""
+    cancel_text = "❌ Bekor qilish" if lang == "uz" else "❌ Отмена"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=cancel_text, callback_data="tech_cancel")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_back_to_application_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Back to application keyboard for technician"""
+    back_text = "⬅️ Ariza qaytish" if lang == "uz" else "⬅️ Вернуться к заявке"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=back_text, callback_data="tech_back_to_application")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_help_back_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Help back keyboard for technician"""
+    back_text = "⬅️ Orqaga" if lang == "uz" else "⬅️ Назад"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=back_text, callback_data="tech_back_to_help")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_reports_back_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Reports back keyboard for technician"""
+    back_text = "⬅️ Orqaga" if lang == "uz" else "⬅️ Назад"
+    
+    keyboard = [
+        [InlineKeyboardButton(text=back_text, callback_data="tech_back_to_reports")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_application_action_keyboard(application, current_index: int, total_applications: int, lang: str = "uz") -> InlineKeyboardMarkup:
+    """Application action keyboard for technician"""
+    keyboard = []
+    
+    # Navigation buttons
+    if total_applications > 1:
+        if current_index > 0:
+            prev_text = "⬅️ Oldingi" if lang == "uz" else "⬅️ Предыдущий"
+            keyboard.append([InlineKeyboardButton(text=prev_text, callback_data="tech_prev_application")])
+        
+        if current_index < total_applications - 1:
+            next_text = "Keyingi ➡️" if lang == "uz" else "Следующий ➡️"
+            keyboard.append([InlineKeyboardButton(text=next_text, callback_data="tech_next_application")])
+    
+    # Action buttons
+    if application.get('current_status') == 'assigned_to_technician':
+        accept_text = "✅ Ishni qabul qilish" if lang == "uz" else "✅ Принять работу"
+        keyboard.append([InlineKeyboardButton(text=accept_text, callback_data="tech_accept_work")])
+    
+    if application.get('work_started', False) and not application.get('work_completed', False):
+        diagnostic_text = "🔍 Diagnostika" if lang == "uz" else "🔍 Диагностика"
+        keyboard.append([InlineKeyboardButton(text=diagnostic_text, callback_data="tech_start_diagnostic")])
+    
+    # Back button
+    back_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"
+    keyboard.append([InlineKeyboardButton(text=back_text, callback_data="tech_main_menu")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

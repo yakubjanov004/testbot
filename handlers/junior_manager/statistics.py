@@ -7,10 +7,13 @@ This module handles junior manager statistics functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_statistics_keyboard, get_junior_manager_back_keyboard
+from filters.role_filter import RoleFilter
+from keyboards.junior_manager_buttons import (
+    get_statistics_keyboard,
+    get_detailed_statistics_keyboard
+)
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -137,9 +140,7 @@ def get_junior_manager_statistics_router():
                 f"• Muvaffaqiyat darajasi: {stats['success_rate']}"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_statistics")]
-            ])
+            keyboard = get_detailed_statistics_keyboard(lang)
             
             await callback.message.edit_text(detailed_stats_text, reply_markup=keyboard, parse_mode='HTML')
             

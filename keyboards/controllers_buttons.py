@@ -6,24 +6,20 @@ def get_controller_main_keyboard(lang="uz"):
     return controllers_main_menu(lang)
 
 def controllers_main_menu(lang='uz'):
-    """Controllers asosiy menyu"""
+    """Controllers asosiy menyu (soddalashtirilgan, 2tadan chiroyli)"""
     if lang == 'uz':
         keyboard = [
             [KeyboardButton(text="📥 Inbox"), KeyboardButton(text="📊 Monitoring")],
-            [KeyboardButton(text="📊 Statistika"), KeyboardButton(text="🎯 Sifat nazorati")],
-            [KeyboardButton(text="📊 Hisobotlar"), KeyboardButton(text="👨‍🔧 Texniklar")],
-            [KeyboardButton(text="🔌 Ulanish arizasi yaratish"), KeyboardButton(text="🔧 Texnik xizmat yaratish")],
-            [KeyboardButton(text="🕐 Real vaqtda kuzatish"), KeyboardButton(text="📤 Export")],
-            [KeyboardButton(text="🌐 Tilni o'zgartirish"), KeyboardButton(text="🏠 Bosh menyu")]
+            [KeyboardButton(text="🎯 Sifat nazorati"), KeyboardButton(text="🔌 Ulanish arizasi yaratish")],
+            [KeyboardButton(text="🔧 Texnik xizmat yaratish"), KeyboardButton(text="🕐 Real vaqtda kuzatish")],
+            [KeyboardButton(text="📤 Export"), KeyboardButton(text="🌐 Tilni o'zgartirish")]
         ]
     else:
         keyboard = [
             [KeyboardButton(text="📥 Входящие"), KeyboardButton(text="📊 Мониторинг")],
-            [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="🎯 Контроль качества")],
-            [KeyboardButton(text="📊 Отчеты"), KeyboardButton(text="👨‍🔧 Техники")],
-            [KeyboardButton(text="🔌 Создать заявку на подключение"), KeyboardButton(text="🔧 Создать техническую заявку")],
-            [KeyboardButton(text="🕐 Мониторинг в реальном времени"), KeyboardButton(text="📤 Экспорт")],
-            [KeyboardButton(text="🌐 Изменить язык"), KeyboardButton(text="🏠 Главное меню")]
+            [KeyboardButton(text="🎯 Контроль качества"), KeyboardButton(text="🔌 Создать заявку на подключение")],
+            [KeyboardButton(text="🔧 Создать техническую заявку"), KeyboardButton(text="🕐 Мониторинг в реальном времени")],
+            [KeyboardButton(text="📤 Экспорт"), KeyboardButton(text="🌐 Изменить язык")]
         ]
     
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
@@ -491,6 +487,288 @@ def get_realtime_monitoring_keyboard(lang='uz'):
         ],
         [
             InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+# Application Creator callbacks
+def get_application_creator_keyboard(lang='uz'):
+    """Generate application creator keyboard for controller"""
+    search_phone_text = "📞 Telefon orqali qidirish" if lang == "uz" else "📞 Поиск по телефону"
+    search_name_text = "👤 Ism orqali qidirish" if lang == "uz" else "👤 Поиск по имени"
+    search_id_text = "🆔 ID orqali qidirish" if lang == "uz" else "🆔 Поиск по ID"
+    new_client_text = "🆕 Yangi mijoz" if lang == "uz" else "🆕 Новый клиент"
+    cancel_text = "❌ Bekor qilish" if lang == "uz" else "❌ Отмена"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=search_phone_text, callback_data="ctrl_search_phone"),
+            InlineKeyboardButton(text=search_name_text, callback_data="ctrl_search_name")
+        ],
+        [
+            InlineKeyboardButton(text=search_id_text, callback_data="ctrl_search_id"),
+            InlineKeyboardButton(text=new_client_text, callback_data="ctrl_search_new")
+        ],
+        [
+            InlineKeyboardButton(text=cancel_text, callback_data="ctrl_cancel_creation"),
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_client_selection_keyboard(clients, lang='uz'):
+    """Generate client selection keyboard"""
+    keyboard = []
+    
+    for client in clients[:10]:  # Maximum 10 clients
+        button_text = f"👤 {client.get('full_name', 'N/A')} - {client.get('phone', 'N/A')}"
+        keyboard.append([
+            InlineKeyboardButton(
+                text=button_text,
+                callback_data=f"ctrl_select_client_{client['id']}"
+            )
+        ])
+    
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    keyboard.append([InlineKeyboardButton(text=back_text, callback_data="ctrl_cancel_creation")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_priority_selection_keyboard(request_id, lang='uz'):
+    """Generate priority selection keyboard"""
+    low_text = "🟢 Past" if lang == "uz" else "🟢 Низкий"
+    medium_text = "🟡 O'rta" if lang == "uz" else "🟡 Средний"
+    high_text = "🟠 Yuqori" if lang == "uz" else "🟠 Высокий"
+    urgent_text = "🔴 Shoshilinch" if lang == "uz" else "🔴 Срочный"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=low_text, callback_data=f"ctrl_priority_{request_id}_low"),
+            InlineKeyboardButton(text=medium_text, callback_data=f"ctrl_priority_{request_id}_medium")
+        ],
+        [
+            InlineKeyboardButton(text=high_text, callback_data=f"ctrl_priority_{request_id}_high"),
+            InlineKeyboardButton(text=urgent_text, callback_data=f"ctrl_priority_{request_id}_urgent")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="ctrl_cancel_creation")
+        ]
+    ])
+    return keyboard
+
+# Workflow Manager callbacks
+def get_workflow_manager_keyboard(lang='uz'):
+    """Generate workflow manager keyboard"""
+    statistics_text = "📊 Workflow statistikasi" if lang == "uz" else "📊 Статистика workflow"
+    active_workflows_text = "🔄 Faol workflow'lar" if lang == "uz" else "🔄 Активные workflow"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=statistics_text, callback_data="view_workflow_statistics"),
+            InlineKeyboardButton(text=active_workflows_text, callback_data="view_active_workflows")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_workflow_navigation_keyboard(lang='uz'):
+    """Generate workflow navigation keyboard"""
+    prev_text = "⬅️ Oldingi" if lang == "uz" else "⬅️ Предыдущий"
+    next_text = "Keyingi ➡️" if lang == "uz" else "Следующий ➡️"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=prev_text, callback_data="workflow_prev"),
+            InlineKeyboardButton(text=next_text, callback_data="workflow_next")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+# Technicians callbacks
+def get_technicians_management_keyboard(lang='uz'):
+    """Generate technicians management keyboard"""
+    view_all_text = "📋 Barcha texniklar" if lang == "uz" else "📋 Все техники"
+    performance_text = "📊 Samaradorlik" if lang == "uz" else "📊 Производительность"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=view_all_text, callback_data="view_technicians"),
+            InlineKeyboardButton(text=performance_text, callback_data="view_technician_performance")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+def get_technician_navigation_keyboard(lang='uz'):
+    """Generate technician navigation keyboard"""
+    prev_text = "⬅️ Oldingi" if lang == "uz" else "⬅️ Предыдущий"
+    next_text = "Keyingi ➡️" if lang == "uz" else "Следующий ➡️"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=prev_text, callback_data="technician_prev"),
+            InlineKeyboardButton(text=next_text, callback_data="technician_next")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_technician")
+        ]
+    ])
+    return keyboard
+
+def get_technician_actions_keyboard(technician_id, lang='uz'):
+    """Generate technician actions keyboard"""
+    view_details_text = "👁️ Batafsil" if lang == "uz" else "👁️ Подробно"
+    assign_task_text = "📋 Vazifa tayinlash" if lang == "uz" else "📋 Назначить задачу"
+    performance_text = "📊 Samaradorlik" if lang == "uz" else "📊 Производительность"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=view_details_text, callback_data=f"technician:view:{technician_id}"),
+            InlineKeyboardButton(text=assign_task_text, callback_data=f"technician:assign:{technician_id}")
+        ],
+        [
+            InlineKeyboardButton(text=performance_text, callback_data=f"technician:performance:{technician_id}")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_technicians")
+        ]
+    ])
+    return keyboard
+
+# Technical Service callbacks
+def get_technical_service_navigation_keyboard(lang='uz'):
+    """Generate technical service navigation keyboard"""
+    prev_text = "⬅️ Oldingi" if lang == "uz" else "⬅️ Предыдущий"
+    next_text = "Keyingi ➡️" if lang == "uz" else "Следующий ➡️"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=prev_text, callback_data="ts_prev_service"),
+            InlineKeyboardButton(text=next_text, callback_data="ts_next_service")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_controller_main")
+        ]
+    ])
+    return keyboard
+
+# Staff Application Creation callbacks
+def get_staff_creation_keyboard(lang='uz'):
+    """Generate staff creation keyboard"""
+    view_members_text = "📋 Xodimlarni ko'rish" if lang == "uz" else "📋 Просмотр сотрудников"
+    create_app_text = "📝 Ariza yaratish" if lang == "uz" else "📝 Создать заявку"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=view_members_text, callback_data="view_staff_members"),
+            InlineKeyboardButton(text=create_app_text, callback_data="create_staff_application")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_staff_creation")
+        ]
+    ])
+    return keyboard
+
+def get_staff_navigation_keyboard(lang='uz'):
+    """Generate staff navigation keyboard"""
+    prev_text = "⬅️ Oldingi" if lang == "uz" else "⬅️ Предыдущий"
+    next_text = "Keyingi ➡️" if lang == "uz" else "Следующий ➡️"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=prev_text, callback_data="staff_prev"),
+            InlineKeyboardButton(text=next_text, callback_data="staff_next")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_staff_creation")
+        ]
+    ])
+    return keyboard
+
+# Quality callbacks
+def get_quality_management_keyboard(lang='uz'):
+    """Generate quality management keyboard"""
+    issues_text = "🔴 Sifat muammolari" if lang == "uz" else "🔴 Проблемы качества"
+    metrics_text = "📊 Sifat ko'rsatkichlari" if lang == "uz" else "📊 Показатели качества"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=issues_text, callback_data="view_quality_issues"),
+            InlineKeyboardButton(text=metrics_text, callback_data="view_quality_metrics")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_quality")
+        ]
+    ])
+    return keyboard
+
+def get_quality_navigation_keyboard(lang='uz'):
+    """Generate quality navigation keyboard"""
+    prev_text = "⬅️ Oldingi" if lang == "uz" else "⬅️ Предыдущий"
+    next_text = "Keyingi ➡️" if lang == "uz" else "Следующий ➡️"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=prev_text, callback_data="quality_prev_issue"),
+            InlineKeyboardButton(text=next_text, callback_data="quality_next_issue")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_quality")
+        ]
+    ])
+    return keyboard
+
+# Monitoring callbacks
+def get_monitoring_detailed_keyboard(lang='uz'):
+    """Generate monitoring detailed keyboard"""
+    statistics_text = "📊 Batafsil statistika" if lang == "uz" else "📊 Подробная статистика"
+    system_status_text = "🖥️ Tizim holati" if lang == "uz" else "🖥️ Состояние системы"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=statistics_text, callback_data="view_detailed_statistics"),
+            InlineKeyboardButton(text=system_status_text, callback_data="view_system_status")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="back_to_monitoring")
+        ]
+    ])
+    return keyboard
+
+# Realtime monitoring additional callbacks
+def get_realtime_refresh_keyboard(lang='uz'):
+    """Generate realtime refresh keyboard"""
+    refresh_text = "🔄 Yangilash" if lang == "uz" else "🔄 Обновить"
+    detailed_text = "📋 Batafsil" if lang == "uz" else "📋 Подробно"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=refresh_text, callback_data="ctrl_refresh_realtime"),
+            InlineKeyboardButton(text=detailed_text, callback_data="ctrl_detailed_view")
+        ],
+        [
+            InlineKeyboardButton(text=back_text, callback_data="ctrl_back_to_realtime")
         ]
     ])
     return keyboard

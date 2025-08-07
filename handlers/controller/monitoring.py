@@ -7,7 +7,7 @@ This module handles controller monitoring functionality.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import get_monitoring_keyboard, get_controller_back_keyboard
+from keyboards.controllers_buttons import get_monitoring_keyboard, get_controller_back_keyboard, get_monitoring_detailed_keyboard
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
@@ -140,9 +140,7 @@ def get_monitoring_router():
                 f"• O'rtacha javob vaqti: {monitoring_data['avg_response_time']}"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_monitoring")]
-            ])
+            keyboard = get_monitoring_detailed_keyboard(lang)
             
             await callback.message.edit_text(stats_text, reply_markup=keyboard, parse_mode='HTML')
             

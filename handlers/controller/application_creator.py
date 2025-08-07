@@ -7,6 +7,11 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from states.controller_states import ControllerApplicationStates
 from filters.role_filter import RoleFilter
+from keyboards.controllers_buttons import (
+    get_application_creator_keyboard,
+    get_client_selection_keyboard,
+    get_priority_selection_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -86,34 +91,7 @@ def get_controller_application_creator_router():
                 "Mijozni qanday qidirishni xohlaysiz?"
             )
 
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="📱 Telefon",
-                        callback_data="ctrl_search_phone"
-                    ),
-                    InlineKeyboardButton(
-                        text="👤 Ism",
-                        callback_data="ctrl_search_name"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🆔 ID",
-                        callback_data="ctrl_search_id"
-                    ),
-                    InlineKeyboardButton(
-                        text="➕ Yangi mijoz",
-                        callback_data="ctrl_search_new"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="❌ Bekor qilish",
-                        callback_data="ctrl_cancel_creation"
-                    )
-                ]
-            ])
+            keyboard = get_application_creator_keyboard(lang)
 
             await message.answer(
                 prompt_text,

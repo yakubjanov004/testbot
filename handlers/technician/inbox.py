@@ -8,7 +8,19 @@ Qabul qilish, diagnostika, ombor bilan ishlash va yakunlash funksiyalari bilan.
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.technician_buttons import get_technician_inbox_keyboard, get_technician_back_keyboard
+from keyboards.technician_buttons import (
+    get_technician_inbox_keyboard, 
+    get_technician_back_keyboard,
+    get_diagnostic_keyboard,
+    get_cancel_keyboard,
+    get_warehouse_confirmation_keyboard,
+    get_warehouse_items_keyboard,
+    get_warehouse_quantity_keyboard,
+    get_work_completion_keyboard,
+    get_work_notes_keyboard,
+    get_back_to_application_keyboard,
+    get_application_action_keyboard
+)
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from filters.role_filter import RoleFilter
@@ -446,15 +458,7 @@ def get_technician_inbox_router():
             )
             
             # Create diagnostic button
-            diagnostic_button = InlineKeyboardButton(
-                text="🔍 Diagnostika qo'yish",
-                callback_data="tech_start_diagnostic"
-            )
-            back_button = InlineKeyboardButton(
-                text="⬅️ Orqaga qaytish",
-                callback_data="tech_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[diagnostic_button], [back_button]])
+            keyboard = get_diagnostic_keyboard(lang)
             
             await callback.message.edit_text(
                 confirmation_text,
@@ -502,12 +506,7 @@ def get_technician_inbox_router():
                 f"• Qo'shimcha ma'lumotlar"
             )
             
-            # Create cancel button
-            cancel_button = InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="tech_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            keyboard = get_cancel_keyboard(lang)
             
             await callback.message.edit_text(
                 input_text,
@@ -562,16 +561,7 @@ def get_technician_inbox_router():
                 f"Agar kerakli jihozlar omborda bo'lsa, ularni olish kerak."
             )
             
-            # Create warehouse choice buttons
-            yes_button = InlineKeyboardButton(
-                text="✅ Ha, ombor bilan ishlayman",
-                callback_data="tech_warehouse_yes"
-            )
-            no_button = InlineKeyboardButton(
-                text="❌ Yo'q, o'zim qilaman",
-                callback_data="tech_warehouse_no"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[yes_button], [no_button]])
+            keyboard = get_warehouse_confirmation_keyboard(lang)
             
             await message.answer(
                 warehouse_text,
@@ -693,12 +683,7 @@ def get_technician_inbox_router():
                 f"<i>Maksimal: {selected_item['quantity']} dona</i>"
             )
             
-            # Create cancel button
-            cancel_button = InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="tech_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            keyboard = get_warehouse_quantity_keyboard(lang)
             
             await callback.message.edit_text(
                 input_text,
@@ -810,12 +795,7 @@ def get_technician_inbox_router():
                 f"<i>Masalan: Router TP-Link Archer C6 - 1 dona</i>"
             )
             
-            # Create cancel button
-            cancel_button = InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="tech_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            keyboard = get_cancel_keyboard(lang)
             
             await callback.message.edit_text(
                 input_text,
@@ -916,16 +896,7 @@ def get_technician_inbox_router():
                 f"🔧 Endi o'zingiz qilgan ishlarni yozib, arizani yakunlashingiz kerak."
             )
             
-            # Create complete work button
-            complete_button = InlineKeyboardButton(
-                text="✅ Ishni yakunlash",
-                callback_data="tech_complete_work"
-            )
-            back_button = InlineKeyboardButton(
-                text="⬅️ Orqaga qaytish",
-                callback_data="tech_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[complete_button], [back_button]])
+            keyboard = get_work_completion_keyboard(lang)
             
             await callback.message.edit_text(
                 text=text,
@@ -973,12 +944,7 @@ def get_technician_inbox_router():
                 f"• Qo'shimcha ma'lumotlar"
             )
             
-            # Create cancel button
-            cancel_button = InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="tech_back_to_application"
-            )
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button]])
+            keyboard = get_work_notes_keyboard(lang)
             
             await callback.message.edit_text(
                 input_text,
@@ -1123,49 +1089,4 @@ def get_technician_inbox_router():
 
 def get_technician_action_keyboard(application, current_index: int, total_applications: int):
     """Create action keyboard for technician based on work status"""
-    keyboard = []
-    
-    # Navigation row
-    nav_buttons = []
-    
-    # Previous button
-    if current_index > 0:
-        nav_buttons.append(InlineKeyboardButton(
-            text="⬅️ Oldingi",
-            callback_data="tech_prev_application"
-        ))
-    
-    # Next button
-    if current_index < total_applications - 1:
-        nav_buttons.append(InlineKeyboardButton(
-            text="Keyingi ➡️",
-            callback_data="tech_next_application"
-        ))
-    
-    if nav_buttons:
-        keyboard.append(nav_buttons)
-    
-    # Action buttons based on work status
-    work_started = application.get('work_started', False)
-    work_completed = application.get('work_completed', False)
-    
-    if not work_started:
-        # Accept work button
-        keyboard.append([InlineKeyboardButton(
-            text="✅ Ishni qabul qilish",
-            callback_data="tech_accept_work"
-        )])
-    elif not work_completed:
-        # Work in progress - show diagnostic or complete options
-        if not application.get('diagnostic_result'):
-            keyboard.append([InlineKeyboardButton(
-                text="🔍 Diagnostika qo'yish",
-                callback_data="tech_start_diagnostic"
-            )])
-        else:
-            keyboard.append([InlineKeyboardButton(
-                text="✅ Ishni yakunlash",
-                callback_data="tech_complete_work"
-            )])
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+    return get_application_action_keyboard(application, current_index, total_applications, 'uz')

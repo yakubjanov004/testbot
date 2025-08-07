@@ -8,6 +8,10 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from filters.role_filter import RoleFilter
+from keyboards.controllers_buttons import (
+    get_workflow_manager_keyboard,
+    get_workflow_navigation_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -111,16 +115,7 @@ def get_workflow_manager_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="📊 Workflow statistika", callback_data="view_workflow_statistics"),
-                    InlineKeyboardButton(text="🔄 Faol workflow", callback_data="view_active_workflows")
-                ],
-                [
-                    InlineKeyboardButton(text="➕ Yangi workflow", callback_data="create_workflow"),
-                    InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_workflow")
-                ]
-            ])
+            keyboard = get_workflow_manager_keyboard(lang)
             
             await message.answer(
                 workflow_text,

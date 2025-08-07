@@ -5,12 +5,15 @@ This module implements feedback functionality for Call Center Supervisor role.
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List
 
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import get_feedback_keyboard
+from keyboards.call_center_supervisor_buttons import (
+    get_supervisor_feedback_keyboard
+)
 
 # States imports
 from states.call_center_supervisor_states import CallCenterSupervisorFeedbackStates
@@ -204,8 +207,6 @@ async def _handle_view_feedback(callback: CallbackQuery, state: FSMContext, lang
 async def _handle_rate_service(callback: CallbackQuery, state: FSMContext, lang: str):
     """Handle rate service action"""
     try:
-        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-        
         text = (
             "⭐ Xizmat sifatini baholash\n\n"
             "Tizim va xodimlar ishini qanday baholaysiz?\n\n"
@@ -216,21 +217,7 @@ async def _handle_rate_service(callback: CallbackQuery, state: FSMContext, lang:
             "1 - очень плохо, 5 - отлично"
         )
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(text="⭐", callback_data="ccs_rate_1"),
-                InlineKeyboardButton(text="⭐⭐", callback_data="ccs_rate_2"),
-                InlineKeyboardButton(text="⭐⭐⭐", callback_data="ccs_rate_3"),
-                InlineKeyboardButton(text="⭐⭐⭐⭐", callback_data="ccs_rate_4"),
-                InlineKeyboardButton(text="⭐⭐⭐⭐⭐", callback_data="ccs_rate_5")
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Bekor qilish" if lang == 'uz' else "❌ Отмена",
-                    callback_data="ccs_cancel_rating"
-                )
-            ]
-        ])
+        keyboard = get_supervisor_feedback_keyboard(lang)
         
         await callback.message.edit_text(text, reply_markup=keyboard)
         await callback.answer()

@@ -9,6 +9,10 @@ from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from filters.role_filter import RoleFilter
 from datetime import datetime
+from keyboards.controllers_buttons import (
+    get_staff_creation_keyboard,
+    get_staff_navigation_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -105,16 +109,7 @@ def get_staff_application_creation_router():
                 "Kerakli amalni tanlang:"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="👥 Xodimlarni ko'rish", callback_data="view_staff_members"),
-                    InlineKeyboardButton(text="➕ Yangi ariza", callback_data="create_staff_application")
-                ],
-                [
-                    InlineKeyboardButton(text="📊 Faoliyat baholash", callback_data="evaluate_performance"),
-                    InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_staff_creation")
-                ]
-            ])
+            keyboard = get_staff_creation_keyboard(lang)
             
             await message.answer(
                 staff_text,

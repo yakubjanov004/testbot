@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from datetime import datetime
-from keyboards.technician_buttons import get_technician_help_menu, get_technician_main_menu_keyboard
+from keyboards.technician_buttons import get_technician_help_menu, get_technician_main_menu_keyboard, get_help_back_keyboard
 from states.technician_states import TechnicianHelpStates
 from filters.role_filter import RoleFilter
 
@@ -98,14 +98,7 @@ Kerakli yordam turini tanlang:
 Muammo bo'lsa menejer bilan bog'laning.
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_help"
-                )
-            ]]
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_help_back_keyboard('uz')
             await callback.message.edit_text(
                 text.strip(),
                 reply_markup=keyboard,
@@ -137,14 +130,7 @@ Muammo bo'lsa menejer bilan bog'laning.
 Faqat kerakli jihozlarni so'rang.
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_help"
-                )
-            ]]
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_help_back_keyboard('uz')
             await callback.message.edit_text(
                 text.strip(),
                 reply_markup=keyboard,
@@ -176,14 +162,7 @@ Faqat kerakli jihozlarni so'rang.
 📞 Darhol menejer bilan bog'laning!
             """
             
-            buttons = [[
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="tech_back_to_help"
-                )
-            ]]
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_help_back_keyboard('uz')
             await callback.message.edit_text(
                 text.strip(),
                 reply_markup=keyboard,

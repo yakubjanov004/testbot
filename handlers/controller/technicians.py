@@ -8,6 +8,11 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from filters.role_filter import RoleFilter
+from keyboards.controllers_buttons import (
+    get_technicians_management_keyboard,
+    get_technician_navigation_keyboard,
+    get_technician_actions_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -179,7 +184,7 @@ def get_controller_technicians_router():
             
             await message.answer(
                 technicians_text,
-                reply_markup=technicians_menu(lang),
+                reply_markup=get_technicians_management_keyboard(lang),
                 parse_mode='HTML'
             )
             

@@ -10,6 +10,11 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 from filters.role_filter import RoleFilter
+from keyboards.manager_buttons import (
+    get_inbox_navigation_keyboard,
+    get_junior_assignment_keyboard,
+    get_junior_confirmation_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -745,7 +750,7 @@ def get_manager_inbox_router():
             if nav_buttons:
                 buttons.append(nav_buttons)
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_inbox_navigation_keyboard(lang=user.get('language', 'uz'))
             
             print(f"Sending message for request {short_id}")
             try:
@@ -819,7 +824,7 @@ def get_manager_inbox_router():
                 f"Quyidagi kichik menejerlardan birini tanlang:"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            keyboard = get_junior_assignment_keyboard(full_id, junior_managers, lang=user.get('language', 'uz'))
             await callback.message.edit_text(
                 text=text,
                 reply_markup=keyboard,

@@ -8,6 +8,10 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from filters.role_filter import RoleFilter
+from keyboards.controllers_buttons import (
+    get_quality_management_keyboard,
+    get_quality_navigation_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -106,15 +110,7 @@ def get_quality_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="📊 Sifat ko'rsatkichlari", callback_data="view_quality_metrics"),
-                    InlineKeyboardButton(text="⚠️ Sifat muammolari", callback_data="view_quality_issues")
-                ],
-                [
-                    InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_quality")
-                ]
-            ])
+            keyboard = get_quality_management_keyboard(lang)
             
             await message.answer(
                 quality_text,

@@ -9,7 +9,13 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
-from keyboards.manager_buttons import get_status_keyboard, get_manager_main_keyboard
+from keyboards.manager_buttons import (
+    get_status_keyboard, 
+    get_manager_main_keyboard,
+    get_status_management_keyboard,
+    get_status_navigation_keyboard,
+    get_status_confirmation_keyboard
+)
 from states.manager_states import ManagerStatusStates
 from filters.role_filter import RoleFilter
 
@@ -44,32 +50,7 @@ def get_manager_status_management_router():
             )
             
             # Create inline keyboard for options
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="📋 Barcha arizalar",
-                        callback_data="status_view_all_applications"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🆕 Faqat yangi arizalar",
-                        callback_data="status_view_new_applications"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="⏳ Jarayondagi arizalar",
-                        callback_data="status_view_progress_applications"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🔙 Orqaga",
-                        callback_data="back_to_main_menu"
-                    )
-                ]
-            ])
+            keyboard = get_status_management_keyboard(lang=user.get('language', 'uz'))
             
             await message.answer(
                 status_text,
@@ -179,12 +160,7 @@ def get_manager_status_management_router():
                 
                 await callback.message.edit_text(
                     no_apps_text,
-                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(
-                            text="🔙 Orqaga",
-                            callback_data="back_to_status_main"
-                        )]
-                    ])
+                    reply_markup=get_status_navigation_keyboard(lang=user.get('language', 'uz'))
                 )
                 await callback.answer()
                 return
@@ -233,12 +209,7 @@ def get_manager_status_management_router():
                 
                 await callback.message.edit_text(
                     no_apps_text,
-                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(
-                            text="🔙 Orqaga",
-                            callback_data="back_to_status_main"
-                        )]
-                    ])
+                    reply_markup=get_status_navigation_keyboard(lang=user.get('language', 'uz'))
                 )
                 await callback.answer()
                 return
@@ -363,20 +334,7 @@ def get_manager_status_management_router():
                 f"Tasdiqlaysizmi?"
             )
             
-            confirm_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="✅ Ha, tasdiqlash",
-                        callback_data=f"confirm_status_change_{app_id}_{new_status}"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="❌ Yo'q, bekor qilish",
-                        callback_data=f"cancel_status_change_{app_id}"
-                    )
-                ]
-            ])
+            confirm_keyboard = get_status_confirmation_keyboard(app_id, new_status, lang=user.get('language', 'uz'))
             
             await callback.message.edit_text(
                 confirm_text,
@@ -428,16 +386,7 @@ def get_manager_status_management_router():
                 await callback.message.edit_text(
                     success_text,
                     parse_mode='HTML',
-                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(
-                            text="🔄 Boshqa ariza",
-                            callback_data="back_to_status_main"
-                        )],
-                        [InlineKeyboardButton(
-                            text="🏠 Asosiy menyu",
-                            callback_data="back_to_main_menu"
-                        )]
-                    ])
+                    reply_markup=get_status_navigation_keyboard(lang=user.get('language', 'uz'))
                 )
                 
                 await callback.answer("✅ Status o'zgartirildi!", show_alert=True)
