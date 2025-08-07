@@ -266,7 +266,8 @@ def get_technician_inbox_router():
             # Store applications in state
             await state.update_data(
                 applications=applications,
-                current_app_index=0
+                current_app_index=0,
+                lang=lang
             )
             
             # Show first application
@@ -436,6 +437,8 @@ def get_technician_inbox_router():
             data = await state.get_data()
             current_index = data.get('current_app_index', 0)
             applications = data.get('applications', [])
+            # Retrieve user language (default to 'uz' if not found)
+            lang = await get_user_lang(callback.from_user.id)
             
             if not applications or current_index >= len(applications):
                 await callback.answer("Ariza topilmadi")
@@ -480,6 +483,8 @@ def get_technician_inbox_router():
             data = await state.get_data()
             current_index = data.get('current_app_index', 0)
             applications = data.get('applications', [])
+            # Retrieve user language
+            lang = await get_user_lang(callback.from_user.id)
             
             if not applications or current_index >= len(applications):
                 await callback.answer("Ariza topilmadi")
@@ -527,6 +532,8 @@ def get_technician_inbox_router():
         try:
             # Get the diagnostic text
             diagnostic_text = message.text.strip()
+            # Retrieve user language
+            lang = await get_user_lang(message.from_user.id)
             
             if len(diagnostic_text) < 10:
                 await message.answer(
@@ -643,6 +650,8 @@ def get_technician_inbox_router():
         """Handle warehouse item selection"""
         try:
             await callback.answer()
+            # Retrieve user language
+            lang = await get_user_lang(callback.from_user.id)
             
             item_id = int(callback.data.replace("tech_select_item_", ""))
             
@@ -773,6 +782,8 @@ def get_technician_inbox_router():
         """Handle custom warehouse item input"""
         try:
             await callback.answer()
+            # Retrieve user language
+            lang = await get_user_lang(callback.from_user.id)
             
             # Get application data from state
             data = await state.get_data()
@@ -880,6 +891,8 @@ def get_technician_inbox_router():
         """Handle warehouse no choice"""
         try:
             await callback.answer()
+            # Retrieve user language
+            lang = await get_user_lang(callback.from_user.id)
             
             # Get application data from state
             data = await state.get_data()
@@ -913,6 +926,8 @@ def get_technician_inbox_router():
         """Handle complete work button"""
         try:
             await callback.answer()
+            # Retrieve user language
+            lang = await get_user_lang(callback.from_user.id)
             
             # Get current application
             data = await state.get_data()
