@@ -29,6 +29,7 @@ from .orders import get_junior_manager_orders_router
 from .staff_application_creation import get_junior_manager_staff_application_router
 from .statistics import get_junior_manager_statistics_router
 from .workflow_management import get_junior_manager_workflow_router
+from .ticket_creation import get_junior_manager_ticket_creation_router
 
 def get_junior_manager_router():
     """Get the complete junior manager router with all handlers"""
@@ -49,5 +50,6 @@ def get_junior_manager_router():
     router.include_router(get_junior_manager_staff_application_router())
     router.include_router(get_junior_manager_statistics_router())
     router.include_router(get_junior_manager_workflow_router())
+    router.include_router(get_junior_manager_ticket_creation_router())
     
     return router

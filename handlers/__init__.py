@@ -15,6 +15,11 @@ def setup_handlers(dp: Dispatcher):
         start_router = get_start_router()
         dp.include_router(start_router)
         
+        # Import shared ticket creation router
+        from handlers.shared_ticket_creation import get_shared_ticket_router
+        shared_ticket_router = get_shared_ticket_router()
+        dp.include_router(shared_ticket_router)
+        
         # Import all role routers
         from handlers.admin import get_admin_router
         from handlers.manager import get_manager_router

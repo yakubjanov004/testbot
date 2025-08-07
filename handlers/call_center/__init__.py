@@ -29,6 +29,7 @@ from .orders import get_call_center_orders_router
 from .staff_application_creation import get_call_center_staff_application_creation_router
 from .statistics import get_call_center_statistics_router
 from .supervisor import get_call_center_supervisor_router
+from .ticket_creation import get_call_center_ticket_creation_router
 
 def get_call_center_router():
     """Get the complete call center router with all handlers"""
@@ -48,5 +49,6 @@ def get_call_center_router():
     router.include_router(get_call_center_staff_application_creation_router())
     router.include_router(get_call_center_statistics_router())
     router.include_router(get_call_center_supervisor_router())
+    router.include_router(get_call_center_ticket_creation_router())
     
     return router
