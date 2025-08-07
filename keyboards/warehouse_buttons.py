@@ -310,9 +310,7 @@ def export_menu(language: str, export_types: list = None) -> InlineKeyboardMarku
                     callback_data=f"export_{export_type}"
                 )
             ])
-    
-    back = "◀️ Orqaga" if language == 'uz' else "◀️ Назад"
-    keyboard.append([InlineKeyboardButton(text=back, callback_data="warehouse_back")])
+
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -321,11 +319,9 @@ def export_reply_menu(language: str) -> ReplyKeyboardMarkup:
     excel = "Excelga export" if language == 'uz' else "Экспорт в Excel"
     pdf = "PDFga export" if language == 'uz' else "Экспорт в PDF"
     word = "Wordga export" if language == 'uz' else "Экспорт в Word"
-    back = "◀️ Orqaga" if language == 'uz' else "◀️ Назад"
     keyboard = [
         [KeyboardButton(text=excel), KeyboardButton(text=pdf)],
-        [KeyboardButton(text=word)],
-        [KeyboardButton(text=back)]
+        [KeyboardButton(text=word)]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -344,12 +340,10 @@ def export_format_keyboard(language: str) -> InlineKeyboardMarkup:
     excel = "📊 Excel" if language == 'uz' else "📊 Excel"
     pdf = "📄 PDF" if language == 'uz' else "📄 PDF"
     word = "📝 Word" if language == 'uz' else "📝 Word"
-    back = "◀️ Orqaga" if language == 'uz' else "◀️ Назад"
     keyboard = [
         [InlineKeyboardButton(text=excel, callback_data="export_format_xlsx")],
         [InlineKeyboardButton(text=pdf, callback_data="export_format_pdf")],
         [InlineKeyboardButton(text=word, callback_data="export_format_docx")],
-        [InlineKeyboardButton(text=back, callback_data="warehouse_back")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
