@@ -22,6 +22,7 @@ class CallCenterInboxStates(StatesGroup):
     viewing_messages = State()
     entering_message_number = State()
     viewing_message_details = State()
+    entering_resolution_notes = State()
 
 
 class CallCenterOrdersStates(StatesGroup):
