@@ -45,8 +45,9 @@ def get_warehouse_export_router():
             print(f"Warehouse export handler completed successfully")
             
         except Exception as e:
-            print(f"Error in warehouse export handler: {str(e)}")
-            await message.answer("❌ Xatolik yuz berdi")
+            # print(f"Error in warehouse export handler: {str(e)}")
+            # await message.answer("❌ Xatolik yuz berdi")
+            pass
 
     @router.callback_query(F.data.startswith("export_"))
     async def handle_export_selection(callback: CallbackQuery, state: FSMContext):
