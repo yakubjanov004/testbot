@@ -222,7 +222,8 @@ def get_junior_manager_inbox_router():
             # Store applications in state
             await state.update_data(
                 applications=applications,
-                current_app_index=0
+                current_app_index=0,
+                lang=lang
             )
             
             # Show first application
@@ -487,6 +488,9 @@ def get_junior_manager_inbox_router():
                 current_application_id=application['id'],
                 current_application_data=application
             )
+            # Get lang from state (default to 'uz')
+            data_lang = await state.get_data()
+            lang = data_lang.get('lang', 'uz')
             
             # Show text input prompt
             input_text = (
@@ -523,6 +527,9 @@ def get_junior_manager_inbox_router():
         try:
             # Get the note text
             note_text = message.text.strip()
+            # Retrieve lang from state
+            data_lang = await state.get_data()
+            lang = data_lang.get('lang', 'uz')
             
             if len(note_text) < 10:
                 await message.answer(
@@ -635,6 +642,9 @@ def get_junior_manager_inbox_router():
         try:
             # Get the note text
             note_text = message.text.strip()
+            # Retrieve lang from state
+            data_lang = await state.get_data()
+            lang = data_lang.get('lang', 'uz')
             
             if len(note_text) < 20:
                 await message.answer(
@@ -687,6 +697,9 @@ def get_junior_manager_inbox_router():
         """Handle edit controller note button"""
         try:
             await callback.answer()
+            # Retrieve lang from state
+            data_lang = await state.get_data()
+            lang = data_lang.get('lang', 'uz')
             
             # Get application data from state
             data = await state.get_data()
