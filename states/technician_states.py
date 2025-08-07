@@ -55,4 +55,5 @@ class TechnicianWorkflowStates(StatesGroup):
 class TechnicianStates(StatesGroup):
     """General states for technician"""
     waiting_for_diagnostic = State()
-    waiting_for_work_notes = State() 
+    waiting_for_work_notes = State()
+    waiting_for_warehouse_item = State() 
