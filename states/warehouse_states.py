@@ -42,6 +42,9 @@ class WarehouseInventoryStates(StatesGroup):
 
 class WarehouseExportStates(StatesGroup):
     """Export states for warehouse"""
+    selecting_type = State()
+    selecting_format = State()
+    exporting_data = State()
     selecting_export_type = State()
     entering_export_details = State()
 
