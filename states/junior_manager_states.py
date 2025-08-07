@@ -18,6 +18,7 @@ class JuniorManagerStates(StatesGroup):
     entering_application_number = State()
     viewing_application_details = State()
     waiting_for_controller_note = State()
+    waiting_for_contact_note = State()
 
 
 class JuniorManagerApplicationStates(StatesGroup):
