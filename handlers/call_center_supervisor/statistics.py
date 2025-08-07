@@ -589,19 +589,22 @@ async def _show_data_export_options(message: Message, lang: str):
             # Create export file
             file_content, filename = create_export_file(actual_export_type, format_type)
             
-            # Send success message
-            await callback.message.answer(
-                f"✅ {export_type.title()} ma'lumotlari {format_type.upper()} formatida export qilindi!\n"
-                f"📁 Fayl: {filename}"
-            )
+            # Get file size
+            file_content.seek(0, 2)  # Move to end
+            file_size = file_content.tell()
+            file_content.seek(0)  # Reset to beginning
             
-            # Send the actual file
+            # Send only the file with all information in caption
             await callback.message.answer_document(
                 BufferedInputFile(
                     file_content.read(),
                     filename=filename
                 ),
-                caption=f"📤 {export_type.title()} export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                caption=f"✅ {export_type.title()} export muvaffaqiyatli yakunlandi!\n\n"
+                        f"📄 Fayl: {filename}\n"
+                        f"📦 Hajm: {file_size:,} bayt\n"
+                        f"📊 Format: {format_type.upper()}\n"
+                        f"📅 Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
             )
             
         except Exception as e:

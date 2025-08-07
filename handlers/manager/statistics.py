@@ -311,29 +311,25 @@ def get_manager_statistics_router():
             
             actual_export_type = export_mapping.get(export_type, "statistics")
             
-            await callback.message.answer(
-                "📊 Export tayyorlanmoqda..."
-            )
-            
             # Create export file
             file_content, filename = create_export_file(actual_export_type, "csv")
             
-            # Send success message
-            await callback.message.answer(
-                "✅ Export tayyor!\n\n"
-                f"📄 Fayl turi: {actual_export_type}\n"
-                f"📁 Fayl: {filename}\n"
-                "📅 Sana: " + date.today().strftime('%d.%m.%Y') + "\n"
-                "📊 Ma'lumotlar soni: 150"
-            )
+            # Get file size
+            file_content.seek(0, 2)  # Move to end
+            file_size = file_content.tell()
+            file_content.seek(0)  # Reset to beginning
             
-            # Send the actual file
+            # Send only the file with all information in caption
             await callback.message.answer_document(
                 BufferedInputFile(
                     file_content.read(),
                     filename=filename
                 ),
-                caption=f"📤 {actual_export_type.title()} export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                caption=f"✅ {actual_export_type.title()} export muvaffaqiyatli yakunlandi!\n\n"
+                        f"📄 Fayl: {filename}\n"
+                        f"📦 Hajm: {file_size:,} bayt\n"
+                        f"📊 Format: CSV\n"
+                        f"📅 Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
             )
                 
         except Exception as e:

@@ -218,30 +218,18 @@ def get_warehouse_export_router():
                 # Delete processing message
                 await processing_msg.delete()
                 
-                # Send success message
-                await callback.message.answer(
-                    f"Export muvaffaqiyatli tayyorlandi!\n\n"
-                    f"Fayl nomi: {filename}\n"
-                    f"Fayl hajmi: {file_size:,} bayt\n"
-                    f"Format: {format_names.get(format_type, format_type)}\n\n"
-                    f"Fayl yuborilmoqda..."
-                )
-                
-                # Send the actual file
+                # Send only the file with all information in caption
                 await callback.message.answer_document(
                     BufferedInputFile(
                         file_content.read(),
                         filename=filename
                     ),
-                    caption=f"{export_type_names.get(export_type, export_type)} export\n"
-                            f"Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-                            f"Format: {format_names.get(format_type, format_type)}\n\n"
-                            f"Export muvaffaqiyatli yakunlandi!"
-                )
-                
-                # Return to main menu
-                await callback.message.answer(
-                    "Export yakunlandi. Bosh menyuga qaytdingiz.",
+                    caption=f"✅ {export_type_names.get(export_type, export_type)} export muvaffaqiyatli yakunlandi!\n\n"
+                            f"📄 Fayl nomi: {filename}\n"
+                            f"📦 Fayl hajmi: {file_size:,} bayt\n"
+                            f"📊 Format: {format_names.get(format_type, format_type)}\n"
+                            f"📅 Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
+                            f"Export muvaffaqiyatli yakunlandi!",
                     reply_markup=get_warehouse_main_keyboard('uz')
                 )
                 await state.set_state(WarehouseMainMenuStates.main_menu)

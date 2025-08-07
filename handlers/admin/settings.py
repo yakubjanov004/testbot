@@ -317,24 +317,33 @@ def get_admin_settings_router():
             from aiogram.types import BufferedInputFile
             
             processing_text = "Barcha ma'lumotlar eksport qilinmoqda..."
-            await call.message.edit_text(processing_text)
+            processing_msg = await call.message.edit_text(processing_text)
             
             # Export different types of data
             export_types = ["users", "orders", "statistics"]
             
-            success_text = f"✅ {len(export_types)} ta fayl export qilindi!"
-            await call.message.edit_text(success_text)
+            # Delete processing message
+            await processing_msg.delete()
             
             # Send each export file
             for export_type in export_types:
                 file_content, filename = create_export_file(export_type, "csv")
+                
+                # Get file size
+                file_content.seek(0, 2)  # Move to end
+                file_size = file_content.tell()
+                file_content.seek(0)  # Reset to beginning
                 
                 await call.message.answer_document(
                     BufferedInputFile(
                         file_content.read(),
                         filename=filename
                     ),
-                    caption=f"📤 {export_type.title()} ma'lumotlari - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                    caption=f"✅ {export_type.title()} export muvaffaqiyatli yakunlandi!\n\n"
+                            f"📄 Fayl: {filename}\n"
+                            f"📦 Hajm: {file_size:,} bayt\n"
+                            f"📊 Format: CSV\n"
+                            f"📅 Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
                 )
                 
         except Exception as e:
