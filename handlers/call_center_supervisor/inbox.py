@@ -34,34 +34,135 @@ async def get_supervisor_applications(user_id: int):
         {
             'id': 'req_001_2024_01_15',
             'workflow_type': 'call_center_direct',
-            'current_status': 'pending',
+            'current_status': 'assigned_to_supervisor',
             'contact_info': {
                 'full_name': 'Aziz Karimov',
                 'phone': '+998901234567'
             },
             'created_at': datetime.now(),
-            'description': 'Qo\'ng\'iroq markazi arizasi',
-            'location': 'Tashkent, Chorsu',
+            'description': 'Internet xizmati haqida shikoyat',
+            'location': 'Tashkent, Chorsu tumani, 45-uy',
             'priority': 'high',
             'region': 'Toshkent shahri',
-            'call_type': 'complaint'
+            'call_type': 'complaint',
+            'client_issue': 'Internet juda sekin ishlayapti',
+            'client_expectation': 'Tezroq internet kerak',
+            'additional_notes': 'Mijoz juda norozi'
         },
         {
             'id': 'req_002_2024_01_16',
             'workflow_type': 'call_center_direct',
-            'current_status': 'in_progress',
+            'current_status': 'assigned_to_supervisor',
             'contact_info': {
                 'full_name': 'Malika Toshmatova',
                 'phone': '+998901234568'
             },
             'created_at': datetime.now(),
-            'description': 'Xizmat haqida ma\'lumot',
-            'location': 'Tashkent, Yunusabad',
+            'description': 'Yangi xizmat haqida ma\'lumot',
+            'location': 'Tashkent, Yunusabad tumani, 23-uy',
             'priority': 'normal',
             'region': 'Toshkent shahri',
-            'call_type': 'information'
+            'call_type': 'information',
+            'client_issue': 'Yangi internet paketlari haqida ma\'lumot kerak',
+            'client_expectation': 'Eng yaxshi paketni tanlash',
+            'additional_notes': 'Mijoz yangi mijoz'
+        },
+        {
+            'id': 'req_003_2024_01_17',
+            'workflow_type': 'call_center_direct',
+            'current_status': 'assigned_to_supervisor',
+            'contact_info': {
+                'full_name': 'Bobur Rahimov',
+                'phone': '+998901234569'
+            },
+            'created_at': datetime.now(),
+            'description': 'Texnik muammo haqida yordam',
+            'location': 'Tashkent, Shayxontohur tumani, 67-uy',
+            'priority': 'high',
+            'region': 'Toshkent shahri',
+            'call_type': 'support',
+            'client_issue': 'Router ishlamayapti',
+            'client_expectation': 'Router o\'rnatish kerak',
+            'additional_notes': 'Mijoz texnik yordam so\'rayapti'
+        },
+        {
+            'id': 'req_004_2024_01_18',
+            'workflow_type': 'call_center_direct',
+            'current_status': 'assigned_to_supervisor',
+            'contact_info': {
+                'full_name': 'Dilfuza Karimova',
+                'phone': '+998901234570'
+            },
+            'created_at': datetime.now(),
+            'description': 'Hisob-kitob haqida savol',
+            'location': 'Tashkent, Sergeli tumani, 89-uy',
+            'priority': 'normal',
+            'region': 'Toshkent shahri',
+            'call_type': 'request',
+            'client_issue': 'Hisob-kitobda xatolik bor',
+            'client_expectation': 'Hisobni to\'g\'rilash',
+            'additional_notes': 'Mijoz hisob-kitob haqida savol berdi'
+        },
+        {
+            'id': 'req_005_2024_01_19',
+            'workflow_type': 'call_center_direct',
+            'current_status': 'assigned_to_supervisor',
+            'contact_info': {
+                'full_name': 'Jahongir Toshmatov',
+                'phone': '+998901234571'
+            },
+            'created_at': datetime.now(),
+            'description': 'Xizmatni bekor qilish',
+            'location': 'Tashkent, Yashnobod tumani, 12-uy',
+            'priority': 'high',
+            'region': 'Toshkent shahri',
+            'call_type': 'complaint',
+            'client_issue': 'Xizmatni bekor qilmoqchi',
+            'client_expectation': 'Xizmatni bekor qilish',
+            'additional_notes': 'Mijoz xizmatni bekor qilmoqchi'
         }
     ]
+
+async def get_call_center_operators():
+    """Mock get call center operators"""
+    return [
+        {
+            'id': 1,
+            'name': 'Aziza Abdullayeva',
+            'phone': '+998 90 123 45 67',
+            'status': 'available',
+            'active_calls': 2
+        },
+        {
+            'id': 2,
+            'name': 'Bobur Karimov',
+            'phone': '+998 91 234 56 78',
+            'status': 'available',
+            'active_calls': 1
+        },
+        {
+            'id': 3,
+            'name': 'Malika Toshmatova',
+            'phone': '+998 92 345 67 89',
+            'status': 'available',
+            'active_calls': 0
+        },
+        {
+            'id': 4,
+            'name': 'Jahongir Rahimov',
+            'phone': '+998 93 456 78 90',
+            'status': 'busy',
+            'active_calls': 3
+        }
+    ]
+
+async def assign_to_call_center_operator(application_id: str, operator_id: int, supervisor_notes: str = ""):
+    """Mock assign to call center operator"""
+    try:
+        # Mock assignment
+        return True
+    except Exception as e:
+        return False
 
 def get_supervisor_inbox_router():
     """Router for supervisor inbox functionality"""
@@ -178,11 +279,17 @@ def get_supervisor_inbox_router():
                 f"{status_emoji} <b>Holat:</b> {status_text}\n"
                 f"📞 <b>Qo'ng'iroq turi:</b> {call_type_text}\n"
                 f"{priority_emoji} <b>Ustuvorlik:</b> {priority_text}\n\n"
+                f"📋 <b>Mijoz muammosi:</b>\n"
+                f"<i>{application.get('client_issue', 'Ko\'rsatilmagan')}</i>\n\n"
+                f"🎯 <b>Mijoz kutayotgani:</b>\n"
+                f"<i>{application.get('client_expectation', 'Ko\'rsatilmagan')}</i>\n\n"
+                f"📝 <b>Qo'shimcha izohlar:</b>\n"
+                f"<i>{application.get('additional_notes', 'Yo\'q')}</i>\n\n"
                 f"📊 <b>Ariza #{index + 1} / {len(applications)}</b>"
             )
             
             # Create navigation keyboard
-            keyboard = get_applications_navigation_keyboard(index, len(applications))
+            keyboard = get_applications_navigation_keyboard(index, len(applications), application['id'])
             
             if isinstance(message_or_callback, Message):
                 await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
@@ -239,11 +346,268 @@ def get_supervisor_inbox_router():
         except Exception as e:
             await callback.answer("Xatolik yuz berdi")
 
+    @router.callback_query(F.data.startswith("supervisor_assign_operator_"))
+    async def assign_to_operator_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle assign to operator"""
+        try:
+            await callback.answer()
+            
+            application_id = callback.data.replace("supervisor_assign_operator_", "")
+            
+            # Get current application
+            applications = await get_supervisor_applications(callback.from_user.id)
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
+            
+            if current_index < len(applications):
+                application = applications[current_index]
+                
+                # Get available operators
+                operators = await get_call_center_operators()
+                available_operators = [op for op in operators if op['status'] == 'available']
+                
+                if not available_operators:
+                    await callback.answer("❌ Mavjud operatorlar yo'q", show_alert=True)
+                    return
+                
+                # Show operator selection
+                text = (
+                    f"📞 <b>Operator tanlash</b>\n\n"
+                    f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                    f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                    f"📞 <b>Telefon:</b> {application['contact_info']['phone']}\n"
+                    f"📝 <b>Tavsif:</b> {application['description']}\n\n"
+                    f"📞 Mavjud operatorlarni tanlang:"
+                )
+                
+                # Create operator selection buttons
+                buttons = []
+                for operator in available_operators:
+                    status_emoji = "🟢" if operator['status'] == 'available' else "🔴"
+                    buttons.append([InlineKeyboardButton(
+                        text=f"{status_emoji} {operator['name']} ({operator['active_calls']} qo'ng'iroq)",
+                        callback_data=f"supervisor_select_operator_{application_id}_{operator['id']}"
+                    )])
+                
+                # Add cancel button
+                buttons.append([InlineKeyboardButton(
+                    text="❌ Bekor qilish",
+                    callback_data="supervisor_back_to_application"
+                )])
+                
+                keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+                
+                await callback.message.edit_text(
+                    text,
+                    parse_mode='HTML',
+                    reply_markup=keyboard
+                )
+                
+            else:
+                await callback.answer("❌ Ariza topilmadi", show_alert=True)
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("supervisor_select_operator_"))
+    async def select_operator_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle operator selection"""
+        try:
+            await callback.answer()
+            
+            # Parse callback data
+            parts = callback.data.replace("supervisor_select_operator_", "").split("_")
+            application_id = parts[0]
+            operator_id = int(parts[1])
+            
+            # Get application and operator data
+            applications = await get_supervisor_applications(callback.from_user.id)
+            operators = await get_call_center_operators()
+            
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
+            
+            if current_index < len(applications):
+                application = applications[current_index]
+                operator = next((op for op in operators if op['id'] == operator_id), None)
+                
+                if not operator:
+                    await callback.answer("❌ Operator topilmadi", show_alert=True)
+                    return
+                
+                # Show assignment confirmation
+                text = (
+                    f"✅ <b>Operator'ga yuborish tasdiqlash</b>\n\n"
+                    f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                    f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                    f"📞 <b>Telefon:</b> {application['contact_info']['phone']}\n"
+                    f"📝 <b>Tavsif:</b> {application['description']}\n\n"
+                    f"📞 <b>Tanlangan operator:</b>\n"
+                    f"👤 {operator['name']}\n"
+                    f"📞 {operator['phone']}\n"
+                    f"📊 {operator['active_calls']} faol qo'ng'iroq\n\n"
+                    f"✅ Operator'ga yuborilsinmi?"
+                )
+                
+                # Create confirmation buttons
+                buttons = [
+                    [InlineKeyboardButton(
+                        text="✅ Ha, yuborish",
+                        callback_data=f"supervisor_confirm_assign_{application_id}_{operator_id}"
+                    )],
+                    [InlineKeyboardButton(
+                        text="❌ Bekor qilish",
+                        callback_data="supervisor_back_to_application"
+                    )]
+                ]
+                
+                keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+                
+                await callback.message.edit_text(
+                    text,
+                    parse_mode='HTML',
+                    reply_markup=keyboard
+                )
+                
+            else:
+                await callback.answer("❌ Ariza topilmadi", show_alert=True)
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("supervisor_confirm_assign_"))
+    async def confirm_assign_handler(callback: CallbackQuery, state: FSMContext):
+        """Handle assignment confirmation"""
+        try:
+            await callback.answer()
+            
+            # Parse callback data
+            parts = callback.data.replace("supervisor_confirm_assign_", "").split("_")
+            application_id = parts[0]
+            operator_id = int(parts[1])
+            
+            # Get application and operator data
+            applications = await get_supervisor_applications(callback.from_user.id)
+            operators = await get_call_center_operators()
+            
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
+            
+            if current_index < len(applications):
+                application = applications[current_index]
+                operator = next((op for op in operators if op['id'] == operator_id), None)
+                
+                if not operator:
+                    await callback.answer("❌ Operator topilmadi", show_alert=True)
+                    return
+                
+                # Mock assignment
+                success = await assign_to_call_center_operator(application_id, operator_id)
+                
+                if success:
+                    # Show success message
+                    success_text = (
+                        f"✅ <b>Ariza operator'ga yuborildi!</b>\n\n"
+                        f"🆔 <b>Ariza ID:</b> {application['id']}\n"
+                        f"👤 <b>Mijoz:</b> {application['contact_info']['full_name']}\n"
+                        f"📞 <b>Telefon:</b> {application['contact_info']['phone']}\n"
+                        f"📝 <b>Tavsif:</b> {application['description']}\n\n"
+                        f"📞 <b>Yuborilgan operator:</b>\n"
+                        f"👤 {operator['name']}\n"
+                        f"📞 {operator['phone']}\n\n"
+                        f"✅ Operator mijoz bilan bog'lanadi."
+                    )
+                    
+                    # Create back to inbox button
+                    back_button = InlineKeyboardButton(
+                        text="📥 Inbox'ga qaytish",
+                        callback_data="supervisor_back_to_inbox"
+                    )
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[[back_button]])
+                    
+                    await callback.message.edit_text(
+                        success_text,
+                        parse_mode='HTML',
+                        reply_markup=keyboard
+                    )
+                    await callback.answer("✅ Ariza yuborildi!")
+                    
+                    # Remove the application from the list
+                    applications.pop(current_index)
+                    
+                    if applications:
+                        # Show next application or previous if at end
+                        new_index = min(current_index, len(applications) - 1)
+                        await state.update_data(current_app_index=new_index)
+                        
+                        # Show updated application list
+                        await show_application_details(callback, applications[new_index], applications, new_index)
+                    else:
+                        # No more applications
+                        await callback.message.edit_text("📭 Barcha arizalar operator'larga yuborildi!")
+                else:
+                    await callback.answer("❌ Yuborishda xatolik yuz berdi", show_alert=True)
+            else:
+                await callback.answer("❌ Ariza topilmadi", show_alert=True)
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "supervisor_back_to_application")
+    async def back_to_application_handler(callback: CallbackQuery, state: FSMContext):
+        """Return to application details"""
+        try:
+            await callback.answer()
+            
+            # Get current application
+            applications = await get_supervisor_applications(callback.from_user.id)
+            current_index = await state.get_data()
+            current_index = current_index.get('current_app_index', 0)
+            
+            if current_index < len(applications):
+                await show_application_details(callback, applications[current_index], applications, current_index)
+            else:
+                await callback.answer("❌ Ariza topilmadi", show_alert=True)
+                
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data == "supervisor_back_to_inbox")
+    async def back_to_inbox_handler(callback: CallbackQuery, state: FSMContext):
+        """Return to inbox"""
+        try:
+            await callback.answer()
+            
+            # Get applications
+            applications = await get_supervisor_applications(callback.from_user.id)
+            
+            if not applications:
+                await callback.message.edit_text("📭 Hozircha qo'ng'iroq markazi arizalari yo'q.")
+                return
+            
+            # Reset to first application
+            await state.update_data(current_app_index=0)
+            await show_application_details(callback, applications[0], applications, 0)
+            
+        except Exception as e:
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
     return router
 
-def get_applications_navigation_keyboard(current_index: int, total_applications: int):
+def get_applications_navigation_keyboard(current_index: int, total_applications: int, application_id: str):
     """Create navigation keyboard for applications"""
     keyboard = []
+    
+    # Action buttons row
+    action_buttons = []
+    
+    # Assign to operator button
+    action_buttons.append(InlineKeyboardButton(
+        text="📞 Operator'ga yuborish",
+        callback_data=f"supervisor_assign_operator_{application_id}"
+    ))
+    
+    keyboard.append(action_buttons)
     
     # Navigation row
     nav_buttons = []
@@ -266,7 +630,7 @@ def get_applications_navigation_keyboard(current_index: int, total_applications:
         keyboard.append(nav_buttons)
     
     # Back to menu
-    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifaccs", callback_data="back_to_main_menu")])
+    keyboard.append([InlineKeyboardButton(text="🏠 Bosh sahifa", callback_data="back_to_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
