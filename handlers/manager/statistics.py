@@ -312,7 +312,7 @@ def get_manager_statistics_router():
             actual_export_type = export_mapping.get(export_type, "statistics")
             
             # Create export file
-            file_content, filename = create_export_file(actual_export_type, "csv")
+            file_content, filename = create_export_file(actual_export_type, "csv", "manager")
             
             # Get file size
             file_content.seek(0, 2)  # Move to end

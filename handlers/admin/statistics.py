@@ -510,7 +510,7 @@ def get_admin_statistics_router():
             await call.message.edit_text(processing_text)
             
             # Create export file
-            file_content, filename = create_export_file("statistics", "xlsx")
+            file_content, filename = create_export_file("statistics", "xlsx", "admin")
             
             # Get file size
             file_content.seek(0, 2)  # Move to end

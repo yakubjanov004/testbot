@@ -587,7 +587,7 @@ async def _show_data_export_options(message: Message, lang: str):
             actual_export_type = export_mapping.get(export_type, "statistics")
             
             # Create export file
-            file_content, filename = create_export_file(actual_export_type, format_type)
+            file_content, filename = create_export_file(actual_export_type, format_type, "call_center_supervisor")
             
             # Get file size
             file_content.seek(0, 2)  # Move to end

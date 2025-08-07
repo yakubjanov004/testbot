@@ -208,7 +208,7 @@ def get_warehouse_export_router():
             
             try:
                 # Create export file
-                file_content, filename = create_export_file(export_type, format_type)
+                file_content, filename = create_export_file(export_type, format_type, "warehouse")
                 
                 # Get file size
                 file_content.seek(0, 2)  # Move to end

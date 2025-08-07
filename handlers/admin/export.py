@@ -265,7 +265,7 @@ def get_admin_export_router():
             
             try:
                 # Create export file
-                file_content, filename = create_export_file(export_type, format_type)
+                file_content, filename = create_export_file(export_type, format_type, "admin")
                 
                 # Get file size
                 file_content.seek(0, 2)  # Move to end

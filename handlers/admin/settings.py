@@ -327,7 +327,7 @@ def get_admin_settings_router():
             
             # Send each export file
             for export_type in export_types:
-                file_content, filename = create_export_file(export_type, "csv")
+                file_content, filename = create_export_file(export_type, "csv", "admin")
                 
                 # Get file size
                 file_content.seek(0, 2)  # Move to end
