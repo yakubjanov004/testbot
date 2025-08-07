@@ -7,6 +7,13 @@ This module defines all state classes for the Call Center Supervisor role.
 from aiogram.fsm.state import State, StatesGroup
 
 
+class CallCenterSupervisorMainMenuStates(StatesGroup):
+    """Main menu states for Call Center Supervisor"""
+    main_menu = State()
+    export_selection = State()
+    export_format_selection = State()
+
+
 class CallCenterSupervisorStates(StatesGroup):
     """Main states for Call Center Supervisor"""
     main_menu = State()

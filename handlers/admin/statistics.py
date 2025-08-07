@@ -510,22 +510,27 @@ def get_admin_statistics_router():
             await call.message.edit_text(processing_text)
             
             # Create export file
-            file_content, filename = create_export_file("statistics", "xlsx")
+            file_content, filename = create_export_file("statistics", "xlsx", "admin")
             
-            # Send success message
-            await call.message.answer(
-                f"✅ Statistika ma'lumotlari export qilindi!\n"
-                f"📁 Fayl: {filename}\n"
-                f"📅 Yaratilgan: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
-            )
+            # Get file size
+            file_content.seek(0, 2)  # Move to end
+            file_size = file_content.tell()
+            file_content.seek(0)  # Reset to beginning
             
-            # Send the actual file
+            # Delete processing message
+            await call.message.delete()
+            
+            # Send only the file with all information in caption
             await call.message.answer_document(
                 BufferedInputFile(
                     file_content.read(),
                     filename=filename
                 ),
-                caption=f"📊 Statistika export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                caption=f"✅ Statistika export muvaffaqiyatli yakunlandi!\n\n"
+                        f"📄 Fayl: {filename}\n"
+                        f"📦 Hajm: {file_size:,} bayt\n"
+                        f"📊 Format: XLSX\n"
+                        f"📅 Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
             )
             
         except Exception as e:

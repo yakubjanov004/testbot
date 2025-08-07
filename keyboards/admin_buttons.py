@@ -174,6 +174,7 @@ def get_admin_main_menu(lang="uz"):
     users_text = "👥 Foydalanuvchilar" if lang == "uz" else "👥 Пользователи"
     orders_text = "📝 Zayavkalar" if lang == "uz" else "📝 Заявки"
     settings_text = "⚙️ Sozlamalar" if lang == "uz" else "⚙️ Настройки"
+    export_text = "📤 Export" if lang == "uz" else "📤 Экспорт"
     
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -184,6 +185,9 @@ def get_admin_main_menu(lang="uz"):
             [
                 KeyboardButton(text=orders_text),
                 KeyboardButton(text=settings_text)
+            ],
+            [
+                KeyboardButton(text=export_text)
             ]
         ],
         resize_keyboard=True

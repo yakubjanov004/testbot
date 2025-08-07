@@ -1,187 +1,146 @@
 # Alfa Connect Bot
 
-Telegram bot for managing workflow and customer service operations.
+Alfa Connect - telekommunikatsiya kompaniyasi uchun Telegram bot.
 
-## 🚀 Quick Start
+## 🚀 Xususiyatlari
 
-### Method 1: Using bugbot command (Recommended)
+### Rollar va funksiyalar:
+- **Admin** - Tizim boshqaruvi
+- **Manager** - Buyurtmalar va xodimlar boshqaruvi  
+- **Controller** - Sifat nazorati va monitoring
+- **Call Center Supervisor** - Call center boshqaruvi
+- **Call Center** - Mijozlar bilan ishlash
+- **Warehouse** - Ombor boshqaruvi
+- **Technician** - Texnik xizmatlar
+- **Client** - Mijozlar uchun
+
+### Asosiy imkoniyatlar:
+- 📊 Export (CSV, Excel, Word, PDF)
+- 📥 Inbox tizimi
+- 📈 Statistika va hisobotlar
+- 🔄 Workflow boshqaruvi
+- 👥 Xodimlar boshqaruvi
+- 🌐 Ko'p tillilik (O'zbek, Rus)
+
+## 📋 O'rnatish
+
+### 1. Repository ni clone qilish:
 ```bash
-# Run the bot
-python3 bugbot.py run
+git clone https://github.com/yourusername/alfaconnect-bot.git
+cd alfaconnect-bot
 ```
 
-### Method 2: Direct Python execution
+### 2. Virtual environment yaratish:
 ```bash
-# Run directly
-python3 main.py run
-
-# Or simply
-python3 main.py
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# yoki
+venv\Scripts\activate  # Windows
 ```
 
-### Method 3: Install globally (Optional)
-```bash
-# Install globally
-pip install -e .
-
-# Run the bot
-bugbot run
-```
-
-## 📋 Prerequisites
-
-- Python 3.8 or higher
-- Required packages (see requirements.txt):
-  - aiogram>=3.0.0
-  - python-dotenv>=0.19.0
-
-## 🔧 Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd alfa-connect-bot
-```
-
-2. Install dependencies:
+### 3. Dependencies o'rnatish:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set up environment variables:
+### 4. Environment sozlash:
 ```bash
 cp .env.example .env
-# Edit .env file with your bot token and other settings
+# .env faylini tahrirlang va BOT_TOKEN ni kiriting
 ```
 
-4. Install bugbot command globally:
+### 5. Botni ishga tushirish:
 ```bash
-pip install -e .
+python main.py
 ```
 
-## 🎯 Usage
+## 🔧 Konfiguratsiya
 
-### Start the bot:
-```bash
-python3 bugbot.py run
-```
+`.env` faylida quyidagi sozlamalar mavjud:
+- `BOT_TOKEN` - Telegram bot token (@BotFather dan)
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Database sozlamalari (kelajakda)
+- `LOG_LEVEL` - Logging darajasi (INFO, DEBUG, ERROR)
 
-### Available commands:
-- `python3 bugbot.py run` - Start the bot (recommended)
-- `python3 main.py run` - Alternative way to start
-- `bugbot run` - If installed globally
-
-### First time setup:
-```bash
-# The bot will automatically install dependencies on first run
-python3 bugbot.py run
-```
-
-### Configuration:
-1. Copy `.env.example` to `.env` (if available)
-2. Set your bot token in `.env` file:
-```env
-BOT_TOKEN=your_actual_bot_token_here
-```
-3. Run the bot:
-```bash
-python3 bugbot.py run
-```
-
-## 📁 Project Structure
+## 📁 Fayl strukturasi
 
 ```
-├── main.py              # Main entry point
-├── bugbot.py            # BugBot command runner
-├── setup.py             # Installation script
-├── loader.py            # Bot loader and configuration
-├── handlers/            # Bot handlers
-│   ├── manager/         # Manager role handlers
-│   ├── junior_manager/  # Junior manager handlers
-│   ├── controller/      # Controller handlers
-│   ├── technician/      # Technician handlers
-│   ├── warehouse/       # Warehouse handlers
-│   ├── call_center_supervisor/  # Call center supervisor
-│   └── call_center/     # Call center operator
-├── states/              # State management
-├── keyboards/           # Keyboard layouts
-├── filters/             # Message filters
-└── requirements.txt     # Python dependencies
+alfaconnect-bot/
+├── handlers/           # Bot handlerlari
+│   ├── admin/         # Admin funksiyalari
+│   ├── manager/       # Manager funksiyalari
+│   ├── controller/    # Controller funksiyalari
+│   └── ...
+├── keyboards/         # Klaviaturalar
+├── states/           # FSM states
+├── utils/            # Yordamchi funksiyalar
+├── middlewares/      # Middleware
+├── filters/          # Filterlar
+├── main.py          # Asosiy fayl
+└── requirements.txt # Dependencies
 ```
 
-## 🔄 Workflow Roles
+## 🛠️ Texnologiyalar
 
-1. **Manager** - Reviews applications and assigns to junior managers
-2. **Junior Manager** - Contacts clients and sends to controller
-3. **Controller** - Assigns to call center supervisor or technicians
-4. **Technician** - Performs technical work and warehouse requests
-5. **Warehouse** - Handles technician requests
-6. **Call Center Supervisor** - Assigns to operators
-7. **Call Center Operator** - Contacts clients and resolves issues
+- **Python 3.8+**
+- **aiogram 3.x** - Telegram Bot framework
+- **openpyxl** - Excel fayllar bilan ishlash
+- **python-docx** - Word fayllar bilan ishlash
+- **reportlab** - PDF generatsiya
+- **Faker** - Test ma'lumotlar generatsiyasi
 
-## 🛠️ Development
+## 📊 Export funksiyalari
 
-### Running in development mode:
-```bash
-# Install in development mode
-pip install -e .
+Har bir rol uchun maxsus export imkoniyatlari:
 
-# Run with debug logging
-python main.py run
-```
+### Manager:
+- Buyurtmalar
+- Statistika
+- Xodimlar
+- Hisobotlar
 
-### Testing:
-```bash
-# Run tests (if available)
-python -m pytest
+### Controller:
+- Buyurtmalar (sifat ko'rsatkichlari bilan)
+- Sifat nazorati
+- Texniklar
+- Statistika
 
-# Run with specific configuration
-python main.py run --debug
-```
+### Call Center Supervisor:
+- Buyurtmalar
+- Xodimlar
+- Fikr-mulohazalar
+- Workflow
 
-## 📝 Logging
+### Admin:
+- Foydalanuvchilar
+- Buyurtmalar
+- Tizim sozlamalari
+- Loglar
 
-The bot creates several log files:
-- `testbot_errors.log` - Error logs
-- `testbot_activity.log` - Activity logs
+### Warehouse:
+- Inventarizatsiya
+- Berilgan materiallar
+- Buyurtmalar
+- Statistika
 
-## 🚨 Troubleshooting
+## ⚠️ Muhim eslatmalar
 
-### Common issues:
+1. **Database**: Hozircha database integratsiyasi yo'q, barcha ma'lumotlar fake
+2. **Security**: Production uchun qo'shimcha xavfsizlik choralari kerak
+3. **Performance**: Katta hajmdagi export uchun optimization kerak
 
-1. **Import errors**: Make sure all dependencies are installed
-```bash
-pip install -r requirements.txt
-```
+## 🐛 Xatoliklar va takliflar
 
-2. **Permission denied**: Make sure bugbot.py is executable
-```bash
-chmod +x bugbot.py
-```
+Xatolik topsangiz yoki taklif bo'lsa, GitHub Issues orqali xabar bering.
 
-3. **Bot not starting**: Check your .env file configuration
-```bash
-# Verify .env file exists and has correct values
-cat .env
-```
+## 📄 Litsenziya
 
-4. **Command not found**: Install the package globally
-```bash
-pip install -e .
-```
+MIT License
 
-## 📄 License
+## 👥 Hissa qo'shish
 
-This project is licensed under the MIT License.
+Pull requestlar qabul qilinadi. Katta o'zgarishlar uchun avval issue oching.
 
-## 🤝 Contributing
+## 📞 Aloqa
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📞 Support
-
-For support and questions, please contact the development team.
+Support: @your_support_bot
+Email: support@alfaconnect.uz

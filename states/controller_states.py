@@ -10,6 +10,8 @@ from aiogram.fsm.state import State, StatesGroup
 class ControllerMainMenuStates(StatesGroup):
     """Main menu states for controller"""
     main_menu = State()
+    export_selection = State()
+    export_format_selection = State()
 
 
 class ControllerStates(StatesGroup):

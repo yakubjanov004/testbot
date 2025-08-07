@@ -34,6 +34,7 @@ from .applications import get_manager_applications_router
 from .filters import get_manager_filters_router
 from .realtime_monitoring import get_manager_realtime_monitoring_router
 from .reports import get_manager_reports_router
+from .export import get_manager_export_router
 
 def get_manager_router():
     """Get the complete manager router with all handlers"""
@@ -58,6 +59,7 @@ def get_manager_router():
     router.include_router(get_manager_filters_router())
     router.include_router(get_manager_realtime_monitoring_router())
     router.include_router(get_manager_reports_router())
+    router.include_router(get_manager_export_router())
     
     return router
 
