@@ -49,4 +49,10 @@ class TechnicianWorkflowStates(StatesGroup):
     confirming_materials = State()
     waiting_for_comment = State()
     entering_service_order_number = State()
-    entering_diagnostics_result = State() 
+    entering_diagnostics_result = State()
+
+
+class TechnicianStates(StatesGroup):
+    """General states for technician"""
+    waiting_for_diagnostic = State()
+    waiting_for_work_notes = State() 
