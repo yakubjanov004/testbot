@@ -5,9 +5,44 @@ Menejer uchun real vaqtda kuzatish handleri - Yaxshilangan versiya
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
-from datetime import datetime
+from datetime import datetime, timedelta
 from filters.role_filter import RoleFilter
 from keyboards.manager_buttons import get_manager_realtime_keyboard
+
+def calculate_time_duration(start_time: datetime, end_time: datetime = None) -> str:
+    """Calculate time duration between start and end time"""
+    if end_time is None:
+        end_time = datetime.now()
+    
+    duration = end_time - start_time
+    total_seconds = int(duration.total_seconds())
+    
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    
+    if hours > 0:
+        return f"{hours}s {minutes}d"
+    else:
+        return f"{minutes} daqiqa"
+
+def get_priority_emoji(priority: str) -> str:
+    """Get priority emoji based on priority level"""
+    priority_emojis = {
+        'urgent': '🔴',
+        'high': '🟠', 
+        'normal': '🟡',
+        'low': '🟢'
+    }
+    return priority_emojis.get(priority, '⚪')
+
+def get_status_emoji(duration_minutes: int) -> str:
+    """Get status emoji based on duration"""
+    if duration_minutes <= 30:
+        return '🟢'
+    elif duration_minutes <= 60:
+        return '🟡'
+    else:
+        return '🔴'
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -28,7 +63,6 @@ async def get_user_lang(telegram_id: int):
 # Mock database functions
 async def get_manager_realtime_dashboard(user_id: int):
     """Mock get manager realtime dashboard"""
-    from datetime import datetime, timedelta
     now = datetime.now()
     
     return {
@@ -44,15 +78,19 @@ async def get_manager_realtime_dashboard(user_id: int):
                 'status': 'in_progress',
                 'current_role_actor_name': 'Umar Azimov',
                 'current_role_actor_role': 'technician',
-                'current_duration_text': '45 daqiqa',
+                'start_time': now - timedelta(hours=2, minutes=30),
+                'current_role_start_time': now - timedelta(minutes=45),
+                'current_duration_text': calculate_time_duration(now - timedelta(minutes=45)),
                 'created_at': '2024-01-15 10:30',
                 'location': 'Toshkent sh., Chilonzor t., 15-uy',
                 'workflow_steps': 3,
-                'total_duration_text': '2 soat 15 daqiqa',
-                'status_emoji': '🟡',
+                'total_duration_text': calculate_time_duration(now - timedelta(hours=2, minutes=30)),
+                'status_emoji': get_status_emoji(45),
                 'priority': 'high',
                 'tariff': '100 Mbps',
                 'connection_type': 'B2C',
+                'duration_minutes': 150,
+                'current_role_minutes': 45,
                 'realtime': {
                     'current_role_duration_minutes': 45,
                     'total_duration_minutes': 135,
@@ -547,20 +585,22 @@ def get_manager_realtime_monitoring_router():
             
             # Joriy zayavka ma'lumotlari
             current_request = urgent_requests[current_index]
-            duration = current_request.get('realtime', {}).get('current_role_duration_minutes', 0)
-            hours = int(duration // 60)
-            minutes = int(duration % 60)
+            duration_minutes = current_request.get('current_role_minutes', 0)
+            total_duration = current_request.get('total_duration_text', 'Noma\'lum')
+            current_role_duration = current_request.get('current_duration_text', 'Noma\'lum')
             
             # Zayavka ma'lumotlarini formatlash
             urgent_text = f"""
 🚨 <b>Shoshilinch zayavka</b>
 
-🔴 <b>{current_request.get('client_name', 'Noma\'lum')}</b>
-   ⏰ {hours}s {minutes}d o'tdi
+{get_status_emoji(duration_minutes)} <b>{current_request.get('client_name', 'Noma\'lum')}</b>
+   ⏰ Joriy rolda: {current_role_duration}
+   ⏰ Umumiy vaqt: {total_duration}
    📋 ID: {current_request.get('id', '')[:8]}...
    👤 Joriy: {current_request.get('current_role_actor_name', 'Noma\'lum')} ({current_request.get('current_role_actor_role', 'Noma\'lum')})
    📍 Manzil: {current_request.get('location', 'Manzil ko\'rsatilmagan')}
    📅 Yaratilgan: {current_request.get('created_at', 'Noma\'lum')}
+   🏷️ Turi: {current_request.get('workflow_type', 'Noma\'lum')}
 """
             
             # Navigatsiya tugmalari
@@ -644,38 +684,33 @@ def get_manager_realtime_monitoring_router():
             # Joriy zayavka ma'lumotlari
             current_request = requests[current_index]
             request_id = current_request.get('id')
-            time_summary = await get_workflow_time_summary(request_id)
-            
-            if "error" in time_summary:
-                await callback.answer("Zayavka ma'lumotlarini olishda xatolik", show_alert=True)
-                return
             
             # Zayavka ma'lumotlarini formatlash
-            client_name = time_summary.get('client_name', 'Noma\'lum')
-            total_hours = time_summary.get('total_duration_hours', 0)
-            total_minutes = time_summary.get('total_duration_minutes', 0)
-            current_role = time_summary.get('current_role', 'Noma\'lum')
-            current_minutes = time_summary.get('current_role_duration_minutes', 0)
-            
-            # Vaqt formatlash
-            total_time_text = f"{total_hours}s {total_minutes}d" if total_hours > 0 else f"{total_minutes} daqiqa"
-            current_time_text = f"{current_minutes} daqiqa"
+            client_name = current_request.get('client_name', 'Noma\'lum')
+            total_duration = current_request.get('total_duration_text', 'Noma\'lum')
+            current_role_duration = current_request.get('current_duration_text', 'Noma\'lum')
+            current_role = current_request.get('current_role_actor_role', 'Noma\'lum')
+            current_actor = current_request.get('current_role_actor_name', 'Noma\'lum')
+            duration_minutes = current_request.get('current_role_minutes', 0)
             
             # Status belgisini aniqlash
-            status_emoji = "🟢" if current_minutes <= 30 else "🟡" if current_minutes <= 60 else "🔴"
+            status_emoji = get_status_emoji(duration_minutes)
+            priority_emoji = get_priority_emoji(current_request.get('priority', 'normal'))
             
             time_text = f"""
 ⏰ <b>Vaqt kuzatish #{current_index + 1} / {len(requests)}</b>
 
 {status_emoji} <b>{client_name}</b>
-   ⏰ Umumiy vaqt: {total_time_text}
-   🔄 Joriy rol: {current_role} ({current_time_text})
+   {priority_emoji} {current_request.get('workflow_type', 'Noma\'lum')}
+   ⏰ Umumiy vaqt: {total_duration}
+   🔄 Joriy rol: {current_role} ({current_role_duration})
+   👤 Joriy: {current_actor}
    📋 ID: {request_id[:8]}...
 
 📊 <b>Vaqt tahlili:</b>
-   • Umumiy soat: {total_hours}
-   • Umumiy daqiqa: {total_minutes}
-   • Joriy rolda: {current_minutes} daqiqa
+   • Joriy rolda: {duration_minutes} daqiqa
+   • Status: {current_request.get('status', 'Noma\'lum')}
+   • Priority: {current_request.get('priority', 'Noma\'lum')}
 """
             
             # Navigatsiya tugmalari

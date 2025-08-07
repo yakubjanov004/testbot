@@ -626,3 +626,26 @@ def get_manager_search_keyboard(lang='uz'):
         [KeyboardButton(text=back_text)]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+def get_manager_realtime_keyboard(lang='uz'):
+    """Generate real-time monitoring keyboard for manager with locale support"""
+    requests_text = "📋 Zayavkalar ro'yxati" if lang == "uz" else "📋 Список заявок"
+    urgent_text = "🚨 Shoshilinch zayavkalar" if lang == "uz" else "🚨 Срочные заявки"
+    time_tracking_text = "⏰ Vaqt kuzatish" if lang == "uz" else "⏰ Отслеживание времени"
+    workflow_history_text = "📊 Workflow tarix" if lang == "uz" else "📊 История workflow"
+    refresh_text = "🔄 Yangilash" if lang == "uz" else "🔄 Обновить"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=requests_text, callback_data="mgr_realtime_requests"),
+            InlineKeyboardButton(text=urgent_text, callback_data="mgr_realtime_urgent")
+        ],
+        [
+            InlineKeyboardButton(text=time_tracking_text, callback_data="mgr_time_tracking"),
+            InlineKeyboardButton(text=workflow_history_text, callback_data="mgr_workflow_history")
+        ],
+        [
+            InlineKeyboardButton(text=refresh_text, callback_data="mgr_refresh_realtime")
+        ]
+    ])
+    return keyboard

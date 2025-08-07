@@ -27,8 +27,45 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
+def calculate_time_duration(start_time: datetime, end_time: datetime = None) -> str:
+    """Calculate time duration between start and end time"""
+    if end_time is None:
+        end_time = datetime.now()
+    
+    duration = end_time - start_time
+    total_seconds = int(duration.total_seconds())
+    
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    
+    if hours > 0:
+        return f"{hours}s {minutes}d"
+    else:
+        return f"{minutes} daqiqa"
+
+def get_priority_emoji(priority: str) -> str:
+    """Get priority emoji based on priority level"""
+    priority_emojis = {
+        'urgent': '🔴',
+        'high': '🟠', 
+        'normal': '🟡',
+        'low': '🟢'
+    }
+    return priority_emojis.get(priority, '⚪')
+
+def get_status_emoji(duration_minutes: int) -> str:
+    """Get status emoji based on duration"""
+    if duration_minutes <= 30:
+        return '🟢'
+    elif duration_minutes <= 60:
+        return '🟡'
+    else:
+        return '🔴'
+
 async def get_realtime_data():
     """Mock get real-time data"""
+    now = datetime.now()
+    
     return {
         'active_orders': 25,
         'pending_orders': 8,
@@ -44,12 +81,62 @@ async def get_realtime_data():
         'completed_applications': 8,
         'available_technicians': 4,
         'busy_technicians': 6,
+        'urgent_requests': [
+            {
+                'id': 'req_001',
+                'client_name': 'Aziz Karimov',
+                'workflow_type': 'connection_request',
+                'status': 'in_progress',
+                'current_role_actor_name': 'Umar Azimov',
+                'current_role_actor_role': 'technician',
+                'start_time': now - timedelta(hours=2, minutes=30),
+                'current_role_start_time': now - timedelta(minutes=45),
+                'created_at': '2024-01-15 10:30',
+                'location': 'Toshkent sh., Chilonzor t., 15-uy',
+                'priority': 'urgent',
+                'total_duration': calculate_time_duration(now - timedelta(hours=2, minutes=30)),
+                'current_role_duration': calculate_time_duration(now - timedelta(minutes=45)),
+                'status_emoji': '🔴'
+            },
+            {
+                'id': 'req_002',
+                'client_name': 'Malika Toshmatova',
+                'workflow_type': 'technical_service',
+                'status': 'urgent',
+                'current_role_actor_name': 'Jahongir Karimov',
+                'current_role_actor_role': 'junior_manager',
+                'start_time': now - timedelta(hours=3, minutes=15),
+                'current_role_start_time': now - timedelta(minutes=90),
+                'created_at': '2024-01-15 09:15',
+                'location': 'Toshkent sh., Sergeli t., 45-uy',
+                'priority': 'urgent',
+                'total_duration': calculate_time_duration(now - timedelta(hours=3, minutes=15)),
+                'current_role_duration': calculate_time_duration(now - timedelta(minutes=90)),
+                'status_emoji': '🔴'
+            },
+            {
+                'id': 'req_003',
+                'client_name': 'Dilfuza Karimova',
+                'workflow_type': 'call_center_direct',
+                'status': 'urgent',
+                'current_role_actor_name': 'Ahmad Toshmatov',
+                'current_role_actor_role': 'call_center_supervisor',
+                'start_time': now - timedelta(hours=4, minutes=20),
+                'current_role_start_time': now - timedelta(minutes=120),
+                'created_at': '2024-01-15 08:45',
+                'location': 'Toshkent sh., Chilanzar t., 23-uy',
+                'priority': 'urgent',
+                'total_duration': calculate_time_duration(now - timedelta(hours=4, minutes=20)),
+                'current_role_duration': calculate_time_duration(now - timedelta(minutes=120)),
+                'status_emoji': '🔴'
+            }
+        ],
         'recent_activities': [
             {
                 'id': 1,
                 'type': 'order_created',
                 'description': 'Yangi buyurtma yaratildi',
-                'time': datetime.now() - timedelta(minutes=5),
+                'time': now - timedelta(minutes=5),
                 'user': 'Test Client',
                 'priority': 'normal'
             },
@@ -57,7 +144,7 @@ async def get_realtime_data():
                 'id': 2,
                 'type': 'order_assigned',
                 'description': 'Buyurtma texnikka tayinlandi',
-                'time': datetime.now() - timedelta(minutes=12),
+                'time': now - timedelta(minutes=12),
                 'user': 'Aziz Karimov',
                 'priority': 'high'
             },
@@ -65,7 +152,7 @@ async def get_realtime_data():
                 'id': 3,
                 'type': 'order_completed',
                 'description': 'Buyurtma bajarildi',
-                'time': datetime.now() - timedelta(minutes=25),
+                'time': now - timedelta(minutes=25),
                 'user': 'Malika Yusupova',
                 'priority': 'normal'
             },
@@ -73,7 +160,7 @@ async def get_realtime_data():
                 'id': 4,
                 'type': 'technician_assigned',
                 'description': 'Texnik tayinlandi',
-                'time': datetime.now() - timedelta(minutes=35),
+                'time': now - timedelta(minutes=35),
                 'user': 'Umar Azimov',
                 'priority': 'high'
             },
@@ -81,7 +168,7 @@ async def get_realtime_data():
                 'id': 5,
                 'type': 'application_urgent',
                 'description': 'Shoshilinch ariza yaratildi',
-                'time': datetime.now() - timedelta(minutes=45),
+                'time': now - timedelta(minutes=45),
                 'user': 'Dilfuza Karimova',
                 'priority': 'urgent'
             }
@@ -91,13 +178,13 @@ async def get_realtime_data():
                 'id': 1,
                 'type': 'warning',
                 'message': 'Tizim yuklama 85% ga yetdi',
-                'time': datetime.now() - timedelta(minutes=10)
+                'time': now - timedelta(minutes=10)
             },
             {
                 'id': 2,
                 'type': 'info',
                 'message': 'Yangi texnik qo\'shildi',
-                'time': datetime.now() - timedelta(minutes=30)
+                'time': now - timedelta(minutes=30)
             }
         ],
         'performance_metrics': {
@@ -110,6 +197,8 @@ async def get_realtime_data():
 
 async def get_detailed_realtime_data():
     """Mock get detailed real-time data"""
+    now = datetime.now()
+    
     return {
         'system_overview': {
             'total_requests': 156,
@@ -131,12 +220,68 @@ async def get_detailed_realtime_data():
             'satisfaction_rate': '94%',
             'system_uptime': '99.8%'
         },
+        'urgent_requests_with_time': [
+            {
+                'id': 'req_001',
+                'client_name': 'Aziz Karimov',
+                'workflow_type': 'connection_request',
+                'status': 'in_progress',
+                'current_role_actor_name': 'Umar Azimov',
+                'current_role_actor_role': 'technician',
+                'start_time': now - timedelta(hours=2, minutes=30),
+                'current_role_start_time': now - timedelta(minutes=45),
+                'created_at': '2024-01-15 10:30',
+                'location': 'Toshkent sh., Chilonzor t., 15-uy',
+                'priority': 'urgent',
+                'total_duration': calculate_time_duration(now - timedelta(hours=2, minutes=30)),
+                'current_role_duration': calculate_time_duration(now - timedelta(minutes=45)),
+                'status_emoji': '🔴',
+                'duration_minutes': 150,
+                'current_role_minutes': 45
+            },
+            {
+                'id': 'req_002',
+                'client_name': 'Malika Toshmatova',
+                'workflow_type': 'technical_service',
+                'status': 'urgent',
+                'current_role_actor_name': 'Jahongir Karimov',
+                'current_role_actor_role': 'junior_manager',
+                'start_time': now - timedelta(hours=3, minutes=15),
+                'current_role_start_time': now - timedelta(minutes=90),
+                'created_at': '2024-01-15 09:15',
+                'location': 'Toshkent sh., Sergeli t., 45-uy',
+                'priority': 'urgent',
+                'total_duration': calculate_time_duration(now - timedelta(hours=3, minutes=15)),
+                'current_role_duration': calculate_time_duration(now - timedelta(minutes=90)),
+                'status_emoji': '🔴',
+                'duration_minutes': 195,
+                'current_role_minutes': 90
+            },
+            {
+                'id': 'req_003',
+                'client_name': 'Dilfuza Karimova',
+                'workflow_type': 'call_center_direct',
+                'status': 'urgent',
+                'current_role_actor_name': 'Ahmad Toshmatov',
+                'current_role_actor_role': 'call_center_supervisor',
+                'start_time': now - timedelta(hours=4, minutes=20),
+                'current_role_start_time': now - timedelta(minutes=120),
+                'created_at': '2024-01-15 08:45',
+                'location': 'Toshkent sh., Chilanzar t., 23-uy',
+                'priority': 'urgent',
+                'total_duration': calculate_time_duration(now - timedelta(hours=4, minutes=20)),
+                'current_role_duration': calculate_time_duration(now - timedelta(minutes=120)),
+                'status_emoji': '🔴',
+                'duration_minutes': 260,
+                'current_role_minutes': 120
+            }
+        ],
         'recent_activities': [
             {
                 'id': 1,
                 'type': 'new_application',
                 'description': 'Yangi ulanish arizasi',
-                'time': datetime.now() - timedelta(minutes=5),
+                'time': now - timedelta(minutes=5),
                 'user': 'Aziz Karimov',
                 'priority': 'high',
                 'status': 'in_progress'
@@ -145,7 +290,7 @@ async def get_detailed_realtime_data():
                 'id': 2,
                 'type': 'technician_assigned',
                 'description': 'Texnik tayinlandi',
-                'time': datetime.now() - timedelta(minutes=12),
+                'time': now - timedelta(minutes=12),
                 'user': 'Umar Azimov',
                 'priority': 'normal',
                 'status': 'assigned'
@@ -154,7 +299,7 @@ async def get_detailed_realtime_data():
                 'id': 3,
                 'type': 'application_completed',
                 'description': 'Ariza bajarildi',
-                'time': datetime.now() - timedelta(minutes=25),
+                'time': now - timedelta(minutes=25),
                 'user': 'Malika Yusupova',
                 'priority': 'normal',
                 'status': 'completed'
@@ -163,7 +308,7 @@ async def get_detailed_realtime_data():
                 'id': 4,
                 'type': 'application_cancelled',
                 'description': 'Ariza bekor qilindi',
-                'time': datetime.now() - timedelta(minutes=35),
+                'time': now - timedelta(minutes=35),
                 'user': 'Jasur Rahimov',
                 'priority': 'low',
                 'status': 'cancelled'
@@ -172,7 +317,7 @@ async def get_detailed_realtime_data():
                 'id': 5,
                 'type': 'urgent_request',
                 'description': 'Shoshilinch ariza',
-                'time': datetime.now() - timedelta(minutes=45),
+                'time': now - timedelta(minutes=45),
                 'user': 'Dilfuza Karimova',
                 'priority': 'urgent',
                 'status': 'urgent'
@@ -290,12 +435,7 @@ def get_realtime_monitoring_router():
             
             # Add recent activities
             for i, activity in enumerate(realtime_data['recent_activities'], 1):
-                priority_emoji = {
-                    'urgent': '🔴',
-                    'high': '🟠',
-                    'normal': '🟡',
-                    'low': '🟢'
-                }.get(activity.get('priority', 'normal'), '⚪')
+                priority_emoji = get_priority_emoji(activity.get('priority', 'normal'))
                 
                 activity_type_emoji = {
                     'new_application': '📝',
@@ -522,6 +662,23 @@ def get_realtime_monitoring_router():
                     f"• Mijozlar mamnuniyati: {detailed_data['performance_metrics']['satisfaction_rate']}\n"
                     f"• Tizim ishlashi: {detailed_data['performance_metrics']['system_uptime']}"
                 )
+            elif detail_type == "alerts":
+                detailed_text = (
+                    "🚨 <b>Shoshilinch zayavkalar</b>\n\n"
+                )
+                
+                for i, request in enumerate(detailed_data['urgent_requests_with_time'], 1):
+                    priority_emoji = get_priority_emoji(request['priority'])
+                    status_emoji = get_status_emoji(request['current_role_minutes'])
+                    
+                    detailed_text += (
+                        f"{i}. {status_emoji} <b>{request['client_name']}</b>\n"
+                        f"   {priority_emoji} {request['workflow_type']}\n"
+                        f"   👤 {request['current_role_actor_name']} ({request['current_role_actor_role']})\n"
+                        f"   ⏰ Umumiy vaqt: {request['total_duration']}\n"
+                        f"   🔄 Joriy rolda: {request['current_role_duration']}\n"
+                        f"   📍 {request['location']}\n\n"
+                    )
             else:
                 detailed_text = "📊 Batafsil ma'lumotlar ko'rsatilmoqda..."
             
