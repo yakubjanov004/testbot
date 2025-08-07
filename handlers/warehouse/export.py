@@ -35,7 +35,7 @@ def get_warehouse_export_router():
                 'statistics': '📊 Statistika'
             }
             
-            text = "📤 Export qilish\n\nQaysi ma'lumotlarni export qilmoqchisiz?"
+            text = "Export qilish\n\nQaysi ma'lumotlarni export qilmoqchisiz?"
             
             # Create inline keyboard for export types
             keyboard = []
@@ -47,10 +47,7 @@ def get_warehouse_export_router():
                     )
                 ])
             
-            # Add back button
-            keyboard.append([
-                InlineKeyboardButton(text="◀️ Orqaga", callback_data="warehouse_export_back_main")
-            ])
+
             
             markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
             
@@ -92,7 +89,7 @@ def get_warehouse_export_router():
                     'statistics': '📊 Statistika'
                 }
                 
-                text = "📤 Export qilish\n\nQaysi ma'lumotlarni export qilmoqchisiz?"
+                text = "Export qilish\n\nQaysi ma'lumotlarni export qilmoqchisiz?"
                 
                 keyboard = []
                 for export_type in export_types:
@@ -131,19 +128,19 @@ def get_warehouse_export_router():
             
             # Show format selection
             formats = get_available_export_formats()
-            text = f"📤 {export_type_names.get(action, action)} export\n\n"
+            text = f"{export_type_names.get(action, action)} export\n\n"
             text += "Qaysi formatda export qilmoqchisiz?\n\n"
-            text += "📄 CSV - Universal format (Excel, Google Sheets)\n"
-            text += "📊 Excel - Microsoft Excel formati\n"
-            text += "📝 Word - Microsoft Word formati\n"
-            text += "📑 PDF - Chop etish uchun qulay format"
+            text += "CSV - Universal format (Excel, Google Sheets)\n"
+            text += "Excel - Microsoft Excel formati\n"
+            text += "Word - Microsoft Word formati\n"
+            text += "PDF - Chop etish uchun qulay format"
             
             keyboard = []
             format_icons = {
-                'csv': '📄 CSV',
-                'xlsx': '📊 Excel',
-                'docx': '📝 Word',
-                'pdf': '📑 PDF'
+                'csv': 'CSV',
+                'xlsx': 'Excel',
+                'docx': 'Word',
+                'pdf': 'PDF'
             }
             
             for fmt in formats:
@@ -223,11 +220,11 @@ def get_warehouse_export_router():
                 
                 # Send success message
                 await callback.message.answer(
-                    f"✅ Export muvaffaqiyatli tayyorlandi!\n\n"
-                    f"📁 Fayl nomi: {filename}\n"
-                    f"📊 Fayl hajmi: {file_size:,} bayt\n"
-                    f"📄 Format: {format_names.get(format_type, format_type)}\n\n"
-                    f"📤 Fayl yuborilmoqda..."
+                    f"Export muvaffaqiyatli tayyorlandi!\n\n"
+                    f"Fayl nomi: {filename}\n"
+                    f"Fayl hajmi: {file_size:,} bayt\n"
+                    f"Format: {format_names.get(format_type, format_type)}\n\n"
+                    f"Fayl yuborilmoqda..."
                 )
                 
                 # Send the actual file
@@ -236,10 +233,10 @@ def get_warehouse_export_router():
                         file_content.read(),
                         filename=filename
                     ),
-                    caption=f"📤 {export_type_names.get(export_type, export_type)} export\n"
-                            f"📅 Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-                            f"📄 Format: {format_names.get(format_type, format_type)}\n\n"
-                            f"✅ Export muvaffaqiyatli yakunlandi!"
+                    caption=f"{export_type_names.get(export_type, export_type)} export\n"
+                            f"Sana: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+                            f"Format: {format_names.get(format_type, format_type)}\n\n"
+                            f"Export muvaffaqiyatli yakunlandi!"
                 )
                 
                 # Return to main menu
