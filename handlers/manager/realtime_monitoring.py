@@ -112,6 +112,8 @@ async def get_manager_realtime_dashboard(user_id: int):
                 'status_emoji': '🔴',
                 'priority': 'urgent',
                 'issue_type': 'TV signal yo\'q',
+                'duration_minutes': 210,
+                'current_role_minutes': 90,
                 'realtime': {
                     'current_role_duration_minutes': 90,
                     'total_duration_minutes': 210,
@@ -134,6 +136,8 @@ async def get_manager_realtime_dashboard(user_id: int):
                 'priority': 'normal',
                 'tariff': '50 Mbps',
                 'connection_type': 'B2B',
+                'duration_minutes': 105,
+                'current_role_minutes': 30,
                 'realtime': {
                     'current_role_duration_minutes': 30,
                     'total_duration_minutes': 105,
@@ -155,6 +159,8 @@ async def get_manager_realtime_dashboard(user_id: int):
                 'status_emoji': '🔴',
                 'priority': 'urgent',
                 'issue_type': 'Internet sekin ishlaydi',
+                'duration_minutes': 260,
+                'current_role_minutes': 120,
                 'realtime': {
                     'current_role_duration_minutes': 120,
                     'total_duration_minutes': 260,
@@ -176,6 +182,8 @@ async def get_manager_realtime_dashboard(user_id: int):
                 'status_emoji': '🟡',
                 'priority': 'high',
                 'issue_type': 'Router ishlamayapti',
+                'duration_minutes': 45,
+                'current_role_minutes': 15,
                 'realtime': {
                     'current_role_duration_minutes': 15,
                     'total_duration_minutes': 45,
@@ -564,7 +572,10 @@ def get_manager_realtime_monitoring_router():
             
             # Shoshilinch zayavkalarni filtrlash
             for request in requests:
+                # Try both nested and direct field access for backwards compatibility
                 duration = request.get('realtime', {}).get('current_role_duration_minutes', 0)
+                if duration == 0:  # If nested structure doesn't have duration, try direct field
+                    duration = request.get('current_role_minutes', 0)
                 if duration > 60:  # 1 soatdan ko'p
                     urgent_requests.append(request)
             
