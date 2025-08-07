@@ -30,6 +30,8 @@ def get_warehouse_export_router():
             
             # Get user language (default to uz)
             lang = 'uz'
+            # Store language in state for later callbacks
+            await state.update_data(lang=lang)
             export_types = get_available_export_types('warehouse')
             
             # Export type names in Uzbek
@@ -59,6 +61,9 @@ def get_warehouse_export_router():
         """Handle export type selection"""
         try:
             await callback.answer()
+            # Retrieve language preference (default 'uz')
+            data_state = await state.get_data()
+            lang = data_state.get('lang', 'uz')
             
             # Parse callback data
             action = callback.data.replace("warehouse_export_", "")
