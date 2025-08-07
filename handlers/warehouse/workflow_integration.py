@@ -4,6 +4,8 @@ from aiogram.fsm.context import FSMContext
 from keyboards.warehouse_buttons import equipment_preparation_keyboard
 from states.warehouse_states import WarehouseWorkflowStates
 from filters.role_filter import RoleFilter
+from utils.retry_helper import retry_helper
+from utils.message_cache import message_cache
 
 def get_warehouse_workflow_router():
     """Warehouse workflow integration router"""
@@ -18,6 +20,9 @@ def get_warehouse_workflow_router():
     async def prepare_equipment_handler(callback: CallbackQuery, state: FSMContext):
         """Handle equipment preparation request from technician"""
         try:
+            # MUHIM: Callback'ga darhol javob berish
+            await callback.answer()
+            
             request_id = callback.data.split("_")[-1]
             
             # Mock application details (like other modules)
@@ -52,12 +57,20 @@ def get_warehouse_workflow_router():
                 {"text": "✅ Tayyorlash tugallandi", "callback_data": f"equipment_ready_{request_id}"}
             ]]
             
-            await callback.message.answer(
-                "🔧 Uskunani tayyorlang va tugagach tasdiqlang:",
-                reply_markup={"inline_keyboard": keyboard}
-            )
+            # Xabar yuborishda retry mexanizmini ishlatish
+            message_text = "🔧 Uskunani tayyorlang va tugagach tasdiqlang:"
             
-            await callback.answer()
+            # Duplicate tekshirish
+            if not message_cache.is_duplicate(
+                callback.from_user.id, 
+                message_text, 
+                callback.message.chat.id
+            ):
+                await retry_helper.retry_on_flood(
+                    callback.message.answer,
+                    message_text,
+                    reply_markup={"inline_keyboard": keyboard}
+                )
             
         except Exception as e:
             await callback.answer("Xatolik yuz berdi", show_alert=True)

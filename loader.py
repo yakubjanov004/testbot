@@ -72,9 +72,11 @@ from middlewares.logger_middleware import LoggerMiddleware
 from middlewares.error_middleware import ErrorMiddleware
 from middlewares.rate_limit_middleware import RateLimitMiddleware
 from middlewares.anti_spam_middleware import AntiSpamMiddleware
+from middlewares.callback_answer_middleware import CallbackAnswerMiddleware
 
 dp.message.middleware(LoggerMiddleware())
 dp.callback_query.middleware(LoggerMiddleware())
+dp.callback_query.middleware(CallbackAnswerMiddleware())  # Callback uchun birinchi bo'lishi kerak
 dp.message.middleware(AntiSpamMiddleware())
 dp.callback_query.middleware(AntiSpamMiddleware())
 dp.message.middleware(RateLimitMiddleware())
