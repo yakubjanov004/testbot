@@ -1,13 +1,14 @@
 """
-Manager Inbox Handler - Soddalashtirilgan versiya
+Manager Inbox Handler - To'liq yangilangan versiya
 
 Bu modul manager uchun inbox funksionalligini o'z ichiga oladi.
+To'liq mock data, pagination va kichik menejerga yuborish funksiyasi bilan.
 """
 
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from datetime import datetime
+from datetime import datetime, timedelta
 from filters.role_filter import RoleFilter
 
 # Mock functions to replace utils and database imports
@@ -44,6 +45,20 @@ async def get_users_by_role(role: str):
                 'phone_number': '+998901234569',
                 'role': 'junior_manager',
                 'is_active': True
+            },
+            {
+                'id': 4,
+                'full_name': 'Jasur Rahimov',
+                'phone_number': '+998901234570',
+                'role': 'junior_manager',
+                'is_active': True
+            },
+            {
+                'id': 5,
+                'full_name': 'Dilfuza Abdullayeva',
+                'phone_number': '+998901234571',
+                'role': 'junior_manager',
+                'is_active': True
             }
         ]
     return []
@@ -63,198 +78,293 @@ class MockWorkflowEngine:
         print(f"Mock: Transitioning workflow {request_id} with action {action} by {role}")
         return True
 
-# Mock state manager
+# Mock state manager with comprehensive data
 class MockStateManager:
-    """Mock state manager"""
+    """Mock state manager with complete application data"""
     async def get_request(self, request_id: str):
-        """Mock get request"""
+        """Mock get request with complete details"""
         from datetime import datetime, timedelta
         now = datetime.now()
         
-        # Different data based on request ID
-        if 'req_001' in request_id:
-            return {
-                'id': request_id,
+        # Comprehensive mock data for different request types
+        mock_requests = {
+            'req_001_2024_01_15': {
+                'id': 'req_001_2024_01_15',
                 'workflow_type': 'connection_request',
                 'current_status': 'created',
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Aziz Karimov',
                     'phone': '+998901234567',
-                    'phone_number': '+998901234567'
+                    'phone_number': '+998901234567',
+                    'email': 'aziz.karimov@example.com'
                 },
                 'created_at': now - timedelta(hours=2),
-                'description': 'Internet ulanish arizasi\nTariff: 100 Mbps\nB2C mijoz\nManzil: Tashkent, Chorsu tumani, 15-uy',
+                'description': 'Internet ulanish arizasi\nTariff: 100 Mbps\nB2C mijoz\nManzil: Tashkent, Chorsu tumani, 15-uy\nQo\'shimcha ma\'lumot: Yangi uy, optic kabel kerak',
                 'location': 'Tashkent, Chorsu tumani, 15-uy',
-                'priority': 'high'
-            }
-        elif 'req_002' in request_id:
-            return {
-                'id': request_id,
+                'priority': 'high',
+                'tariff': '100 Mbps',
+                'connection_type': 'B2C',
+                'equipment_needed': 'Router, optic kabel',
+                'estimated_cost': '500,000 so\'m',
+                'expected_completion': '3-5 kun'
+            },
+            'req_002_2024_01_16': {
+                'id': 'req_002_2024_01_16',
                 'workflow_type': 'technical_service',
                 'current_status': 'created',
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Malika Toshmatova',
                     'phone': '+998901234568',
-                    'phone_number': '+998901234568'
+                    'phone_number': '+998901234568',
+                    'email': 'malika.toshmatova@example.com'
                 },
                 'created_at': now - timedelta(hours=1, minutes=30),
-                'description': 'TV signal yo\'q\nKabel uzilgan\nManzil: Tashkent, Yunusabad tumani, 45-uy',
+                'description': 'TV signal yo\'q\nKabel uzilgan\nManzil: Tashkent, Yunusabad tumani, 45-uy\nMuammo: TV kanallar ko\'rinmayapti',
                 'location': 'Tashkent, Yunusabad tumani, 45-uy',
-                'priority': 'medium'
-            }
-        elif 'req_003' in request_id:
-            return {
-                'id': request_id,
+                'priority': 'medium',
+                'service_type': 'TV signal repair',
+                'equipment_needed': 'Yangi kabel',
+                'estimated_cost': '150,000 so\'m',
+                'expected_completion': '1-2 kun'
+            },
+            'req_003_2024_01_17': {
+                'id': 'req_003_2024_01_17',
                 'workflow_type': 'connection_request',
                 'current_status': 'created',
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Jasur Rahimov',
                     'phone': '+998901234569',
-                    'phone_number': '+998901234569'
+                    'phone_number': '+998901234569',
+                    'email': 'jasur.rahimov@company.uz'
                 },
                 'created_at': now - timedelta(minutes=45),
-                'description': 'Internet ulanish arizasi\nTariff: 50 Mbps\nB2B mijoz\nManzil: Tashkent, Sergeli tumani, 78-uy',
+                'description': 'Internet ulanish arizasi\nTariff: 50 Mbps\nB2B mijoz\nManzil: Tashkent, Sergeli tumani, 78-uy\nKompaniya: "Rahimov Trading" LLC',
                 'location': 'Tashkent, Sergeli tumani, 78-uy',
-                'priority': 'normal'
-            }
-        elif 'req_004' in request_id:
-            return {
-                'id': request_id,
+                'priority': 'normal',
+                'tariff': '50 Mbps',
+                'connection_type': 'B2B',
+                'company_name': 'Rahimov Trading LLC',
+                'equipment_needed': 'Router, switch',
+                'estimated_cost': '800,000 so\'m',
+                'expected_completion': '5-7 kun'
+            },
+            'req_004_2024_01_18': {
+                'id': 'req_004_2024_01_18',
                 'workflow_type': 'call_center_direct',
                 'current_status': 'created',
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Dilfuza Karimova',
                     'phone': '+998901234570',
-                    'phone_number': '+998901234570'
+                    'phone_number': '+998901234570',
+                    'email': 'dilfuza.karimova@example.com'
                 },
                 'created_at': now - timedelta(minutes=20),
-                'description': 'Internet sekin ishlaydi\nTezlik past\nManzil: Tashkent, Chilanzar tumani, 23-uy',
+                'description': 'Internet sekin ishlaydi\nTezlik past\nManzil: Tashkent, Chilanzar tumani, 23-uy\nMuammo: Download tezligi 1 Mbps',
                 'location': 'Tashkent, Chilanzar tumani, 23-uy',
-                'priority': 'high'
-            }
-        elif 'req_005' in request_id:
-            return {
-                'id': request_id,
+                'priority': 'high',
+                'service_type': 'Speed optimization',
+                'current_speed': '1 Mbps',
+                'expected_speed': '50 Mbps',
+                'estimated_cost': '200,000 so\'m',
+                'expected_completion': '2-3 kun'
+            },
+            'req_005_2024_01_19': {
+                'id': 'req_005_2024_01_19',
                 'workflow_type': 'technical_service',
                 'current_status': 'created',
                 'role_current': 'manager',
                 'contact_info': {
                     'full_name': 'Asadbek Abdullayev',
                     'phone': '+998901234571',
-                    'phone_number': '+998901234571'
+                    'phone_number': '+998901234571',
+                    'email': 'asadbek.abdullayev@example.com'
                 },
                 'created_at': now - timedelta(minutes=10),
-                'description': 'Router ishlamayapti\nYangi router kerak\nManzil: Tashkent, Shayxontohur tumani, 67-uy',
+                'description': 'Router ishlamayapti\nYangi router kerak\nManzil: Tashkent, Shayxontohur tumani, 67-uy\nMuammo: Router yonib-o\'chib turadi',
                 'location': 'Tashkent, Shayxontohur tumani, 67-uy',
-                'priority': 'urgent'
+                'priority': 'urgent',
+                'service_type': 'Router replacement',
+                'equipment_needed': 'Yangi router',
+                'estimated_cost': '300,000 so\'m',
+                'expected_completion': '1 kun'
+            },
+            'req_006_2024_01_20': {
+                'id': 'req_006_2024_01_20',
+                'workflow_type': 'connection_request',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Shahnoza Mirzayeva',
+                    'phone': '+998901234572',
+                    'phone_number': '+998901234572',
+                    'email': 'shahnoza.mirzayeva@example.com'
+                },
+                'created_at': now - timedelta(minutes=5),
+                'description': 'Internet ulanish arizasi\nTariff: 200 Mbps\nB2C mijoz\nManzil: Tashkent, Yakkasaroy tumani, 89-uy\nQo\'shimcha: Gaming uchun yuqori tezlik kerak',
+                'location': 'Tashkent, Yakkasaroy tumani, 89-uy',
+                'priority': 'high',
+                'tariff': '200 Mbps',
+                'connection_type': 'B2C',
+                'equipment_needed': 'Gaming router, optic kabel',
+                'estimated_cost': '750,000 so\'m',
+                'expected_completion': '4-6 kun'
+            },
+            'req_007_2024_01_21': {
+                'id': 'req_007_2024_01_21',
+                'workflow_type': 'technical_service',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Bobur Turgunov',
+                    'phone': '+998901234573',
+                    'phone_number': '+998901234573',
+                    'email': 'bobur.turgunov@example.com'
+                },
+                'created_at': now - timedelta(minutes=3),
+                'description': 'WiFi signal kuchsiz\nSignal kuchaytirgich kerak\nManzil: Tashkent, Mirabad tumani, 34-uy\nMuammo: Uyning narigi qismida signal yo\'q',
+                'location': 'Tashkent, Mirabad tumani, 34-uy',
+                'priority': 'medium',
+                'service_type': 'WiFi signal booster',
+                'equipment_needed': 'WiFi extender',
+                'estimated_cost': '250,000 so\'m',
+                'expected_completion': '2-3 kun'
+            },
+            'req_008_2024_01_22': {
+                'id': 'req_008_2024_01_22',
+                'workflow_type': 'connection_request',
+                'current_status': 'created',
+                'role_current': 'manager',
+                'contact_info': {
+                    'full_name': 'Zarina Usmanova',
+                    'phone': '+998901234574',
+                    'phone_number': '+998901234574',
+                    'email': 'zarina.usmanova@company.uz'
+                },
+                'created_at': now - timedelta(minutes=1),
+                'description': 'Internet ulanish arizasi\nTariff: 150 Mbps\nB2B mijoz\nManzil: Tashkent, Bektemir tumani, 12-uy\nKompaniya: "Usmanova Solutions" LLC',
+                'location': 'Tashkent, Bektemir tumani, 12-uy',
+                'priority': 'normal',
+                'tariff': '150 Mbps',
+                'connection_type': 'B2B',
+                'company_name': 'Usmanova Solutions LLC',
+                'equipment_needed': 'Router, switch, UPS',
+                'estimated_cost': '1,200,000 so\'m',
+                'expected_completion': '7-10 kun'
             }
-        else:
-            # Default fallback - try to extract request number from ID
-            import re
-            match = re.search(r'req_(\d+)', request_id)
-            if match:
-                req_num = match.group(1)
-                # Generate data based on request number
-                if req_num == '001' or req_num == '003':
-                    return {
-                        'id': request_id,
-                        'workflow_type': 'connection_request',
-                        'current_status': 'created',
-                        'role_current': 'manager',
-                        'contact_info': {
-                            'full_name': f'Client {req_num}',
-                            'phone': '+998901234567',
-                            'phone_number': '+998901234567'
-                        },
-                        'created_at': now - timedelta(minutes=int(req_num) * 10),
-                        'description': f'Internet ulanish arizasi\nTariff: {int(req_num) * 10} Mbps\nB2C mijoz\nManzil: Tashkent, Test tumani, {req_num}-uy',
-                        'location': f'Tashkent, Test tumani, {req_num}-uy',
-                        'priority': 'normal'
-                    }
-                else:
-                    return {
-                        'id': request_id,
-                        'workflow_type': 'technical_service',
-                        'current_status': 'created',
-                        'role_current': 'manager',
-                        'contact_info': {
-                            'full_name': f'Client {req_num}',
-                            'phone': '+998901234567',
-                            'phone_number': '+998901234567'
-                        },
-                        'created_at': now - timedelta(minutes=int(req_num) * 10),
-                        'description': f'Texnik muammo\nManzil: Tashkent, Test tumani, {req_num}-uy',
-                        'location': f'Tashkent, Test tumani, {req_num}-uy',
-                        'priority': 'medium'
-                    }
-            else:
-                # Generic fallback
-                return {
-                    'id': request_id,
-                    'workflow_type': 'connection_request',
-                    'current_status': 'created',
-                    'role_current': 'manager',
-                    'contact_info': {
-                        'full_name': 'Test Client',
-                        'phone': '+998901234567',
-                        'phone_number': '+998901234567'
-                    },
-                    'created_at': now,
-                    'description': 'Test ariza',
-                    'location': 'Test manzil',
-                    'priority': 'normal'
-                }
+        }
+        
+        return mock_requests.get(request_id, {
+            'id': request_id,
+            'workflow_type': 'connection_request',
+            'current_status': 'created',
+            'role_current': 'manager',
+            'contact_info': {
+                'full_name': 'Test Client',
+                'phone': '+998901234567',
+                'phone_number': '+998901234567',
+                'email': 'test@example.com'
+            },
+            'created_at': now,
+            'description': 'Test ariza',
+            'location': 'Test manzil',
+            'priority': 'normal',
+            'tariff': '50 Mbps',
+            'connection_type': 'B2C',
+            'equipment_needed': 'Router',
+            'estimated_cost': '400,000 so\'m',
+            'expected_completion': '3-5 kun'
+        })
 
-# Mock inbox manager
+# Mock inbox manager with comprehensive data
 class MockInboxManager:
-    """Mock inbox manager"""
+    """Mock inbox manager with complete data"""
     async def get_role_inbox(self, role: str, limit: int = 50):
-        """Mock get role inbox"""
+        """Mock get role inbox with comprehensive data"""
         from datetime import datetime
         return [
             {
                 'id': 1,
                 'application_id': 'req_001_2024_01_15',
                 'title': '🔴 Muhim: Internet ulanish arizasi',
-                'description': 'Aziz Karimov - 100 Mbps tariff, B2C mijoz',
+                'description': 'Aziz Karimov - 100 Mbps tariff, B2C mijoz, Chorsu tumani',
                 'priority': 'high',
-                'time_ago': '2 soat oldin'
+                'time_ago': '2 soat oldin',
+                'status': 'created',
+                'workflow_type': 'connection_request'
             },
             {
                 'id': 2,
                 'application_id': 'req_002_2024_01_16',
                 'title': '🔧 TV signal muammosi',
-                'description': 'Malika Toshmatova - kabel uzilgan',
+                'description': 'Malika Toshmatova - kabel uzilgan, Yunusabad tumani',
                 'priority': 'medium',
-                'time_ago': '1 soat 30 daqiqa oldin'
+                'time_ago': '1 soat 30 daqiqa oldin',
+                'status': 'created',
+                'workflow_type': 'technical_service'
             },
             {
                 'id': 3,
                 'application_id': 'req_003_2024_01_17',
                 'title': '🔌 Yangi internet ulanish',
-                'description': 'Jasur Rahimov - 50 Mbps tariff, B2B mijoz',
+                'description': 'Jasur Rahimov - 50 Mbps tariff, B2B mijoz, Sergeli tumani',
                 'priority': 'normal',
-                'time_ago': '45 daqiqa oldin'
+                'time_ago': '45 daqiqa oldin',
+                'status': 'created',
+                'workflow_type': 'connection_request'
             },
             {
                 'id': 4,
                 'application_id': 'req_004_2024_01_18',
                 'title': '🚨 Internet sekin ishlaydi',
-                'description': 'Dilfuza Karimova - tezlik past',
+                'description': 'Dilfuza Karimova - tezlik past, Chilanzar tumani',
                 'priority': 'high',
-                'time_ago': '20 daqiqa oldin'
+                'time_ago': '20 daqiqa oldin',
+                'status': 'created',
+                'workflow_type': 'call_center_direct'
             },
             {
                 'id': 5,
                 'application_id': 'req_005_2024_01_19',
                 'title': '⚡ Router ishlamayapti',
-                'description': 'Asadbek Abdullayev - yangi router kerak',
+                'description': 'Asadbek Abdullayev - yangi router kerak, Shayxontohur tumani',
                 'priority': 'urgent',
-                'time_ago': '10 daqiqa oldin'
+                'time_ago': '10 daqiqa oldin',
+                'status': 'created',
+                'workflow_type': 'technical_service'
+            },
+            {
+                'id': 6,
+                'application_id': 'req_006_2024_01_20',
+                'title': '🎮 Gaming internet ulanish',
+                'description': 'Shahnoza Mirzayeva - 200 Mbps tariff, Yakkasaroy tumani',
+                'priority': 'high',
+                'time_ago': '5 daqiqa oldin',
+                'status': 'created',
+                'workflow_type': 'connection_request'
+            },
+            {
+                'id': 7,
+                'application_id': 'req_007_2024_01_21',
+                'title': '📶 WiFi signal kuchsiz',
+                'description': 'Bobur Turgunov - signal kuchaytirgich kerak, Mirabad tumani',
+                'priority': 'medium',
+                'time_ago': '3 daqiqa oldin',
+                'status': 'created',
+                'workflow_type': 'technical_service'
+            },
+            {
+                'id': 8,
+                'application_id': 'req_008_2024_01_22',
+                'title': '🏢 B2B internet ulanish',
+                'description': 'Zarina Usmanova - 150 Mbps tariff, B2B mijoz, Bektemir tumani',
+                'priority': 'normal',
+                'time_ago': '1 daqiqa oldin',
+                'status': 'created',
+                'workflow_type': 'connection_request'
             }
         ]
     
@@ -270,83 +380,17 @@ class MockWorkflowAccessControl:
         from datetime import datetime, timedelta
         now = datetime.now()
         
-        return [
-            {
-                'id': 'req_001_2024_01_15',
-                'workflow_type': 'connection_request',
-                'current_status': 'created',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Aziz Karimov',
-                    'phone': '+998901234567',
-                    'phone_number': '+998901234567'
-                },
-                'created_at': now - timedelta(hours=2),
-                'description': 'Internet ulanish arizasi\nTariff: 100 Mbps\nB2C mijoz\nManzil: Tashkent, Chorsu tumani, 15-uy',
-                'location': 'Tashkent, Chorsu tumani, 15-uy',
-                'priority': 'high'
-            },
-            {
-                'id': 'req_002_2024_01_16',
-                'workflow_type': 'technical_service',
-                'current_status': 'created',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Malika Toshmatova',
-                    'phone': '+998901234568',
-                    'phone_number': '+998901234568'
-                },
-                'created_at': now - timedelta(hours=1, minutes=30),
-                'description': 'TV signal yo\'q\nKabel uzilgan\nManzil: Tashkent, Yunusabad tumani, 45-uy',
-                'location': 'Tashkent, Yunusabad tumani, 45-uy',
-                'priority': 'medium'
-            },
-            {
-                'id': 'req_003_2024_01_17',
-                'workflow_type': 'connection_request',
-                'current_status': 'created',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Jasur Rahimov',
-                    'phone': '+998901234569',
-                    'phone_number': '+998901234569'
-                },
-                'created_at': now - timedelta(minutes=45),
-                'description': 'Internet ulanish arizasi\nTariff: 50 Mbps\nB2B mijoz\nManzil: Tashkent, Sergeli tumani, 78-uy',
-                'location': 'Tashkent, Sergeli tumani, 78-uy',
-                'priority': 'normal'
-            },
-            {
-                'id': 'req_004_2024_01_18',
-                'workflow_type': 'call_center_direct',
-                'current_status': 'created',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Dilfuza Karimova',
-                    'phone': '+998901234570',
-                    'phone_number': '+998901234570'
-                },
-                'created_at': now - timedelta(minutes=20),
-                'description': 'Internet sekin ishlaydi\nTezlik past\nManzil: Tashkent, Chilanzar tumani, 23-uy',
-                'location': 'Tashkent, Chilanzar tumani, 23-uy',
-                'priority': 'high'
-            },
-            {
-                'id': 'req_005_2024_01_19',
-                'workflow_type': 'technical_service',
-                'current_status': 'created',
-                'role_current': 'manager',
-                'contact_info': {
-                    'full_name': 'Asadbek Abdullayev',
-                    'phone': '+998901234571',
-                    'phone_number': '+998901234571'
-                },
-                'created_at': now - timedelta(minutes=10),
-                'description': 'Router ishlamayapti\nYangi router kerak\nManzil: Tashkent, Shayxontohur tumani, 67-uy',
-                'location': 'Tashkent, Shayxontohur tumani, 67-uy',
-                'priority': 'urgent'
-            }
-        ]
+        # Return all mock requests
+        state_manager = MockStateManager()
+        requests = []
+        
+        for i in range(1, 9):
+            request_id = f'req_{i:03d}_2024_01_{15+i-1}'
+            request = await state_manager.get_request(request_id)
+            if request:
+                requests.append(request)
+        
+        return requests
     
     async def validate_workflow_action(self, user_id: int, user_role: str, action: str, **kwargs):
         """Mock validate workflow action"""
@@ -509,7 +553,7 @@ def get_manager_inbox_router():
             await message.answer(error_text)
 
     async def display_manager_request(event, state: FSMContext, requests, index, lang, user):
-        """Display a single request with manager action buttons"""
+        """Display a single request with complete details and manager action buttons"""
         try:
             req = requests[index]
             full_id = req['id']
@@ -571,6 +615,7 @@ def get_manager_inbox_router():
             
             # Get priority emoji
             priority_emoji = {
+                'urgent': '🚨',
                 'high': '🔴',
                 'medium': '🟡', 
                 'normal': '🟢',
@@ -587,20 +632,13 @@ def get_manager_inbox_router():
             # Format date
             created_date = request['created_at'].strftime('%d.%m.%Y %H:%M') if hasattr(request['created_at'], 'strftime') else str(request['created_at'])
             
-            # Extract tariff and connection type from description or state_data
-            tariff_info = ""
-            connection_type = ""
-            
-            if request['description']:
-                if "Tariff:" in request['description']:
-                    tariff_line = [line for line in request['description'].split('\n') if "Tariff:" in line]
-                    if tariff_line:
-                        tariff_info = tariff_line[0].replace("Tariff:", "").strip()
-                
-                if "b2b" in request['description'].lower():
-                    connection_type = "B2B"
-                elif "b2c" in request['description'].lower():
-                    connection_type = "B2C"
+            # Get additional details
+            tariff_info = request.get('tariff', 'N/A')
+            connection_type = request.get('connection_type', 'N/A')
+            equipment_needed = request.get('equipment_needed', 'N/A')
+            estimated_cost = request.get('estimated_cost', 'N/A')
+            expected_completion = request.get('expected_completion', 'N/A')
+            company_name = request.get('company_name', '')
             
             # Get status name in Uzbek
             status_name = {
@@ -646,9 +684,20 @@ def get_manager_inbox_router():
                 f"📅 <b>Yaratilgan:</b> {created_date}\n"
                 f"{priority_emoji} <b>Muhimlik:</b> {request['priority'].title()}\n"
                 f"{status_emoji} <b>Holat:</b> {status_name}\n"
-                f"📝 <b>Tavsif:</b> {request['description'][:150]}{'...' if request['description'] and len(request['description']) > 150 else request['description'] or 'Yoq'}\n\n"
-                f"<i>📊 Ariza {index + 1}/{len(requests)}</i>"
+                f"📝 <b>Tavsif:</b> {request['description'][:150]}{'...' if request['description'] and len(request['description']) > 150 else request['description'] or 'Yoq'}\n"
             )
+            
+            # Add additional details if available
+            if equipment_needed != 'N/A':
+                text += f"🔧 <b>Kerakli jihozlar:</b> {equipment_needed}\n"
+            if estimated_cost != 'N/A':
+                text += f"💰 <b>Taxminiy narx:</b> {estimated_cost}\n"
+            if expected_completion != 'N/A':
+                text += f"⏱ <b>Taxminiy muddat:</b> {expected_completion}\n"
+            if company_name:
+                text += f"🏢 <b>Kompaniya:</b> {company_name}\n"
+            
+            text += f"\n<i>📊 Ariza {index + 1}/{len(requests)}</i>"
             
             print(f"Generated text for request {short_id}: {text[:100]}...")
             print(f"Full text length: {len(text)}")
@@ -739,12 +788,6 @@ def get_manager_inbox_router():
             except Exception as edit_error:
                 print(f"Error editing message: {edit_error}")
 
-
-
-
-
-
-
     @router.callback_query(F.data.startswith("mgr_assign_jm_"))
     async def assign_to_junior_manager(callback: CallbackQuery, state: FSMContext):
         try:
@@ -769,8 +812,6 @@ def get_manager_inbox_router():
                     text=f"👨‍💼 {jm.get('full_name', 'N/A')}",
                     callback_data=f"mgr_confirm_jm_{full_id}_{jm['id']}"
                 )])
-            
-
             
             text = (
                 f"👨‍💼 <b>Kichik menjer tanlang</b>\n\n"
@@ -942,7 +983,5 @@ def get_manager_inbox_router():
         except Exception as e:
             print(f"Error in navigate_next: {str(e)}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-
 
     return router
