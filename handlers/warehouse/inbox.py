@@ -124,7 +124,7 @@ def get_warehouse_inbox_router():
             )
             
             # Display the targeted request
-            await display_warehouse_request(message, state, requests, target_index, lang)
+            await display_warehouse_request(message, state, lang, requests, target_index)
             
         except Exception as e:
             await message.answer("Xatolik yuz berdi")

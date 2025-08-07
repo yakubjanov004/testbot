@@ -552,6 +552,17 @@ def get_controller_inbox_router():
             user = await get_user_by_telegram_id(callback.from_user.id)
             lang = user.get('language', 'uz')
             
+            # Get application data from state
+            data = await state.get_data()
+            applications = data.get('applications', [])
+            current_index = data.get('current_index', 0)
+            
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
+                return
+            
+            application = applications[current_index]
+            
             # Get available technicians
             technicians = await get_users_by_role('technician')
             
