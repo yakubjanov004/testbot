@@ -23,6 +23,9 @@ def get_manager_main_keyboard(lang='uz'):
     # Real vaqtda kuzatish
     realtime_monitoring_text = "🕐 Real vaqtda kuzatish" if lang == "uz" else "🕐 Мониторинг в реальном времени"
     
+    # Export
+    export_text = "📤 Export" if lang == "uz" else "📤 Экспорт"
+    
     # Hujjatlar yaratish
     word_documents_text = "📄 Hujjatlar yaratish" if lang == "uz" else "📄 Создание документов"
     
@@ -37,8 +40,8 @@ def get_manager_main_keyboard(lang='uz'):
         [KeyboardButton(text=change_status_text), KeyboardButton(text=technician_assignment_text)],
         [KeyboardButton(text=notifications_text), KeyboardButton(text=generate_report_text)],
         [KeyboardButton(text=staff_activity_text), KeyboardButton(text=realtime_monitoring_text)],
-        [KeyboardButton(text=word_documents_text), KeyboardButton(text=inbox_text)],
-        [KeyboardButton(text=change_language_text)]
+        [KeyboardButton(text=word_documents_text), KeyboardButton(text=export_text)],
+        [KeyboardButton(text=inbox_text), KeyboardButton(text=change_language_text)]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 

@@ -20,6 +20,7 @@ from .settings import get_admin_settings_router
 from .workflow_recovery import get_admin_workflow_recovery_router
 from .language import get_admin_language_router
 from .callbacks import get_admin_callbacks_router
+from .export import get_admin_export_router
 
 def get_admin_router():
     """Get the complete admin router with all handlers"""
@@ -35,6 +36,7 @@ def get_admin_router():
     router.include_router(get_admin_workflow_recovery_router())
     router.include_router(get_admin_language_router())
     router.include_router(get_admin_callbacks_router())
+    router.include_router(get_admin_export_router())
     
     return router
 

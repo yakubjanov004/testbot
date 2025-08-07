@@ -15,6 +15,7 @@ def get_call_center_supervisor_main_menu(lang: str = 'uz') -> ReplyKeyboardMarku
     create_technical = "🔧 Texnik xizmat yaratish" if lang == 'uz' else "🔧 Создать техническую заявку"
     workflow_management = "⚙️ Workflow boshqaruvi" if lang == 'uz' else "⚙️ Управление процессами"
     statistics = "📊 Statistikalar" if lang == 'uz' else "📊 Статистика"
+    export = "📤 Export" if lang == 'uz' else "📤 Экспорт"
     feedback = "⭐️ Fikr-mulohaza" if lang == 'uz' else "⭐️ Обратная связь"
     change_lang = "🌐 Tilni o'zgartirish" if lang == 'uz' else "🌐 Изменить язык"
     main_menu = "🏠 Bosh menyu" if lang == 'uz' else "🏠 Главное меню"
@@ -25,7 +26,7 @@ def get_call_center_supervisor_main_menu(lang: str = 'uz') -> ReplyKeyboardMarku
         [KeyboardButton(text=staff_management)],
         [KeyboardButton(text=create_connection), KeyboardButton(text=create_technical)],
         [KeyboardButton(text=workflow_management)],
-        [KeyboardButton(text=statistics)],
+        [KeyboardButton(text=statistics), KeyboardButton(text=export)],
         [KeyboardButton(text=feedback)],
         [KeyboardButton(text=change_lang)],
         [KeyboardButton(text=main_menu)]

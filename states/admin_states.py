@@ -10,6 +10,8 @@ from aiogram.fsm.state import State, StatesGroup
 class AdminMainMenuStates(StatesGroup):
     """Main menu states for admin"""
     main_menu = State()
+    export_selection = State()
+    export_format_selection = State()
 
 
 class AdminCallbackStates(StatesGroup):
