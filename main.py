@@ -8,6 +8,7 @@ import asyncio
 import traceback
 import sys
 import logging
+import argparse
 from loader import start_bot
 
 # Logger sozlash - batafsil
@@ -30,7 +31,8 @@ activity_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)
 activity_handler.setFormatter(activity_formatter)
 activity_logger.addHandler(activity_handler)
 
-if __name__ == "__main__":
+def run_bot():
+    """Run the bot"""
     print("🚀 Starting Alfa Connect Bot...")
     print("📋 Loading configuration...")
     print("🔧 Setting up handlers...")
@@ -59,4 +61,19 @@ if __name__ == "__main__":
         print(f"🔍 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
         print(f"📄 Line number: {e.__traceback__.tb_lineno}")
         traceback.print_exc()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    # Argument parser yaratish
+    parser = argparse.ArgumentParser(description='Alfa Connect Bot')
+    parser.add_argument('command', nargs='?', default='run', 
+                       help='Command to run (default: run)')
+    
+    args = parser.parse_args()
+    
+    if args.command == 'run':
+        run_bot()
+    else:
+        print(f"❌ Unknown command: {args.command}")
+        print("Available commands: run")
         sys.exit(1)

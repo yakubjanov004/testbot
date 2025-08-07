@@ -63,9 +63,49 @@ CALL_CENTER_SUPERVISOR_ID = int(os.getenv('CALL_CENTER_SUPERVISOR_ID', 0)) if os
 CALL_CENTER_ID = int(os.getenv('CALL_CENTER_ID', 0)) if os.getenv('CALL_CENTER_ID') else None
 
 # Initialize bot and dispatcher
-bot = Bot(token=BOT_TOKEN)
-storage = MemoryStorage()
-dp = Dispatcher(storage=storage)
+if BOT_TOKEN and BOT_TOKEN != "your_bot_token_here":
+    bot = Bot(token=BOT_TOKEN)
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)
+else:
+    print("⚠️ Warning: BOT_TOKEN not set or invalid!")
+    print("💡 Please set a valid BOT_TOKEN in your .env file")
+    print("🔧 Creating mock bot for testing...")
+    
+    # Create mock bot for testing
+    class MockBot:
+        def __init__(self):
+            self.id = BOT_ID
+            self.username = "test_bot"
+            
+            class MockSession:
+                def __init__(self):
+                    self.timeout = None
+                
+                async def close(self):
+                    pass
+            
+            self.session = MockSession()
+        
+        async def get_me(self):
+            return type('obj', (object,), {
+                'id': self.id,
+                'username': self.username,
+                'first_name': 'Test Bot',
+                'full_name': 'Test Bot'
+            })()
+        
+        async def me(self):
+            return type('obj', (object,), {
+                'id': self.id,
+                'username': self.username,
+                'first_name': 'Test Bot',
+                'full_name': 'Test Bot'
+            })()
+    
+    bot = MockBot()
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)
 
 # Middleware'larni qo'shish
 from middlewares.logger_middleware import LoggerMiddleware

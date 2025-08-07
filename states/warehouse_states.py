@@ -55,4 +55,5 @@ class WarehouseStatisticsStates(StatesGroup):
 class WarehouseWorkflowStates(StatesGroup):
     """Workflow states for warehouse"""
     workflow_monitoring = State()
-    workflow_optimization = State() 
+    workflow_optimization = State()
+    entering_return_reason = State() 
