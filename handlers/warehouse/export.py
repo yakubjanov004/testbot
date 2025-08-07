@@ -207,8 +207,20 @@ def get_warehouse_export_router():
             )
             
             try:
+                # Update progress
+                await processing_msg.edit_text(
+                    f"⏳ {export_type_names.get(export_type, export_type)} ma'lumotlari {format_names.get(format_type, format_type)} formatida tayyorlanmoqda...\n\n"
+                    f"📊 Ma'lumotlar yig'ilmoqda... (25%)"
+                )
+                
                 # Create export file
                 file_content, filename = create_export_file(export_type, format_type, "warehouse")
+                
+                # Update progress
+                await processing_msg.edit_text(
+                    f"⏳ {export_type_names.get(export_type, export_type)} ma'lumotlari {format_names.get(format_type, format_type)} formatida tayyorlanmoqda...\n\n"
+                    f"📄 Fayl yaratilmoqda... (75%)"
+                )
                 
                 # Get file size
                 file_content.seek(0, 2)  # Move to end

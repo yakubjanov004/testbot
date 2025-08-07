@@ -267,7 +267,8 @@ def get_manager_applications_callbacks_router():
                         total_duration = f"{total_hours}s {total_minutes}d"
                     else:
                         total_duration = f"{total_minutes} daqiqa"
-                except:
+                except Exception as e:
+                    print(f"Error calculating duration: {e}")
                     total_duration = "N/A"
             
             # Izoh va diagnostika

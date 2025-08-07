@@ -36,12 +36,6 @@ def format_number(value: Any) -> str:
         return f"{value:,}".replace(",", " ")
     return str(value)
 
-def get_role_from_context() -> str:
-    """Get the current user role from context"""
-    # This would normally get the role from the current user context
-    # For now, we'll determine it based on the export type pattern
-    return "warehouse"  # Default role
-
 def export_to_csv(export_type: str, role: str = None) -> io.BytesIO:
     """Export data to CSV format"""
     output = io.BytesIO()
@@ -50,7 +44,7 @@ def export_to_csv(export_type: str, role: str = None) -> io.BytesIO:
     
     # Get role-specific data
     if not role:
-        role = get_role_from_context()
+        raise ValueError("Role parameter is required for export")
     
     data, headers = get_role_data(role, export_type)
     
@@ -152,7 +146,7 @@ def export_to_excel(export_type: str, role: str = None) -> io.BytesIO:
     
     # Get role-specific data
     if not role:
-        role = get_role_from_context()
+        raise ValueError("Role parameter is required for export")
     
     data, headers = get_role_data(role, export_type)
     
@@ -295,7 +289,7 @@ def export_to_word(export_type: str, role: str = None) -> io.BytesIO:
     
     # Get role-specific data
     if not role:
-        role = get_role_from_context()
+        raise ValueError("Role parameter is required for export")
     
     data, headers = get_role_data(role, export_type)
     
@@ -428,7 +422,7 @@ def export_to_pdf(export_type: str, role: str = None) -> io.BytesIO:
     
     # Get role-specific data
     if not role:
-        role = get_role_from_context()
+        raise ValueError("Role parameter is required for export")
     
     data, headers = get_role_data(role, export_type)
     
@@ -593,7 +587,7 @@ def export_to_pdf(export_type: str, role: str = None) -> io.BytesIO:
 def create_export_file(export_type: str, format_type: str, role: str = None) -> Tuple[io.BytesIO, str]:
     """Create export file with real data using appropriate libraries"""
     if not role:
-        role = get_role_from_context()
+        raise ValueError("Role parameter is required for export")
     
     filename = get_export_filename(export_type, format_type, role)
     
@@ -615,7 +609,7 @@ def create_export_file(export_type: str, format_type: str, role: str = None) -> 
 def get_export_filename(export_type: str, format_type: str, role: str = None) -> str:
     """Generate filename with timestamp"""
     if not role:
-        role = get_role_from_context()
+        raise ValueError("Role parameter is required for export")
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return f"{role}_{export_type}_{timestamp}.{format_type}"

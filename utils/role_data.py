@@ -12,6 +12,9 @@ from faker import Faker
 
 fake = Faker(['uz_UZ', 'ru_RU'])
 
+# Export limits for performance
+MAX_EXPORT_ROWS = 1000  # Maximum rows for single export
+
 # Common data pools
 TECHNICIAN_NAMES = [
     "Sardor Rahimov", "Jasur Karimov", "Sherzod Toshmatov", "Dilshod Yuldashev",
@@ -624,3 +627,23 @@ def get_role_data(role: str, export_type: str) -> tuple:
     
     # Default fallback
     return generate_manager_orders_data(50), get_export_headers("orders")
+
+def validate_export_data(data: Any, headers: List[str]) -> bool:
+    """Validate export data before processing"""
+    if not data:
+        return False
+    
+    if isinstance(data, list):
+        # Check if list is not empty and items are dictionaries
+        if not data or not all(isinstance(item, dict) for item in data):
+            return False
+        # Check if all items have consistent keys
+        if data:
+            first_keys = set(data[0].keys())
+            return all(set(item.keys()) == first_keys for item in data)
+    
+    elif isinstance(data, dict):
+        # Check if dictionary is not empty
+        return bool(data)
+    
+    return True
