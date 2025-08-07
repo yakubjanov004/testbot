@@ -1,4 +1,11 @@
-from datetime import datetime
+"""
+Controller Inbox - Soddalashtirilgan versiya
+
+Bu modul controller uchun inbox funksionalligini o'z ichiga oladi.
+Call center supervisor yoki texniklarga tayinlash funksiyasi bilan.
+"""
+
+from datetime import datetime, timedelta
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
@@ -25,103 +32,180 @@ async def get_users_by_role(role: str):
         return [
             {
                 'id': 1,
-                'full_name': 'Technician 1',
+                'full_name': 'Ahmad Toshmatov',
                 'role': 'technician',
                 'telegram_id': 123456789,
-                'active_requests': 0
+                'active_requests': 2,
+                'specialization': 'Internet ulanish'
             },
             {
                 'id': 2,
-                'full_name': 'Technician 2',
+                'full_name': 'Malika Karimova',
                 'role': 'technician',
                 'telegram_id': 987654321,
-                'active_requests': 2
+                'active_requests': 1,
+                'specialization': 'TV signal'
+            },
+            {
+                'id': 3,
+                'full_name': 'Jasur Rahimov',
+                'role': 'technician',
+                'telegram_id': 111222333,
+                'active_requests': 0,
+                'specialization': 'Router va jihozlar'
+            },
+            {
+                'id': 4,
+                'full_name': 'Dilfuza Abdullayeva',
+                'role': 'technician',
+                'telegram_id': 444555666,
+                'active_requests': 3,
+                'specialization': 'WiFi va signal'
             }
         ]
     elif role == 'call_center_supervisor':
         return [
             {
-                'id': 3,
-                'full_name': 'Call Center Supervisor 1',
+                'id': 5,
+                'full_name': 'Call Center Supervisor',
                 'role': 'call_center_supervisor',
-                'telegram_id': 111222333
+                'telegram_id': 777888999,
+                'active_requests': 0
             }
         ]
     return []
-
-# Removed duplicate get_role_router - using centralized version from utils.role_system
 
 async def get_user_lang(user_id: int) -> str:
     """Mock user language"""
     return 'uz'
 
-# Mock bot and database
-class MockBot:
-    async def send_message(self, chat_id, text, **kwargs):
-        print(f"MockBot: Sending message to {chat_id}: {text}")
-        return True
-    async def edit_message_text(self, chat_id, message_id, text, **kwargs):
-        print(f"MockBot: Editing message {message_id} in {chat_id}: {text}")
-        return True
-    async def delete_message(self, chat_id, message_id):
-        print(f"MockBot: Deleting message {message_id} in {chat_id}")
-        return True
-
-class MockDB:
-    async def fetchrow(self, query, *args):
-        """Mock database fetchrow"""
-        return {
-            'full_name': 'Test Technician',
-            'phone_number': '+998901234567'
+# Mock application data
+async def get_controller_applications():
+    """Mock get controller applications"""
+    now = datetime.now()
+    
+    return [
+        {
+            'id': 'req_001_2024_01_15',
+            'workflow_type': 'connection_request',
+            'current_status': 'sent_to_controller',
+            'contact_info': {
+                'full_name': 'Aziz Karimov',
+                'phone': '+998901234567',
+                'phone_number': '+998901234567',
+                'email': 'aziz.karimov@example.com'
+            },
+            'created_at': now - timedelta(hours=3),
+            'description': 'Internet ulanish arizasi\nTariff: 100 Mbps\nB2C mijoz\nManzil: Tashkent, Chorsu tumani, 15-uy',
+            'location': 'Tashkent, Chorsu tumani, 15-uy',
+            'priority': 'high',
+            'tariff': '100 Mbps',
+            'connection_type': 'B2C',
+            'equipment_needed': 'Router, optic kabel',
+            'estimated_cost': '500,000 so\'m',
+            'expected_completion': '3-5 kun',
+            'additional_info': 'Mijoz bilan bog\'landi, batafsil ma\'lumot olingan. Yangi uy, optic kabel kerak.',
+            'assigned_to': None
+        },
+        {
+            'id': 'req_002_2024_01_16',
+            'workflow_type': 'technical_service',
+            'current_status': 'sent_to_controller',
+            'contact_info': {
+                'full_name': 'Malika Toshmatova',
+                'phone': '+998901234568',
+                'phone_number': '+998901234568',
+                'email': 'malika.toshmatova@example.com'
+            },
+            'created_at': now - timedelta(hours=2, minutes=30),
+            'description': 'TV signal yo\'q\nKabel uzilgan\nManzil: Tashkent, Yunusabad tumani, 45-uy',
+            'location': 'Tashkent, Yunusabad tumani, 45-uy',
+            'priority': 'medium',
+            'service_type': 'TV signal repair',
+            'equipment_needed': 'Yangi kabel',
+            'estimated_cost': '150,000 so\'m',
+            'expected_completion': '1-2 kun',
+            'additional_info': 'Mijoz uyda emas, keyinroq qayta urinib ko\'rish kerak. TV kanallar ko\'rinmayapti.',
+            'assigned_to': None
+        },
+        {
+            'id': 'req_003_2024_01_17',
+            'workflow_type': 'connection_request',
+            'current_status': 'sent_to_controller',
+            'contact_info': {
+                'full_name': 'Jasur Rahimov',
+                'phone': '+998901234569',
+                'phone_number': '+998901234569',
+                'email': 'jasur.rahimov@company.uz'
+            },
+            'created_at': now - timedelta(hours=1, minutes=45),
+            'description': 'Internet ulanish arizasi\nTariff: 50 Mbps\nB2B mijoz\nManzil: Tashkent, Sergeli tumani, 78-uy',
+            'location': 'Tashkent, Sergeli tumani, 78-uy',
+            'priority': 'normal',
+            'tariff': '50 Mbps',
+            'connection_type': 'B2B',
+            'company_name': 'Rahimov Trading LLC',
+            'equipment_needed': 'Router, switch',
+            'estimated_cost': '800,000 so\'m',
+            'expected_completion': '5-7 kun',
+            'additional_info': 'Mijoz bilan bog\'landi, batafsil ma\'lumot olingan. Ish vaqti: 9:00-18:00.',
+            'assigned_to': None
+        },
+        {
+            'id': 'req_004_2024_01_18',
+            'workflow_type': 'call_center_direct',
+            'current_status': 'sent_to_controller',
+            'contact_info': {
+                'full_name': 'Dilfuza Karimova',
+                'phone': '+998901234570',
+                'phone_number': '+998901234570',
+                'email': 'dilfuza.karimova@example.com'
+            },
+            'created_at': now - timedelta(hours=1, minutes=20),
+            'description': 'Internet sekin ishlaydi\nTezlik past\nManzil: Tashkent, Chilanzar tumani, 23-uy',
+            'location': 'Tashkent, Chilanzar tumani, 23-uy',
+            'priority': 'high',
+            'service_type': 'Speed optimization',
+            'current_speed': '1 Mbps',
+            'expected_speed': '50 Mbps',
+            'estimated_cost': '200,000 so\'m',
+            'expected_completion': '2-3 kun',
+            'additional_info': '24/7 internet kerak. Download tezligi 1 Mbps, 50 Mbps ga oshirish kerak.',
+            'assigned_to': None
+        },
+        {
+            'id': 'req_005_2024_01_19',
+            'workflow_type': 'technical_service',
+            'current_status': 'sent_to_controller',
+            'contact_info': {
+                'full_name': 'Asadbek Abdullayev',
+                'phone': '+998901234571',
+                'phone_number': '+998901234571',
+                'email': 'asadbek.abdullayev@example.com'
+            },
+            'created_at': now - timedelta(hours=1, minutes=10),
+            'description': 'Router ishlamayapti\nYangi router kerak\nManzil: Tashkent, Shayxontohur tumani, 67-uy',
+            'location': 'Tashkent, Shayxontohur tumani, 67-uy',
+            'priority': 'urgent',
+            'service_type': 'Router replacement',
+            'equipment_needed': 'Yangi router',
+            'estimated_cost': '300,000 so\'m',
+            'expected_completion': '1 kun',
+            'additional_info': 'Mijoz uyda, router muammosi tasdiqlandi. Router yonib-o\'chib turadi.',
+            'assigned_to': None
         }
-    async def execute(self, query, *args):
-        """Mock database execute"""
-        print(f"MockDB: Executing query: {query}")
-        return True
+    ]
 
-bot = MockBot()
-bot.db = MockDB()
+# Mock assignment functions
+async def assign_to_technician(application_id: str, technician_id: int):
+    """Mock assign to technician"""
+    print(f"Mock: Assigning application {application_id} to technician {technician_id}")
+    return True
 
-class ControllerRequestStates(StatesGroup):
-    waiting_for_technician = State()
-    waiting_for_comment = State()
-
-# 1. send_or_edit universal qiladi va message_id qaytaradi
-async def send_or_edit(
-    event: Message | CallbackQuery,
-    text: str,
-    *,
-    state: FSMContext,
-    **kwargs
-) -> int:
-    data = await state.get_data()
-    message_id = data.get("current_message_id")
-    chat_id = event.from_user.id
-
-    try:
-        if message_id:
-            await event.bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text=text,
-                **kwargs
-            )
-            return message_id
-        else:
-            message = await event.bot.send_message(chat_id=chat_id, text=text, **kwargs)
-            await state.update_data(current_message_id=message.message_id)
-            return message.message_id
-    except Exception as e:
-        print(f"Could not edit message {message_id}, sending a new one. Error: {e}")
-        try:
-            if message_id:
-                await event.bot.delete_message(chat_id=chat_id, message_id=message_id)
-        except Exception as del_e:
-            print(f"Error deleting old message {message_id}: {del_e}")
-        
-        message = await event.bot.send_message(chat_id=chat_id, text=text, **kwargs)
-        await state.update_data(current_message_id=message.message_id)
-        return message.message_id
+async def assign_to_call_center_supervisor(application_id: str):
+    """Mock assign to call center supervisor"""
+    print(f"Mock: Assigning application {application_id} to call center supervisor")
+    return True
 
 def get_controller_inbox_router():
     """Get controller inbox router"""
@@ -131,7 +215,7 @@ def get_controller_inbox_router():
     role_filter = RoleFilter("controller")
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
-    
+
     @router.callback_query(F.data.startswith("open_inbox_"))
     async def handle_inbox_notification(callback: CallbackQuery, state: FSMContext):
         """Handle inbox notification button click"""
@@ -143,7 +227,7 @@ def get_controller_inbox_router():
             
             # Get user
             user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'controller':
+            if not user:
                 return
             
             # Show inbox
@@ -162,21 +246,10 @@ def get_controller_inbox_router():
             
             lang = user.get('language', 'uz')
             
-            # Mock inbox messages
-            inbox_messages = [
-                {
-                    'id': 1,
-                    'application_id': 'req123456',
-                    'message_type': 'new_request'
-                },
-                {
-                    'id': 2,
-                    'application_id': 'req789012',
-                    'message_type': 'new_request'
-                }
-            ]
+            # Get applications
+            applications = await get_controller_applications()
             
-            if not inbox_messages:
+            if not applications:
                 text = "📭 Inbox bo'sh"
                 await message.answer(text)
                 return
@@ -184,717 +257,474 @@ def get_controller_inbox_router():
             # Find target request index if specified
             target_index = 0
             if target_request_id:
-                for i, msg in enumerate(inbox_messages):
-                    if msg['application_id'].startswith(target_request_id):
+                for i, app in enumerate(applications):
+                    if app['id'].startswith(target_request_id):
                         target_index = i
                         break
             
-            # Get full request details
-            requests = []
-            for msg in inbox_messages:
-                try:
-                    request_details = {
-                        'id': msg['application_id'],
-                        'workflow_type': 'connection_request',
-                        'client_name': 'Test Client',
-                        'client_phone': '+998901234567',
-                        'location': 'Test Address',
-                        'description': 'Test description',
-                        'created_at': datetime.now(),
-                        'current_status': 'new',
-                        'contact_info': {
-                            'phone': '+998901234567',
-                            'full_name': 'Test Client'
-                        },
-                        'state_data': {
-                            'selected_tariff': 'Test Tariff'
-                        }
-                    }
-                    request_details['inbox_message'] = msg
-                    requests.append(request_details)
-                except:
-                    pass
-            
-            if not requests:
-                text = "📭 Inbox bo'sh"
-                await message.answer(text)
-                return
-            
             await state.update_data(
-                controller_requests=requests,
+                applications=applications,
                 current_index=target_index
             )
             
-            await display_controller_request(message, state, requests[target_index], target_index, lang)
+            await display_controller_request(message, state, applications, target_index, lang, user)
             
         except Exception as e:
             print(f"Error in show_controller_inbox_from_notification: {e}")
 
     @router.message(F.text == "📥 Inbox")
-    async def show_controller_inbox(event: Message, state: FSMContext):
-        user_id = event.from_user.id
-        
+    async def show_controller_inbox(message: Message, state: FSMContext):
+        """Controller inbox handler"""
         try:
-            # Check user role first - only process if user is controller
-            from loader import get_user_role
-            user_role = get_user_role(event.from_user.id)
-            if user_role != 'controller':
-                return  # Skip processing for non-controller users
+            user = await get_user_by_telegram_id(message.from_user.id)
+            if not user or user['role'] != 'controller':
+                return
             
-            await state.clear()
-            await state.update_data(current_page=0)
-            # Faqat menyudan bosilganda yangi xabar yuboriladi
-            await state.update_data(current_message_id=None)
-            await display_inbox_page(event, state)
+            lang = user.get('language', 'uz')
+            
+            # Get applications
+            applications = await get_controller_applications()
+            
+            if not applications:
+                text = "📭 Inbox bo'sh"
+                await message.answer(text)
+                return
+            
+            await state.update_data(
+                applications=applications,
+                current_index=0
+            )
+            
+            await display_controller_request(message, state, applications, 0, lang, user)
             
         except Exception as e:
             print(f"Error in show_controller_inbox: {str(e)}")
             error_text = "Xatolik yuz berdi"
-            await event.answer(error_text)
+            await message.answer(error_text)
 
-    @router.callback_query(F.data == "controller_inbox")
-    async def show_controller_inbox_callback(callback: CallbackQuery, state: FSMContext):
-        await callback.answer()
-        # Callback orqali chaqirilganda current_message_id ni o'chirmang!
-        await display_inbox_page(callback, state)
-
-    async def display_inbox_page(event: Message | CallbackQuery, state: FSMContext):
-        user_id = event.from_user.id
-        
+    async def display_controller_request(event, state: FSMContext, applications, index, lang, user):
+        """Display a single request with assignment options"""
         try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
-                error_text = "Sizda ruxsat yo'q."
-                await send_or_edit(event, error_text, state=state)
-                return
-
-            lang = user.get('language', 'uz')
+            app = applications[index]
+            full_id = app['id']
+            short_id = full_id[:8]
             
-            # Mock requests
-            requests = [
-                {
-                    'id': 'req123456',
-                    'workflow_type': 'connection_request',
-                    'client_name': 'Test Client 1',
-                    'client_phone': '+998901234567',
-                    'location': 'Test Address 1',
-                    'description': 'Test description 1',
-                    'created_at': datetime.now(),
-                    'current_status': 'new',
-                    'contact_info': {
-                        'phone': '+998901234567',
-                        'full_name': 'Test Client 1'
-                    },
-                    'state_data': {
-                        'selected_tariff': 'Test Tariff 1'
-                    }
-                },
-                {
-                    'id': 'req789012',
-                    'workflow_type': 'technical_service',
-                    'client_name': 'Test Client 2',
-                    'client_phone': '+998901234568',
-                    'location': 'Test Address 2',
-                    'description': 'Test description 2',
-                    'created_at': datetime.now(),
-                    'current_status': 'assigned_to_controller',
-                    'contact_info': {
-                        'phone': '+998901234568',
-                        'full_name': 'Test Client 2'
-                    },
-                    'state_data': {
-                        'selected_tariff': 'Test Tariff 2'
-                    }
-                }
-            ]
+            print(f"Displaying request {short_id} for user {user['id']}")
             
-            if not requests:
-                no_requests = "📭 Sizga biriktirilgan zayavkalar yo'q."
-                await send_or_edit(event, no_requests, state=state)
-                return
-                
-            # Save requests in state and show first one
-            await state.update_data(requests=[dict(r) for r in requests], current_idx=0)
-            await show_request(event, state, 0, lang)
+            # Format workflow type
+            workflow_emoji = {
+                'connection_request': '🔌',
+                'technical_service': '🔧',
+                'call_center_direct': '📞'
+            }.get(app['workflow_type'], '📋')
+            
+            workflow_name = {
+                'connection_request': 'Ulanish',
+                'technical_service': 'Texnik xizmat',
+                'call_center_direct': 'Call Center'
+            }.get(app['workflow_type'], app['workflow_type'])
+            
+            # Format priority
+            priority_emoji = {
+                'urgent': '🚨',
+                'high': '🔴',
+                'medium': '🟡', 
+                'normal': '🟢'
+            }.get(app['priority'], '🟢')
+            
+            priority_text = {
+                'urgent': 'Shoshilinch',
+                'high': 'Yuqori',
+                'medium': 'O\'rtacha',
+                'normal': 'Oddiy'
+            }.get(app['priority'], 'Oddiy')
+            
+            # Format date
+            created_date = app['created_at'].strftime('%d.%m.%Y %H:%M')
+            
+            # Get additional details
+            tariff_info = app.get('tariff', '')
+            connection_type = app.get('connection_type', '')
+            equipment_needed = app.get('equipment_needed', '')
+            estimated_cost = app.get('estimated_cost', '')
+            expected_completion = app.get('expected_completion', '')
+            company_name = app.get('company_name', '')
+            additional_info = app.get('additional_info', '')
+            
+            # Clean text with essential information
+            text = (
+                f"{workflow_emoji} <b>Controller Inbox</b>\n\n"
+                f"🆔 <b>ID:</b> {short_id}-{full_id[8:12].upper()}\n"
+                f"📋 <b>Tur:</b> {workflow_name}\n"
+                f"👤 <b>Mijoz:</b> {app['contact_info']['full_name']}\n"
+                f"📞 <b>Telefon:</b> {app['contact_info']['phone']}\n"
+                f"📍 <b>Manzil:</b> {app['location']}\n"
+                f"📅 <b>Yaratilgan:</b> {created_date}\n"
+                f"{priority_emoji} <b>Muhimlik:</b> {priority_text}\n"
+                f"📝 <b>Tavsif:</b> {app['description'][:100]}{'...' if len(app['description']) > 100 else ''}\n"
+            )
+            
+            # Add essential additional details
+            if tariff_info:
+                text += f"📊 <b>Tarif:</b> {tariff_info}\n"
+            if connection_type:
+                text += f"🔗 <b>Ulanish turi:</b> {connection_type}\n"
+            if equipment_needed:
+                text += f"🔧 <b>Kerakli jihozlar:</b> {equipment_needed}\n"
+            if estimated_cost:
+                text += f"💰 <b>Narx:</b> {estimated_cost}\n"
+            if expected_completion:
+                text += f"⏱ <b>Muddat:</b> {expected_completion}\n"
+            if company_name:
+                text += f"🏢 <b>Kompaniya:</b> {company_name}\n"
+            
+            # Add additional info if available
+            if additional_info:
+                text += f"\n📋 <b>Qo'shimcha ma'lumot:</b>\n{additional_info}\n"
+            
+            text += f"\n📊 <b>Ariza {index + 1}/{len(applications)}</b>"
+            
+            # Create action buttons
+            buttons = []
+            
+            # Assignment buttons
+            assignment_buttons = []
+            
+            # Call Center Supervisor button (always available)
+            assignment_buttons.append(InlineKeyboardButton(
+                text="📞 Call Center Supervisor",
+                callback_data=f"ctrl_assign_ccsupervisor_{full_id}"
+            ))
+            
+            # Technician button
+            assignment_buttons.append(InlineKeyboardButton(
+                text="🔧 Texnik tanlash",
+                callback_data=f"ctrl_assign_tech_{full_id}"
+            ))
+            
+            buttons.append(assignment_buttons)
+            
+            # Navigation buttons
+            nav_buttons = []
+            
+            # Previous button
+            if index > 0:
+                nav_buttons.append(
+                    InlineKeyboardButton(
+                        text="⬅️ Oldingi",
+                        callback_data=f"ctrl_prev_{index}"
+                    )
+                )
+            
+            # Next button
+            if index < len(applications) - 1:
+                nav_buttons.append(
+                    InlineKeyboardButton(
+                        text="Keyingi ➡️",
+                        callback_data=f"ctrl_next_{index}"
+                    )
+                )
+            
+            # Add navigation buttons if they exist
+            if nav_buttons:
+                buttons.append(nav_buttons)
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            
+            print(f"Sending message for request {short_id}")
+            try:
+                # Check if this is a callback query (inline keyboard event)
+                if hasattr(event, 'message') and hasattr(event, 'from_user'):
+                    # This is a CallbackQuery - edit the existing message
+                    await event.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
+                    print(f"Successfully edited message for request {short_id}")
+                else:
+                    # This is a Message - send new message
+                    await event.answer(text, reply_markup=keyboard, parse_mode='HTML')
+                    print(f"Successfully sent new message for request {short_id}")
+            except Exception as e:
+                print(f"Error sending message for request {short_id}: {e}")
+                if "message can't be edited" in str(e):
+                    # If edit fails, try to send a new message
+                    if hasattr(event, 'message') and hasattr(event, 'from_user'):
+                        # For callback events, try to send a new message via bot
+                        from aiogram import Bot
+                        bot = Bot.get_current()
+                        await bot.send_message(event.from_user.id, text, reply_markup=keyboard, parse_mode='HTML')
+                        print(f"Sent new message via bot for request {short_id}")
+                    else:
+                        # For message events, try answer again
+                        await event.answer(text, reply_markup=keyboard, parse_mode='HTML')
+                        print(f"Sent new message for request {short_id}")
+                else:
+                    raise
             
         except Exception as e:
-            print(f"Error in controller_inbox: user_id={event.from_user.id}, error={e}")
-            error_msg = "Xatolik yuz berdi"
-            await send_or_edit(event, error_msg, state=state)
+            print(f"Error in display_controller_request: {e}")
+            error_text = "Xatolik yuz berdi"
+            try:
+                if hasattr(event, 'message') and hasattr(event.message, 'edit_text'):
+                    await event.message.edit_text(error_text)
+                elif hasattr(event, 'edit_text'):
+                    await event.edit_text(error_text)
+                else:
+                    print("Cannot display error message - no edit_text method available")
+            except Exception as edit_error:
+                print(f"Error editing message: {edit_error}")
 
-    # Kontroller uchun "batafsil" ko'rinish yo'q, shuning uchun inbox xabarini yangilaymiz
-    async def show_request(
-        event: Message | CallbackQuery, 
-        state: FSMContext, 
-        idx: int, 
-        lang: str
-    ) -> int:
-        """Show a single request with navigation controls - simplified view"""
-        data = await state.get_data()
-        requests = data.get('requests', [])
-        
-        if not requests or idx < 0 or idx >= len(requests):
-            msg_id = await send_or_edit(event, "📭 Zayavkalar topilmadi.", state=state)
-            await state.update_data(current_message_id=msg_id)
-            return msg_id
+    @router.callback_query(F.data.startswith("ctrl_assign_ccsupervisor_"))
+    async def assign_to_call_center_supervisor(callback: CallbackQuery, state: FSMContext):
+        """Assign to call center supervisor"""
+        try:
+            await callback.answer()
             
-        request_id = requests[idx]['id']
-        request = requests[idx]
-        
-        if not request:
-            msg_id = await send_or_edit(event, "📭 Zayavka topilmadi.", state=state)
-            await state.update_data(current_message_id=msg_id)
-            return msg_id
-
-        contact_info = request.get('contact_info', {})
-        state_data = request.get('state_data', {})
-        
-        client_name = request.get('client_name', 'Noma\'lum')
-        client_phone = contact_info.get('phone', request.get('client_phone', 'Noma\'lum'))
-        created_at = request.get('created_at').strftime('%d.%m.%Y %H:%M') if request.get('created_at') else 'Noma\'lum'
-        status = request.get('current_status', 'new')
-
-        # Status emojis
-        status_emoji = {
-            'new': '🆕',
-            'assigned_to_controller': '🎛️',
-            'in_progress': '⏳',
-            'completed': '✅',
-            'cancelled': '❌'
-        }.get(status, 'ℹ️')
-
-        # Get comments count
-        comments_count = 0
-
-        # Full info template
-        text = (
-            f"🆔 <b>ID:</b> {request_id[:8]}\n"
-            f"📋 <b>Tur:</b> {request.get('workflow_type', 'Noma\'lum')}\n"
-            f"👤 <b>Mijoz:</b> {client_name}\n"
-            f"📞 <b>Telefon:</b> {client_phone}\n"
-            f"📍 <b>Manzil:</b> {request.get('location', 'Noma\'lum')}\n"
-            f"📅 <b>Yaratilgan:</b> {created_at}\n"
-            f"{status_emoji} <b>Holat:</b> {status}\n"
-            f"💬 <b>Izohlar:</b> {comments_count} ta\n"
-            f"📝 <b>Tavsif:</b> {request.get('description', '')[:150]}{'...' if request.get('description') and len(request.get('description')) > 150 else ''}\n"
-        )
-
-        # Create buttons
-        buttons = []
-        
-        # Add comment button
-        buttons.append([
-            InlineKeyboardButton(
-                text="💬 Izoh qo'shish",
-                callback_data=f"ctrl_add_comment_{request_id}"
-            )
-        ])
-        
-        # Add detailed view button
-        buttons.append([
-            InlineKeyboardButton(
-                text="🔍 Batafsil",
-                callback_data=f"ctrl_detail_{request_id}"
-            )
-        ])
-
-        # Add technician assignment button
-        buttons.append([
-            InlineKeyboardButton(
-                text="🧰 Texnikka biriktirish",
-                callback_data=f"ctrl_assign_tech_{request_id}"
-            )
-        ])
-        # Add call center supervisor transfer button
-        buttons.append([
-            InlineKeyboardButton(
-                text="📞 CallCenterSupervisorga yuborish",
-                callback_data=f"ctrl_transfer_ccsupervisor_{request_id}"
-            )
-        ])
-
-        # Navigation buttons
-        nav_buttons = []
-        if idx > 0:
-            nav_buttons.append(InlineKeyboardButton(
-                text="⬅️ Oldingi",
-                callback_data="ctrl_prev_request"
-            ))
-        if idx < len(requests) - 1:
-            nav_buttons.append(InlineKeyboardButton(
-                text="Keyingisi ➡️",
-                callback_data="ctrl_next_request"
-            ))
-        
-        if nav_buttons:
-            buttons.append(nav_buttons)
-
-        keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-        
-        msg_id = await send_or_edit(event, text, reply_markup=keyboard, parse_mode='HTML', state=state)
-        await state.update_data(current_message_id=msg_id)
-        return msg_id
+            full_id = callback.data.replace("ctrl_assign_ccsupervisor_", "")
+            short_id = full_id[:8]
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            
+            # Get application data
+            data = await state.get_data()
+            applications = data.get('applications', [])
+            current_index = data.get('current_index', 0)
+            
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
+                return
+            
+            application = applications[current_index]
+            
+            # Mock assignment
+            success = await assign_to_call_center_supervisor(full_id)
+            
+            if success:
+                # Update application status
+                applications[current_index]['assigned_to'] = 'call_center_supervisor'
+                await state.update_data(applications=applications)
+                
+                text = (
+                    f"✅ <b>Tayinlash muvaffaqiyatli!</b>\n\n"
+                    f"📝 Ariza ID: {short_id}\n"
+                    f"👤 Mijoz: {application['contact_info']['full_name']}\n"
+                    f"📞 Call Center Supervisor'ga yuborildi\n\n"
+                    f"Ariza sizning inboxingizdan o'chirilib, call center supervisor inboxiga o'tdi."
+                )
+                
+                await callback.message.edit_text(text, parse_mode='HTML')
+                
+                # Remove the request from current session
+                updated_applications = [a for a in applications if a['id'] != full_id]
+                new_index = current_index
+                
+                if updated_applications:
+                    # Adjust index if needed
+                    if new_index >= len(updated_applications):
+                        new_index = len(updated_applications) - 1
+                    
+                    await state.update_data(
+                        applications=updated_applications,
+                        current_index=new_index
+                    )
+                    
+                    # Show next request after 2 seconds
+                    import asyncio
+                    await asyncio.sleep(2)
+                    await display_controller_request(callback, state, updated_applications, new_index, lang, user)
+                else:
+                    await state.clear()
+                    
+                await callback.answer()
+            else:
+                await callback.answer("Tayinlashda xatolik yuz berdi", show_alert=True)
+                
+        except Exception as e:
+            print(f"Error in assign_to_call_center_supervisor: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("ctrl_assign_tech_"))
     async def assign_to_technician(callback: CallbackQuery, state: FSMContext):
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        if not user or user['role'] != 'controller':
-            await callback.answer("Ruxsat yo'q!", show_alert=True)
-            return
-        lang = user.get('language', 'uz')
-        request_id = callback.data.replace("ctrl_assign_tech_", "")
+        """Assign to technician"""
         try:
-            # Get available technicians with their workload
+            await callback.answer()
+            
+            full_id = callback.data.replace("ctrl_assign_tech_", "")
+            short_id = full_id[:8]
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            
+            # Get available technicians
             technicians = await get_users_by_role('technician')
+            
             if not technicians:
-                no_tech_text = "Faol texniklar topilmadi!"
-                await callback.answer(no_tech_text, show_alert=True)
+                await callback.message.edit_text("Texniklar topilmadi")
                 return
-            # Create buttons for each technician
-            keyboard_buttons = []
-            for tech in technicians[:8]:  # Max 8 technicians
-                workload_emoji = "🟢" if tech['active_requests'] == 0 else "🟡" if tech['active_requests'] < 3 else "🔴"
-                button_text = f"{workload_emoji} {tech['full_name']} ({tech['active_requests']})"
-                keyboard_buttons.append([
-                    InlineKeyboardButton(
-                        text=button_text,
-                        callback_data=f"ctrl_select_tech_{request_id}_{tech['id']}"
-                    )
-                ])
-            # Add cancel button
-            cancel_text = "❌ Bekor qilish"
-            keyboard_buttons.append([
-                InlineKeyboardButton(
-                    text=cancel_text,
-                    callback_data=f"ctrl_cancel_assign_{request_id}"
-                )
-            ])
-            select_text = (
-                "👨‍🔧 <b>Qaysi texnikka tayinlaysiz?</b>\n\n"
-                "🟢 - Bo'sh\n🟡 - Kam yuklangan\n🔴 - Ko'p yuklangan\n"
-                "Qavs ichida faol zayavkalar soni ko'rsatilgan."
+            
+            # Create selection keyboard
+            buttons = []
+            for tech in technicians:
+                buttons.append([InlineKeyboardButton(
+                    text=f"🔧 {tech.get('full_name', 'N/A')} ({tech.get('specialization', 'Texnik')}) - {tech.get('active_requests', 0)} ariza",
+                    callback_data=f"ctrl_select_tech_{full_id}_{tech['id']}"
+                )])
+            
+            text = (
+                f"🔧 <b>Texnik tanlang</b>\n\n"
+                f"📝 Ariza ID: {short_id}\n"
+                f"👤 Mijoz: {application['contact_info']['full_name']}\n\n"
+                f"Quyidagi texniklardan birini tanlang:"
             )
-            await send_or_edit(
-                callback,
-                select_text,
-                parse_mode='HTML',
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard_buttons),
-                state=state
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=keyboard,
+                parse_mode='HTML'
             )
+            
         except Exception as e:
-            print(f"Error in assign_to_technician: user_id={callback.from_user.id}, request_id={request_id}, error={e}")
-            error_msg = "Xatolik yuz berdi!"
-            await callback.answer(error_msg, show_alert=True)
+            print(f"Error in assign_to_technician: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     @router.callback_query(F.data.startswith("ctrl_select_tech_"))
     async def select_technician(callback: CallbackQuery, state: FSMContext):
-        """Assign request to selected technician"""
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        if not user or user['role'] != 'controller':
-            await callback.answer("Ruxsat yo'q!", show_alert=True)
-            return
-            
-        lang = user.get('language', 'uz')
-        parts = callback.data.split("_")
-        request_id = parts[3]
-        tech_id = int(parts[4])
-        
+        """Select technician for assignment"""
         try:
-            # Mock assignment
-            success = True
-            
-            if success:
-                # Get technician's name
-                tech_info = await bot.db.fetchrow(
-                    "SELECT full_name, phone_number as phone FROM users WHERE id = $1", tech_id
-                )
-                
-                tech_name = tech_info['full_name'] if tech_info else "Noma'lum"
-                
-                success_text = (
-                    f"✅ <b>Zayavka muvaffaqiyatli {tech_name}ga tayinlandi!</b>"
-                )
-                
-                # Update message with success status
-                return await send_or_edit(callback, success_text, parse_mode='HTML', state=state)
-                
-                # Update the request in our state
-                data = await state.get_data()
-                requests = data.get('requests', [])
-                for req in requests:
-                    if str(req.get('id')) == request_id:
-                        req['current_status'] = 'assigned_to_technician'
-                        break
-                
-                await state.update_data(requests=requests)
-                
-                success_msg = "Muvaffaqiyatli tayinlandi!"
-                await callback.answer(success_msg)
-            else:
-                error_text = "❌ <b>Xatolik yuz berdi!</b>"
-                return await send_or_edit(callback, error_text, parse_mode='HTML', state=state)
-                
-                error_msg = "Xatolik yuz berdi!"
-                await callback.answer(error_msg, show_alert=True)
-                
-        except Exception as e:
-            print(f"Error selecting technician: user_id={callback.from_user.id}, request_id={request_id}, tech_id={tech_id}, error={e}")
-            error_text = "❌ <b>Xatolik yuz berdi!</b>"
-            return await send_or_edit(callback, error_text, parse_mode='HTML', state=state)
-            
-            error_msg = "Xatolik yuz berdi!"
-            await callback.answer(error_msg, show_alert=True)
-            
-    @router.callback_query(F.data == "ctrl_prev_request")
-    @router.callback_query(F.data == "ctrl_next_request")
-    async def navigate_requests(callback: CallbackQuery, state: FSMContext):
-        """Handle navigation between requests"""
-        data = await state.get_data()
-        current_idx = data.get('current_idx', 0)
-        
-        if callback.data == "ctrl_prev_request":
-            new_idx = max(0, current_idx - 1)
-        else:  # next_request
-            requests = data.get('requests', [])
-            new_idx = min(len(requests) - 1, current_idx + 1)
-        
-        await state.update_data(current_idx=new_idx)
-        
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        lang = user.get('language', 'uz') if user else 'uz'
-        
-        return await show_request(callback, state, new_idx, lang)
-        
-    @router.callback_query(F.data.startswith("ctrl_detail_"))
-    async def show_detail(callback: CallbackQuery, state: FSMContext):
-        """Show detailed request information with all comments"""
-        request_id = callback.data.replace("ctrl_detail_", "")
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        lang = user.get('language', 'uz')
-
-        try:
-            # Mock request data
-            request = {
-                'id': request_id,
-                'workflow_type': 'connection_request',
-                'client_name': 'Test Client',
-                'client_phone': '+998901234567',
-                'location': 'Test Address',
-                'description': 'Test description',
-                'created_at': datetime.now(),
-                'current_status': 'new',
-                'contact_info': {
-                    'phone': '+998901234567',
-                    'full_name': 'Test Client'
-                },
-                'state_data': {
-                    'selected_tariff': 'Test Tariff'
-                }
-            }
-            
-            if not request:
-                await callback.answer("Zayavka topilmadi!", show_alert=True)
-                return
-
-            # Mock comments
-            comments = []
-
-            comments_info = ""
-            if comments:
-                comments_info = "\n\n💬 <b>Izohlar:</b>\n"
-                for c in comments:
-                    created_str = c.get('created_at')
-                    if created_str:
-                        # Handle both string and datetime objects
-                        if isinstance(created_str, str):
-                            created = datetime.fromisoformat(created_str).strftime('%d.%m.%Y %H:%M')
-                        else:
-                            created = created_str.strftime('%d.%m.%Y %H:%M')
-                    else:
-                        created = '-'
-                    
-                    # Get role from comment_type
-                    comment_type = c.get('comment_type', '')
-                    role = comment_type.replace('_comment', '') if comment_type else 'unknown'
-                    
-                    # Role emojis
-                    role_emoji = {
-                        'manager': '👨‍💼',
-                        'junior_manager': '👨‍💼',
-                        'controller': '🎛️',
-                        'technician': '🔧',
-                        'warehouse': '📦',
-                        'call_center': '📞',
-                        'call_center_supervisor': '📞',
-                        'admin': '👑'
-                    }.get(role, '👤')
-                    
-                    comments_info += f"{role_emoji} <b>{c['commenter']}</b> ({role}): {c['comment']} ({created})\n"
-
-            contact_info = request.get('contact_info', {})
-            state_data = request.get('state_data', {})
-            
-            client_name = request.get('client_name', 'Noma\'lum')
-            client_phone = contact_info.get('phone', request.get('client_phone', 'Noma\'lum'))
-            created_at = request.get('created_at').strftime('%d.%m.%Y %H:%M') if request.get('created_at') else 'Noma\'lum'
-            tariff = state_data.get('selected_tariff', 'Noma\'lum')
-            
-            text = (
-                f"🔌 <b>Ariza batafsil ma'lumotlari!</b>\n\n"
-                f"📝 <b>ID:</b> {request['id']}\n"
-                f"👤 <b>Mijoz:</b> {client_name}\n"
-                f"📞 <b>Telefon:</b> {client_phone}\n"
-                f"📄 <b>Ta'rif:</b> {request['description']}\n"
-                f"💳 <b>Tarif:</b> {tariff}\n"
-                f"📅 <b>Yaratilgan:</b> {created_at}\n"
-                f"🌐 <b>Manzil:</b> {request.get('location', 'Noma\'lum')}\n"
-                f"📊 <b>Status:</b> {request.get('current_status', 'Noma\'lum')}"
-                f"{comments_info}"
-            )
-
-            buttons = [
-                [
-                    InlineKeyboardButton(text="🔙 Ortga", callback_data="ctrl_back_to_inbox")
-                ]
-            ]
-
-            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-
-            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
-            
-        except Exception as e:
-            print(f"Error in show_detail: {e}")
-            await callback.answer("Xatolik yuz berdi!", show_alert=True)
-
-    @router.callback_query(F.data.startswith("ctrl_add_comment_"))
-    async def add_comment_start(callback: CallbackQuery, state: FSMContext):
-        """Start adding comment for controller"""
-        request_id = callback.data.replace("ctrl_add_comment_", "")
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        lang = user.get('language', 'uz')
-
-        # Save request ID in state
-        await state.update_data(comment_request_id=request_id)
-        await state.set_state(ControllerRequestStates.waiting_for_comment)
-
-        prompt_text = (
-            "💬 Iltimos, izohingizni yuboring:"
-        )
-
-        cancel_text = "❌ Bekor qilish"
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=cancel_text, callback_data="ctrl_cancel_comment")]
-        ])
-
-        await callback.message.edit_text(prompt_text, reply_markup=keyboard)
-        await callback.answer()
-
-    @router.message(ControllerRequestStates.waiting_for_comment)
-    async def process_comment(message: Message, state: FSMContext):
-        """Process the comment from controller"""
-        user = await get_user_by_telegram_id(message.from_user.id)
-        if not user:
-            await message.answer("❌ Sizda ruxsat yo'q.")
-            return
-
-        lang = user.get('language', 'uz')
-        comment_text = message.text.strip()
-        data = await state.get_data()
-        request_id = data.get('comment_request_id')
-
-        if not request_id:
-            error_text = "Xatolik: Zayavka topilmadi"
-            await message.answer(error_text)
-            return
-
-        if not comment_text:
-            error_text = "❗️ Izoh bo'sh bo'lishi mumkin emas."
-            await message.answer(error_text)
-            return
-
-        try:
-            # Mock comment addition
-            success = True
-
-            if success:
-                success_text = "✅ Izoh muvaffaqiyatli qo'shildi!"
-                await message.answer(success_text)
-
-                # Return to inbox
-                await show_controller_inbox(message, state)
-            else:
-                error_text = "❌ Izoh qo'shishda xatolik!"
-                await message.answer(error_text)
-
-        except Exception as e:
-            print(f"Error saving comment: {e}")
-            error_text = "❌ Fikrni saqlashda xatolik!"
-            await message.answer(error_text)
-
-        await state.clear()
-
-    @router.callback_query(F.data == "ctrl_cancel_comment")
-    async def cancel_comment(callback: CallbackQuery, state: FSMContext):
-        """Cancel comment adding"""
-        await state.clear()
-        await show_controller_inbox(callback, state)
-        await callback.answer()
-        
-    @router.callback_query(lambda c: c.data.startswith("ctrl_monitor_"))
-    async def monitor_request(callback: CallbackQuery):
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        if not user or user['role'] != 'controller':
-            await callback.answer("Ruxsat yo'q!", show_alert=True)
-            return
-            
-        lang = user.get('language', 'uz')
-        request_id = callback.data.split("_", 2)[2]
-        
-        try:
-            # Mock monitoring data
-            monitoring_data = {
-                'success': True,
-                'request': {
-                    'id': request_id,
-                    'current_status': 'new',
-                    'created_at': datetime.now()
-                },
-                'transitions': [],
-                'technician': None
-            }
-            
-            if not monitoring_data['success']:
-                error_text = "Zayavka topilmadi!"
-                await callback.answer(error_text, show_alert=True)
-                return
-            
-            request_details = monitoring_data['request']
-            transitions = monitoring_data['transitions']
-            technician = monitoring_data['technician']
-            
-            # Monitoring ma'lumotlari
-            monitor_text = f"""📊 <b>Zayavka monitoringi</b>
-
-🆔 <b>ID:</b> {request_details['id'][:8]}...
-📊 <b>Joriy status:</b> {request_details.get('current_status', '-')}
-⏱️ <b>Yaratilganidan beri:</b> {(datetime.now() - request_details['created_at']).days if request_details.get('created_at') else 0} kun"""
-            
-            # Texnik holati
-            if technician:
-                tech_status = (
-                    f"\n👨‍🔧 <b>Tayinlangan texnik:</b> {technician['full_name']}\n"
-                    f"📞 <b>Telefon:</b> {technician.get('phone_number', 'Noma\'lum')}"
-                )
-                monitor_text += tech_status
-            
-            # So'nggi faoliyat
-            if transitions:
-                last_transition = transitions[-1]
-                last_activity = (
-                    f"\n\n⏰ <b>So'nggi faoliyat:</b>\n"
-                    f"{last_transition['created_at'].strftime('%d.%m.%Y %H:%M')} - "
-                    f"{last_transition.get('actor_name', 'Tizim')}: {last_transition.get('action', '-')}"
-                )
-                monitor_text += last_activity
-            
-            # Back tugmasi
-            back_text = "◀️ Orqaga"
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=back_text, callback_data="ctrl_back_to_inbox")]
-            ])
-            
-            return await send_or_edit(callback, monitor_text, parse_mode='HTML', reply_markup=keyboard, state=state)
-            await callback.answer()
-            
-        except Exception as e:
-            print(f"Error in monitor_request: user_id={callback.from_user.id}, request_id={request_id}, error={e}")
-            error_text = "Xatolik yuz berdi"
-            await callback.answer(error_text, show_alert=True)
-
-    @router.callback_query(F.data.startswith("ctrl_cancel_assign_"))
-    async def cancel_assign(callback: CallbackQuery, state: FSMContext):
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        lang = user.get('language', 'uz') if user else 'uz'
-        
-        cancel_text = "❌ <b>Tayinlash bekor qilindi</b>"
-        return await send_or_edit(callback, cancel_text, parse_mode='HTML', state=state)
-
-    @router.callback_query(F.data == "ctrl_back_to_inbox")
-    async def back_to_inbox(callback: CallbackQuery, state: FSMContext):
-        try:
+            parts = callback.data.replace("ctrl_select_tech_", "").split("_")
+            full_id = parts[0]
+            technician_id = int(parts[1])
+            short_id = full_id[:8]
             user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'controller':
-                await callback.answer("Ruxsat yo'q!", show_alert=True)
-                return
             lang = user.get('language', 'uz')
-
-            # Mock requests
-            requests = [
-                {
-                    'id': 'req123456',
-                    'workflow_type': 'connection_request',
-                    'client_name': 'Test Client 1',
-                    'client_phone': '+998901234567',
-                    'location': 'Test Address 1',
-                    'description': 'Test description 1',
-                    'created_at': datetime.now(),
-                    'current_status': 'new',
-                    'contact_info': {
-                        'phone': '+998901234567',
-                        'full_name': 'Test Client 1'
-                    },
-                    'state_data': {
-                        'selected_tariff': 'Test Tariff 1'
-                    }
-                }
-            ]
-
-            if not requests:
-                await callback.message.edit_text("Arizalar topilmadi.")
+            
+            # Get application data
+            data = await state.get_data()
+            applications = data.get('applications', [])
+            current_index = data.get('current_index', 0)
+            
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
                 return
-
-            # State'ni yangilash
-            await state.update_data(requests=requests, current_index=0)
-
-            # 0-indexli arizani ko'rsatish
-            await display_inbox_page(callback, state) # Changed from show_controller_inbox to display_inbox_page
-            await callback.answer()
+            
+            application = applications[current_index]
+            
+            # Get technician info
+            technicians = await get_users_by_role('technician')
+            technician = next((t for t in technicians if t['id'] == technician_id), None)
+            
+            if not technician:
+                await callback.answer("Texnik topilmadi")
+                return
+            
+            # Mock assignment
+            success = await assign_to_technician(full_id, technician_id)
+            
+            if success:
+                # Update application status
+                applications[current_index]['assigned_to'] = f"technician_{technician_id}"
+                await state.update_data(applications=applications)
+                
+                text = (
+                    f"✅ <b>Tayinlash muvaffaqiyatli!</b>\n\n"
+                    f"📝 Ariza ID: {short_id}\n"
+                    f"👤 Mijoz: {application['contact_info']['full_name']}\n"
+                    f"🔧 Texnik: {technician.get('full_name', 'N/A')}\n"
+                    f"📊 Ixtisoslik: {technician.get('specialization', 'Texnik')}\n\n"
+                    f"Ariza sizning inboxingizdan o'chirilib, texnik inboxiga o'tdi."
+                )
+                
+                await callback.message.edit_text(text, parse_mode='HTML')
+                
+                # Remove the request from current session
+                updated_applications = [a for a in applications if a['id'] != full_id]
+                new_index = current_index
+                
+                if updated_applications:
+                    # Adjust index if needed
+                    if new_index >= len(updated_applications):
+                        new_index = len(updated_applications) - 1
+                    
+                    await state.update_data(
+                        applications=updated_applications,
+                        current_index=new_index
+                    )
+                    
+                    # Show next request after 2 seconds
+                    import asyncio
+                    await asyncio.sleep(2)
+                    await display_controller_request(callback, state, updated_applications, new_index, lang, user)
+                else:
+                    await state.clear()
+                    
+                await callback.answer()
+            else:
+                await callback.answer("Tayinlashda xatolik yuz berdi", show_alert=True)
+                
         except Exception as e:
-            print(f"Error in back_to_inbox: {e}")
-            await callback.answer("Xatolik yuz berdi!", show_alert=True)
+            print(f"Error in select_technician: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data.startswith("ctrl_transfer_ccsupervisor_"))
-    async def transfer_to_ccsupervisor(callback: CallbackQuery, state: FSMContext):
-        user = await get_user_by_telegram_id(callback.from_user.id)
-        if not user or user['role'] != 'controller':
-            await callback.answer("Ruxsat yo'q!", show_alert=True)
-            return
-        lang = user.get('language', 'uz')
-        request_id = callback.data.replace("ctrl_transfer_ccsupervisor_", "")
+    @router.callback_query(F.data.startswith("ctrl_prev_"))
+    async def navigate_previous(callback: CallbackQuery, state: FSMContext):
+        """Navigate to previous request"""
         try:
-            # Mock database update
-            await bot.db.execute(
-                "UPDATE service_requests SET role_current = 'call_center_supervisor', current_status = 'assigned_to_call_center_supervisor', updated_at = NOW() WHERE id = $1",
-                request_id
-            )
-            msg_text = (
-                "✅ Ariza Callcenter Supervisorga muvaffaqiyatli yuborildi!"
-            )
-            back_text = "📥 Inboxga qaytish"
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=back_text, callback_data="controller_inbox")]
-            ])
-            await send_or_edit(
-                callback,
-                msg_text,
-                reply_markup=keyboard,
-                parse_mode='HTML',
-                state=state
-            )
-            await callback.answer("Muvaffaqiyatli yuborildi!")
+            await callback.answer()
+            
+            # Extract index from callback data
+            current_index = int(callback.data.replace("ctrl_prev_", ""))
+            new_index = current_index - 1
+            
+            if new_index < 0:
+                await callback.answer("Birinchi ariza", show_alert=True)
+                return
+            
+            # Get user and data
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            data = await state.get_data()
+            applications = data.get('applications', [])
+            
+            if not applications or new_index >= len(applications):
+                await callback.answer("Ariza topilmadi", show_alert=True)
+                return
+            
+            # Update current index
+            await state.update_data(current_index=new_index)
+            
+            # Display the previous request
+            await display_controller_request(callback, state, applications, new_index, lang, user)
+            
         except Exception as e:
-            print(f"Error transferring to callcenter supervisor: user_id={callback.from_user.id}, request_id={request_id}, error={e}")
-            error_msg = "Xatolik yuz berdi!"
-            await callback.answer(error_msg, show_alert=True)
+            print(f"Error in navigate_previous: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("ctrl_next_"))
+    async def navigate_next(callback: CallbackQuery, state: FSMContext):
+        """Navigate to next request"""
+        try:
+            await callback.answer()
+            
+            # Extract index from callback data
+            current_index = int(callback.data.replace("ctrl_next_", ""))
+            new_index = current_index + 1
+            
+            # Get user and data
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            data = await state.get_data()
+            applications = data.get('applications', [])
+            
+            if not applications or new_index >= len(applications):
+                await callback.answer("Oxirgi ariza", show_alert=True)
+                return
+            
+            # Update current index
+            await state.update_data(current_index=new_index)
+            
+            # Display the next request
+            await display_controller_request(callback, state, applications, new_index, lang, user)
+            
+        except Exception as e:
+            print(f"Error in navigate_next: {str(e)}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
     return router
