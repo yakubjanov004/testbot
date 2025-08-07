@@ -17,6 +17,7 @@ class AdminMainMenuStates(StatesGroup):
 class AdminCallbackStates(StatesGroup):
     """Callback states for admin"""
     waiting_for_confirmation = State()
+    waiting_for_search_value = State()
 
 
 class AdminOrderStates(StatesGroup):
@@ -25,10 +26,13 @@ class AdminOrderStates(StatesGroup):
     entering_order_number = State()
     viewing_order_details = State()
     waiting_for_order_id = State()
+    filtering = State()
+    filtering_selected = State()
 
 
 class AdminUsersStates(StatesGroup):
     """User states for admin"""
+    users = State()
     waiting_for_search_query = State()
     waiting_for_user_data = State()
     waiting_for_user_id = State()
@@ -37,6 +41,7 @@ class AdminUsersStates(StatesGroup):
 
 class AdminSettingsStates(StatesGroup):
     """Settings states for admin"""
+    settings = State()
     editing_setting = State()
     waiting_for_setting_value = State()
 
@@ -44,8 +49,10 @@ class AdminSettingsStates(StatesGroup):
 class AdminStatisticsStates(StatesGroup):
     """Statistics states for admin"""
     viewing_statistics = State()
+    statistics = State()
 
 
 class AdminWorkflowRecoveryStates(StatesGroup):
     """Workflow recovery states for admin"""
-    recovery_menu = State() 
+    recovery_menu = State()
+    workflow_recovery = State() 

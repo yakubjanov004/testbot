@@ -53,10 +53,13 @@ class WarehouseStatisticsStates(StatesGroup):
     """Statistics states for warehouse"""
     viewing_statistics = State()
     selecting_report_type = State()
+    statistics_menu = State()
+    period_menu = State()
 
 
 class WarehouseWorkflowStates(StatesGroup):
     """Workflow states for warehouse"""
     workflow_monitoring = State()
     workflow_optimization = State()
-    entering_return_reason = State() 
+    entering_return_reason = State()
+    preparing_equipment = State() 

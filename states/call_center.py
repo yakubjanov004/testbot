@@ -39,17 +39,20 @@ class CallCenterReportsStates(StatesGroup):
 
 class CallCenterChatStates(StatesGroup):
     """Chat states for call center"""
+    chat = State()
     waiting_for_reply = State()
 
 
 class CallCenterFeedbackStates(StatesGroup):
     """Feedback states for call center"""
+    feedback = State()
     writing_feedback = State()
     waiting_for_feedback_data = State()
 
 
 class CallCenterClientsStates(StatesGroup):
     """Clients states for call center"""
+    clients = State()
     waiting_for_search_query = State()
     waiting_for_client_data = State()
     waiting_for_client_id = State()
@@ -62,10 +65,13 @@ class CallCenterClientRatingStates(StatesGroup):
 
 class CallCenterDirectResolutionStates(StatesGroup):
     """Direct resolution states for call center"""
+    direct_resolution = State()
     selecting_problem_type = State()
     entering_resolution = State()
 
 
 class CallCenterSupervisorStates(StatesGroup):
     """Supervisor states for call center"""
-    supervisor_menu = State() 
+    supervisor = State()
+    supervisor_menu = State()
+    assign_requests = State() 
