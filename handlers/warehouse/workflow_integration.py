@@ -52,7 +52,7 @@ def get_warehouse_workflow_router():
                 {"text": "✅ Tayyorlash tugallandi", "callback_data": f"equipment_ready_{request_id}"}
             ]]
             
-            await callback.message.reply(
+            await callback.message.answer(
                 "🔧 Uskunani tayyorlang va tugagach tasdiqlang:",
                 reply_markup={"inline_keyboard": keyboard}
             )

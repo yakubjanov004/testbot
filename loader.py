@@ -70,9 +70,15 @@ dp = Dispatcher(storage=storage)
 # Middleware'larni qo'shish
 from middlewares.logger_middleware import LoggerMiddleware
 from middlewares.error_middleware import ErrorMiddleware
+from middlewares.rate_limit_middleware import RateLimitMiddleware
+from middlewares.anti_spam_middleware import AntiSpamMiddleware
 
 dp.message.middleware(LoggerMiddleware())
 dp.callback_query.middleware(LoggerMiddleware())
+dp.message.middleware(AntiSpamMiddleware())
+dp.callback_query.middleware(AntiSpamMiddleware())
+dp.message.middleware(RateLimitMiddleware())
+dp.callback_query.middleware(RateLimitMiddleware())
 dp.message.middleware(ErrorMiddleware())
 dp.callback_query.middleware(ErrorMiddleware())
 
