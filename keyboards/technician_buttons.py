@@ -354,8 +354,5 @@ def get_application_action_keyboard(application, current_index: int, total_appli
         diagnostic_text = "🔍 Diagnostika" if lang == "uz" else "🔍 Диагностика"
         keyboard.append([InlineKeyboardButton(text=diagnostic_text, callback_data="tech_start_diagnostic")])
     
-    # Back button
-    back_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"
-    keyboard.append([InlineKeyboardButton(text=back_text, callback_data="tech_main_menu")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

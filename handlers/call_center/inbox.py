@@ -97,6 +97,10 @@ async def get_operator_applications(operator_id: int):
         }
     ]
 
+async def get_user_lang(user_id: int) -> str:
+    """Mock user language"""
+    return 'uz'
+
 async def contact_client(client_phone: str, client_name: str):
     """Mock contact client"""
     try:
@@ -271,6 +275,9 @@ def get_call_center_inbox_router():
             
             application_id = callback.data.replace("operator_contact_client_", "")
             
+            # Get user language
+            lang = await get_user_lang(callback.from_user.id)
+            
             # Get current application
             data = await state.get_data()
             applications = data.get('applications', [])
@@ -294,16 +301,9 @@ def get_call_center_inbox_router():
                         f"✅ Mijoz bilan bog'lanish muvaffaqiyatli!"
                     )
                     
-                    # Create resolve issue button
-                    resolve_button = InlineKeyboardButton(
-                        text="✅ Muammoni hal qilish",
-                        callback_data=f"operator_resolve_issue_{application_id}"
-                    )
-                    back_button = InlineKeyboardButton(
-                        text="⬅️ Orqaga qaytish",
-                        callback_data="operator_back_to_application"
-                    )
-                    keyboard = get_operator_resolve_keyboard(lang)
+                    # Create keyboard with resolve and back buttons
+                    from keyboards.call_center_buttons import get_operator_resolve_keyboard
+                    keyboard = get_operator_resolve_keyboard(lang, application_id)
                     
                     await callback.message.edit_text(
                         contact_text,
@@ -326,6 +326,9 @@ def get_call_center_inbox_router():
             await callback.answer()
             
             application_id = callback.data.replace("operator_resolve_issue_", "")
+            
+            # Get user language
+            lang = await get_user_lang(callback.from_user.id)
             
             # Get current application
             data = await state.get_data()
@@ -376,6 +379,9 @@ def get_call_center_inbox_router():
     async def handle_resolution_notes_input(message: Message, state: FSMContext):
         """Handle resolution notes input"""
         try:
+            # Get user language
+            lang = await get_user_lang(message.from_user.id)
+            
             # Get the resolution notes
             resolution_notes = message.text.strip()
             

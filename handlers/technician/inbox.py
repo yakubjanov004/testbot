@@ -541,17 +541,18 @@ def get_technician_inbox_router():
                 )
                 return
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             
-            if not application:
+            if not applications or current_index >= len(applications):
                 await message.answer("❌ Ariza ma'lumotlari topilmadi. Iltimos, qaytadan urinib ko'ring.")
                 return
             
+            application = applications[current_index]
+            
             # Update application diagnostic result
-            applications = data.get('applications', [])
-            current_index = data.get('current_app_index', 0)
             
             if applications and current_index < len(applications):
                 applications[current_index]['diagnostic_result'] = diagnostic_text
@@ -589,13 +590,16 @@ def get_technician_inbox_router():
         try:
             await callback.answer()
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             
-            if not application:
-                await callback.answer("Ariza ma'lumotlari topilmadi")
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
                 return
+            
+            application = applications[current_index]
             
             # Store application info in state
             await state.update_data(
@@ -655,13 +659,16 @@ def get_technician_inbox_router():
             
             item_id = int(callback.data.replace("tech_select_item_", ""))
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             
-            if not application:
-                await callback.answer("Ariza ma'lumotlari topilmadi")
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
                 return
+            
+            application = applications[current_index]
             
             # Get warehouse items
             warehouse_items = await get_warehouse_items()
@@ -720,14 +727,17 @@ def get_technician_inbox_router():
                 )
                 return
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             selected_item = data.get('selected_warehouse_item')
             
-            if not application or not selected_item:
+            if not applications or current_index >= len(applications) or not selected_item:
                 await message.answer("❌ Ariza ma'lumotlari topilmadi. Iltimos, qaytadan urinib ko'ring.")
                 return
+            
+            application = applications[current_index]
             
             # Create warehouse item text
             warehouse_item_text = f"{selected_item['name']} - {quantity_text}"
@@ -785,13 +795,16 @@ def get_technician_inbox_router():
             # Retrieve user language
             lang = await get_user_lang(callback.from_user.id)
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             
-            if not application:
-                await callback.answer("Ariza ma'lumotlari topilmadi")
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
                 return
+            
+            application = applications[current_index]
             
             # Show custom input prompt
             input_text = (
@@ -834,17 +847,18 @@ def get_technician_inbox_router():
                 )
                 return
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             
-            if not application:
+            if not applications or current_index >= len(applications):
                 await message.answer("❌ Ariza ma'lumotlari topilmadi. Iltimos, qaytadan urinib ko'ring.")
                 return
             
+            application = applications[current_index]
+            
             # Update application warehouse info
-            applications = data.get('applications', [])
-            current_index = data.get('current_app_index', 0)
             
             if applications and current_index < len(applications):
                 applications[current_index]['warehouse_needed'] = True
@@ -894,13 +908,16 @@ def get_technician_inbox_router():
             # Retrieve user language
             lang = await get_user_lang(callback.from_user.id)
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             
-            if not application:
-                await callback.answer("Ariza ma'lumotlari topilmadi")
+            if not applications or current_index >= len(applications):
+                await callback.answer("Ariza topilmadi")
                 return
+            
+            application = applications[current_index]
             
             text = (
                 f"✅ <b>Ombor bilan ishlash bekor qilindi</b>\n\n"
@@ -987,17 +1004,18 @@ def get_technician_inbox_router():
                 )
                 return
             
-            # Get application data from state
+            # Get current application from state
             data = await state.get_data()
-            application = data.get('current_application_data')
+            current_index = data.get('current_app_index', 0)
+            applications = data.get('applications', [])
             
-            if not application:
+            if not applications or current_index >= len(applications):
                 await message.answer("❌ Ariza ma'lumotlari topilmadi. Iltimos, qaytadan urinib ko'ring.")
                 return
             
+            application = applications[current_index]
+            
             # Update application work notes
-            applications = data.get('applications', [])
-            current_index = data.get('current_app_index', 0)
             
             if applications and current_index < len(applications):
                 applications[current_index]['work_notes'] = work_notes_text

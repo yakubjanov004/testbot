@@ -1790,7 +1790,7 @@ def get_supervisor_operator_assignment_keyboard(lang: str = 'uz') -> InlineKeybo
         [
             InlineKeyboardButton(
                 text="✅ Ha, yuborish" if lang == 'uz' else "✅ Да, отправить",
-                callback_data="supervisor_confirm_assign"
+                callback_data="supervisor_confirm_assign_"
             )
         ],
         [

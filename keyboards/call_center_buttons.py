@@ -9,25 +9,20 @@ def get_call_center_main_keyboard(lang="uz"):
 def call_center_main_menu_reply(lang: str = 'uz') -> ReplyKeyboardMarkup:
     """Main menu keyboard for call center operator"""
     inbox = "📥 Inbox"
-    orders = "📝 Buyurtmalar" if lang == 'uz' else "📝 Заказы"
-    client_search = "🔍 Mijoz qidirish" if lang == 'uz' else "🔍 Поиск клиента"
+   # orders = "📝 Buyurtmalar" if lang == 'uz' else "📝 Заказы"
+   # client_search = "🔍 Mijoz qidirish" if lang == 'uz' else "🔍 Поиск клиента"
     create_connection = "🔌 Ulanish arizasi yaratish" if lang == 'uz' else "🔌 Создать заявку на подключение"
     create_technical = "🔧 Texnik xizmat yaratish" if lang == 'uz' else "🔧 Создать техническую заявку"
     call_management = "📞 Qo'ng'iroqlar boshqaruvi" if lang == 'uz' else "📞 Управление звонками"
     statistics = "📊 Statistikalar" if lang == 'uz' else "📊 Статистика"
-    feedback = "⭐️ Fikr-mulohaza" if lang == 'uz' else "⭐️ Обратная связь"
+   # feedback = "⭐️ Fikr-mulohaza" if lang == 'uz' else "⭐️ Обратная связь"
     change_lang = "🌐 Tilni o'zgartirish" if lang == 'uz' else "🌐 Изменить язык"
-    webapp_text = "🌐 Web ilovasi" if lang == 'uz' else "🌐 Веб-приложение"
+    webapp_text = "🌐 Onlayn Chat Web App" if lang == 'uz' else "🌐 Onlayn Chat Web App"
 
     keyboard = [
-        [KeyboardButton(text=inbox)],
-        [KeyboardButton(text=orders)],
-        [KeyboardButton(text=client_search)],
-        [KeyboardButton(text=create_connection), KeyboardButton(text=create_technical)],
-        [KeyboardButton(text=call_management)],
-        [KeyboardButton(text=statistics)],
-        [KeyboardButton(text=feedback)],
-        [KeyboardButton(text=change_lang)],
+        [KeyboardButton(text=inbox), KeyboardButton(text=create_connection)],
+        [KeyboardButton(text=create_technical), KeyboardButton(text=call_management)],
+        [KeyboardButton(text=statistics), KeyboardButton(text=change_lang)],
         [KeyboardButton(text=webapp_text, web_app=WebAppInfo(url="https://webapp-gamma-three.vercel.app/"))]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
@@ -1077,13 +1072,13 @@ def get_rating_settings_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-def get_operator_resolve_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+def get_operator_resolve_keyboard(lang: str = 'uz', application_id: str = '') -> InlineKeyboardMarkup:
     """Operator resolve issue keyboard"""
     keyboard = [
         [
             InlineKeyboardButton(
                 text="✅ Muammoni hal qilish" if lang == 'uz' else "✅ Решить проблему",
-                callback_data="operator_resolve_issue"
+                callback_data=f"operator_resolve_issue_{application_id}"
             )
         ],
         [
@@ -1159,3 +1154,28 @@ def get_operator_navigation_keyboard(current_index: int, total_applications: int
         keyboard.append(nav_buttons)
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_statistics_keyboard(lang='uz'):
+    """Get call center statistics menu keyboard"""
+    buttons = []
+    
+    if lang == 'uz':
+        buttons = [
+            [InlineKeyboardButton(text="📅 Bugungi ko'rsatkichlar", callback_data="cc_stats_daily")],
+            [InlineKeyboardButton(text="📊 Haftalik hisobot", callback_data="cc_stats_weekly")],
+            [InlineKeyboardButton(text="📈 Oylik hisobot", callback_data="cc_stats_monthly")],
+            [InlineKeyboardButton(text="🎯 Mening samaradorligim", callback_data="cc_stats_performance")],
+            [InlineKeyboardButton(text="📈 Konversiya darajasi", callback_data="cc_stats_conversion")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="cc_stats_back")]
+        ]
+    else:
+        buttons = [
+            [InlineKeyboardButton(text="📅 Сегодняшние показатели", callback_data="cc_stats_daily")],
+            [InlineKeyboardButton(text="📊 Недельный отчет", callback_data="cc_stats_weekly")],
+            [InlineKeyboardButton(text="📈 Месячный отчет", callback_data="cc_stats_monthly")],
+            [InlineKeyboardButton(text="🎯 Моя эффективность", callback_data="cc_stats_performance")],
+            [InlineKeyboardButton(text="📈 Коэффициент конверсии", callback_data="cc_stats_conversion")],
+            [InlineKeyboardButton(text="⬅️ Назад", callback_data="cc_stats_back")]
+        ]
+    
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

@@ -10,7 +10,7 @@ from aiogram.filters import StateFilter
 from typing import Optional, Dict, Any
 
 # Keyboard imports
-from keyboards.call_center_buttons import call_center_statistics_menu
+from keyboards.call_center_buttons import call_center_statistics_menu , get_statistics_keyboard
 
 # States imports
 from states.call_center import CallCenterReportsStates

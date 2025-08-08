@@ -423,6 +423,9 @@ def get_supervisor_inbox_router():
         try:
             await callback.answer()
             
+            # Get user language
+            lang = await get_user_lang(callback.from_user.id)
+            
             # Parse callback data
             parts = callback.data.replace("supervisor_select_operator_", "").split("_")
             application_id = parts[0]
@@ -457,7 +460,16 @@ def get_supervisor_inbox_router():
                     f"✅ Operator'ga yuborilsinmi?"
                 )
                 
-                keyboard = get_supervisor_operator_assignment_keyboard(lang)
+                # Create confirmation keyboard with proper callback data
+                confirm_button = InlineKeyboardButton(
+                    text="✅ Ha, yuborish" if lang == 'uz' else "✅ Да, отправить",
+                    callback_data=f"supervisor_confirm_assign_{application_id}_{operator_id}"
+                )
+                cancel_button = InlineKeyboardButton(
+                    text="❌ Bekor qilish" if lang == 'uz' else "❌ Отмена",
+                    callback_data="supervisor_back_to_application"
+                )
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[[confirm_button], [cancel_button]])
                 
                 await callback.message.edit_text(
                     text,
@@ -476,6 +488,9 @@ def get_supervisor_inbox_router():
         """Handle assignment confirmation"""
         try:
             await callback.answer()
+            
+            # Get user language
+            lang = await get_user_lang(callback.from_user.id)
             
             # Parse callback data
             parts = callback.data.replace("supervisor_confirm_assign_", "").split("_")

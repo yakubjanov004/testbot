@@ -24,28 +24,22 @@ def get_main_menu_keyboard(lang="uz"):
     """Asosiy menyu klaviaturasi - chiroyli va mantiqiy tartibda"""
     service_order_text = "🔧 Texnik xizmat" if lang == "uz" else "🔧 Техническая служба"
     connection_order_text = "🔌 Ulanish uchun ariza" if lang == "uz" else "🔌 Заявка на подключение"
-    my_orders_text = "📋 Mening buyurtmalarim" if lang == "uz" else "📋 Мои заказы"
-    webapp_text = "🌐 Web ilovasi" if lang == "uz" else "🌐 Веб-приложение"
     contact_operator_text = "📞 Operator bilan bog'lanish" if lang == "uz" else "📞 Связаться с оператором"
-    profile_text = "👤 Profil" if lang == "uz" else "👤 Профиль"
-    help_text = "❓ Yordam" if lang == "uz" else "❓ Помощь"
+    cabinet_text = "👤 Kabinet" if lang == "uz" else "👤 Кабинет"
+    bot_guide_text = "Bot qo'llanmasi" if lang == "uz" else "Инструкция по использованию бота"
     change_language_text = "🌐 Til o'zgartirish" if lang == "uz" else "🌐 Изменить язык"
     
     buttons = [
         [
-            KeyboardButton(text=service_order_text),
-            KeyboardButton(text=connection_order_text)
-        ],
-        [
-            KeyboardButton(text=my_orders_text),
-            KeyboardButton(text=webapp_text, web_app=WebAppInfo(url="https://webapp-gamma-three.vercel.app/"))
+            KeyboardButton(text=connection_order_text),
+            KeyboardButton(text=service_order_text)    
         ],
         [
             KeyboardButton(text=contact_operator_text),
-            KeyboardButton(text=profile_text)
+            KeyboardButton(text=cabinet_text)
         ],
         [
-            KeyboardButton(text=help_text),
+            KeyboardButton(text=bot_guide_text),
             KeyboardButton(text=change_language_text)
         ]
     ]
