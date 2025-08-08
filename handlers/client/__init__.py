@@ -16,7 +16,7 @@ This module provides core client functionality including:
 
 from aiogram import Router
 from .contact import get_client_contact_router
-from .feedback import get_client_feedback_router
+# from .feedback import get_client_feedback_router
 from .help import get_client_help_router
 from .language import get_client_language_router
 from .main_menu import get_client_main_menu_router
@@ -38,8 +38,8 @@ def get_client_router():
     router.include_router(get_client_profile_router())
     router.include_router(get_client_contact_router())
     router.include_router(get_client_help_router())
-    router.include_router(get_client_feedback_router())
     router.include_router(get_client_language_router())
+    # router.include_router(get_client_feedback_router())
     
     return router
 

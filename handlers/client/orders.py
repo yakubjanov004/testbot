@@ -151,19 +151,15 @@ def get_orders_router():
             data = callback.data.split("_")
             action = data[1]
             
-            if action == "next":
+            if action == "next" or action == "prev":
                 current_index = int(data[2])
                 current_page = int(data[3])
-                await show_next_order(callback, current_index, current_page)
-            elif action == "prev":
-                current_index = int(data[2])
-                current_page = int(data[3])
-                await show_previous_order(callback, current_index, current_page)
-            elif action == "details":
-                order_id = int(data[2])
-                order = await get_order_details(order_id)
-                await show_order_details(callback, order, None, 0)
-                
+                # Note: data[4] is order_id but not needed for navigation here
+                if action == "next":
+                    await show_next_order(callback, current_index, current_page)
+                else:
+                    await show_previous_order(callback, current_index, current_page)
+        
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 

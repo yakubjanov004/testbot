@@ -11,6 +11,8 @@ from keyboards.client_buttons import get_client_profile_menu, get_edit_profile_k
 from states.client_states import ProfileStates
 from filters.role_filter import RoleFilter
 from utils.logger import get_logger
+from utils.mock_db import get_user as mock_get_user, get_user_orders as mock_get_user_orders
+from keyboards.client_buttons import get_client_orders_navigation_keyboard
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -35,9 +37,15 @@ async def get_user_lang(telegram_id: int):
     return 'uz'
 
 async def update_user_profile(telegram_id: int, field: str, value: str):
-    """Mock update user profile - should be replaced with real database update"""
-    logger.info(f"Updating user {telegram_id} {field} to {value}")
-    return True
+    """Mock update user profile - updates mock_db storage"""
+    try:
+        from utils.mock_db import update_user_field
+        update_user_field(telegram_id, field, value)
+        logger.info(f"Updating user {telegram_id} {field} to {value}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to update user: {e}")
+        return False
 
 def client_only(func):
     """Decorator to ensure only clients can access"""
@@ -66,7 +74,7 @@ def get_client_profile_router():
     router.callback_query.filter(role_filter)
 
     @client_only
-    @router.message(F.text.in_(['👤 Profil']))
+    @router.message(F.text.in_(['👤 Kabinet', '👤 Кабинет', '👤 Profil']))
     async def client_profile_handler(message: Message, state: FSMContext):
         """Mijoz profili bilan ishlash"""
         try:
@@ -76,10 +84,11 @@ def get_client_profile_router():
                 return
             
             profile_text = "Profil menyusi. Kerakli amalni tanlang."
+            lang = (await get_user_by_telegram_id(message.from_user.id)).get('language', 'uz')
             
             sent_message = await message.answer(
                 text=profile_text,
-                reply_markup=get_client_profile_menu('uz')
+                reply_markup=get_client_profile_menu(lang)
             )
             
             await state.set_state(ProfileStates.profile_menu)
@@ -124,30 +133,48 @@ def get_client_profile_router():
     @client_only
     @router.callback_query(F.data == "client_order_stats")
     async def handle_order_stats(callback: CallbackQuery):
-        """View order statistics"""
+        """View orders one by one with pagination"""
         try:
             await callback.answer()
-            
-            # To'liq statistika
-            stats_text = (
-                f"📊 <b>Buyurtmalar statistikasi - To'liq ma'lumot</b>\n\n"
-                f"📋 <b>Jami buyurtmalar:</b> 5 ta\n\n"
-                f"🔧 <b>Texnik xizmatlar:</b> 3 ta\n"
-                f"• Faol: 1 ta\n"
-                f"• Bajarilgan: 2 ta\n\n"
-                f"🔌 <b>Ulanishlar:</b> 2 ta\n"
-                f"• Faol: 1 ta\n"
-                f"• Bajarilgan: 1 ta\n\n"
-                f"📈 <b>O'rtacha baho:</b> ⭐⭐⭐⭐⭐\n"
-                f"⏰ <b>O'rtacha bajarilish vaqti:</b> 2.5 kun\n"
-                f"💰 <b>Jami xizmat narxi:</b> 1,250,000 so'm\n\n"
-                f"📅 <b>So'nggi faoliyat:</b> 2024-01-15"
+            user = mock_get_user(callback.from_user.id) or await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz') if user else 'uz'
+
+            orders_data = mock_get_user_orders(callback.from_user.id, page=1)
+            orders = orders_data['orders']
+            total_pages = orders_data['total_pages']
+            if not orders:
+                await callback.message.edit_text(
+                    ("📋 Sizda hali arizalar yo'q." if lang == 'uz' else "📋 У вас пока нет заявок.")
+                )
+                return
+
+            order = orders[0]
+            current_index = 0
+            # Build text similar to orders.py
+            order_type_emoji = "🔧" if order['type'] == 'service' else "🔌"
+            order_type_text = "Texnik xizmat" if order['type'] == 'service' else "Ulanish"
+            status_text_map = {'active': 'Faol', 'pending': 'Kutilmoqda', 'completed': 'Bajarilgan', 'cancelled': 'Bekor qilingan'}
+            status_emoji_map = {'active': '🟡', 'pending': '🟠', 'completed': '🟢', 'cancelled': '🔴'}
+            status_text = status_text_map.get(order['status'], "Noma'lum")
+            status_emoji = status_emoji_map.get(order['status'], '⚪')
+            text = (
+                f"{order_type_emoji} <b>{order_type_text}</b>\n\n"
+                f"🆔 <b>Ariza ID:</b> {order['request_id']}\n"
+                f"📅 <b>Sana:</b> {order['created_at']}\n"
+                f"📍 <b>Hudud:</b> {order['region']}\n"
+                f"📍 <b>Manzil:</b> {order['address']}\n"
+                f"📝 <b>Tavsif:</b> {order['description']}\n"
+                f"{status_emoji} <b>Holat:</b> {status_text}"
             )
-            
-            keyboard = get_client_profile_back_keyboard('uz')
-            
-            await callback.message.edit_text(stats_text, reply_markup=keyboard, parse_mode='HTML')
-            
+            keyboard = get_client_orders_navigation_keyboard(
+                current_index=current_index,
+                current_page=1,
+                total_pages=total_pages,
+                orders_on_page=len(orders),
+                order_id=order['id'],
+                lang=lang
+            )
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
         except Exception as e:
             logger.error(f"Error in handle_order_stats: {e}")
             await callback.answer("❌ Xatolik yuz berdi")
@@ -160,10 +187,11 @@ def get_client_profile_router():
             await callback.answer()
             
             profile_text = "Profil menyusi. Kerakli amalni tanlang."
+            lang = (await get_user_by_telegram_id(callback.from_user.id)).get('language', 'uz')
             
             await callback.message.edit_text(
                 text=profile_text,
-                reply_markup=get_client_profile_menu('uz')
+                reply_markup=get_client_profile_menu(lang)
             )
             
         except Exception as e:
@@ -220,7 +248,8 @@ def get_client_profile_router():
             
             if success:
                 success_text = f"✅ Ism muvaffaqiyatli o'zgartirildi: {new_name}"
-                await message.answer(success_text, reply_markup=get_client_profile_menu('uz'))
+                lang = (await get_user_by_telegram_id(message.from_user.id)).get('language', 'uz')
+                await message.answer(success_text, reply_markup=get_client_profile_menu(lang))
             else:
                 await message.answer("❌ Ism o'zgartirishda xatolik yuz berdi.")
             
@@ -262,7 +291,8 @@ def get_client_profile_router():
             
             if success:
                 success_text = f"✅ Manzil muvaffaqiyatli o'zgartirildi: {new_address}"
-                await message.answer(success_text, reply_markup=get_client_profile_menu('uz'))
+                lang = (await get_user_by_telegram_id(message.from_user.id)).get('language', 'uz')
+                await message.answer(success_text, reply_markup=get_client_profile_menu(lang))
             else:
                 await message.answer("❌ Manzil o'zgartirishda xatolik yuz berdi.")
             

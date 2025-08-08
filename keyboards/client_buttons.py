@@ -431,3 +431,21 @@ def get_client_orders_navigation_keyboard(current_index: int, current_page: int,
         keyboard.append(nav_buttons)
         
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_contact_operator_keyboard(lang: str = "uz") -> ReplyKeyboardMarkup:
+    """Operator bilan bog'lanish uchun ichki menyu (reply keyboard)"""
+    phone1 = "📞 +998 71 123 45 67"
+    phone2 = "📞 +998 90 123 45 67"
+    phone3 = "📞 +998 93 123 45 67"
+    chat_text = "💬 Onlayn chat" if lang == 'uz' else "💬 Онлайн чат"
+    back_text = "◀️ Orqaga" if lang == 'uz' else "◀️ Назад"
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=phone1), KeyboardButton(text=phone2)],
+            [KeyboardButton(text=phone3), KeyboardButton(text=chat_text, web_app=WebAppInfo(url="https://webapp-gamma-three.vercel.app/"))],
+            [KeyboardButton(text=back_text)]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
