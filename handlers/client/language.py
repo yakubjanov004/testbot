@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.client_buttons import get_language_keyboard, get_main_menu_keyboard
 from states.client_states import LanguageStates
 from filters.role_filter import RoleFilter
+from utils.mock_db import get_user as mock_get_user, set_language as mock_set_language
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -65,6 +66,21 @@ def get_client_language_router():
             await state.set_state(LanguageStates.selecting_language)
             
         except Exception as e:
+            await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
+
+    @router.message(F.text.in_(["🌐 Til o'zgartirish", "🌐 Изменить язык"]))
+    async def toggle_language(message: Message, state: FSMContext):
+        """Toggle language between uz and ru and refresh main menu"""
+        try:
+            user = mock_get_user(message.from_user.id)
+            current_lang = (user.get('language') if user else 'uz')
+            new_lang = 'ru' if current_lang == 'uz' else 'uz'
+            mock_set_language(message.from_user.id, new_lang)
+            await message.answer(
+                ("Til o'zgartirildi: Русский" if new_lang == 'ru' else "Язык изменён: O'zbekcha"),
+                reply_markup=get_main_menu_keyboard(new_lang)
+            )
+        except Exception:
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data.startswith("lang_"))

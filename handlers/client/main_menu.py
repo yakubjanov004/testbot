@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.client_buttons import get_main_menu_keyboard
 from states.client_states import MainMenuStates
 from filters.role_filter import RoleFilter
+from utils.mock_db import get_user as mock_get_user
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -44,7 +45,7 @@ def get_client_main_menu_router():
     async def main_menu_handler(message: Message, state: FSMContext):
         """Client main menu handler"""
         try:
-            user = await get_user_by_telegram_id(message.from_user.id)
+            user = mock_get_user(message.from_user.id) or await get_user_by_telegram_id(message.from_user.id)
             lang = user.get('language', 'uz')
             
             main_menu_text = (

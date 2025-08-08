@@ -15,52 +15,12 @@ def setup_handlers(dp: Dispatcher):
         start_router = get_start_router()
         dp.include_router(start_router)
         
-        # Import all role routers
-        from handlers.admin import get_admin_router
-        from handlers.manager import get_manager_router
-        from handlers.junior_manager import get_junior_manager_router
-        from handlers.controller import get_controller_router
-        from handlers.technician import get_technician_router
+        # Include only client router for this task
         from handlers.client import get_client_router
-        from handlers.call_center import get_call_center_router
-        from handlers.call_center_supervisor import get_call_center_supervisor_router
-        from handlers.warehouse import get_warehouse_router
-        
-        # Include role-based routers in order of usage frequency
-        # Client router should be included early since it's the most common
         client_router = get_client_router()
         dp.include_router(client_router)
         
-        # Include manager router early to ensure it gets priority for inbox handlers
-        manager_router = get_manager_router()
-        dp.include_router(manager_router)
-        
-        # Include other role routers
-        call_center_router = get_call_center_router()
-        dp.include_router(call_center_router)
-        
-        call_center_supervisor_router = get_call_center_supervisor_router()
-        dp.include_router(call_center_supervisor_router)
-        
-        technician_router = get_technician_router()
-        dp.include_router(technician_router)
-        
-        junior_manager_router = get_junior_manager_router()
-        dp.include_router(junior_manager_router)
-        
-        controller_router = get_controller_router()
-        dp.include_router(controller_router)
-        
-        warehouse_router = get_warehouse_router()
-        dp.include_router(warehouse_router)
-        
-        admin_router = get_admin_router()
-        dp.include_router(admin_router)
-
-        # Finally, include a fallback router to gracefully handle any
-        # unregistered callback_data values so that users get feedback
-        # instead of silent failures. This must be last to avoid
-        # intercepting valid callbacks handled above.
+        # Fallback unhandled
         from handlers.unhandled import get_unhandled_router
         unhandled_router = get_unhandled_router()
         dp.include_router(unhandled_router)

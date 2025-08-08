@@ -69,3 +69,10 @@ class ConnectionOrderStates(StatesGroup):
     asking_for_geo = State()
     waiting_for_geo = State()
     confirming_connection = State()
+
+
+class RegistrationStates(StatesGroup):
+    """Registration states for new client"""
+    choosing_language = State()
+    waiting_contact = State()
+    waiting_name = State()
