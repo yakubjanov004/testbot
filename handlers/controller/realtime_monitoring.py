@@ -65,13 +65,6 @@ def get_status_emoji(duration_minutes: int) -> str:
     else:
         return '🔴'
 
-def minutes_remaining(total_minutes: int, current_minutes: int) -> int:
-    """Compute remaining minutes, never negative. Mock assumes SLA 180 minutes if not provided."""
-    sla = 180
-    used = current_minutes if current_minutes is not None else 0
-    rem = max(0, sla - used)
-    return rem
-
 async def get_realtime_data():
     """Mock get real-time data"""
     now = datetime.now()
@@ -569,39 +562,7 @@ def get_realtime_monitoring_router():
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi")
 
-    @router.callback_query(F.data == "ctrl_realtime_remaining")
-    async def view_remaining_times(callback: CallbackQuery, state: FSMContext):
-        """Show simple remaining time list per urgent/active request in minutes."""
-        try:
-            await callback.answer()
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
-            detailed = await get_detailed_realtime_data()
-
-            lines = ["⌛ <b>Qolgan vaqtlar (daqiqalarda)</b>\n"]
-            urgent = detailed.get('urgent_requests_with_time', [])
-            if not urgent:
-                lines.append("Hozircha shoshilinch arizalar yo'q")
-            else:
-                for i, req in enumerate(urgent, 1):
-                    # If API provided total/current minutes — use them; otherwise fallback calc
-                    total = req.get('duration_minutes')
-                    current = req.get('current_role_minutes')
-                    remaining = minutes_remaining(total, current)
-                    status_emo = get_status_emoji(current or 0)
-                    lines.append(
-                        f"{i}. {status_emo} <b>{req.get('client_name','-')}</b> — {remaining} daqiqa qoldi"
-                    )
-            text = "\n".join(lines)
-
-            kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔄 Yangilash", callback_data="ctrl_realtime_remaining")],
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="ctrl_back_to_realtime")],
-            ])
-            await callback.message.edit_text(text, reply_markup=kb, parse_mode='HTML')
-        except Exception:
-            await callback.answer("❌ Xatolik yuz berdi")
-
+    
     @router.callback_query(F.data == "ctrl_back_to_realtime")
     async def back_to_realtime_monitoring(callback: CallbackQuery, state: FSMContext):
         """Back to real-time monitoring menu"""

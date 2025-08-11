@@ -140,10 +140,8 @@ def get_realtime_monitoring_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     activities_text = "📝 Faoliyatlar" if lang == 'uz' else "📝 Активности"
     alerts_text = "⚠️ Ogohlantirishlar" if lang == 'uz' else "⚠️ Оповещения"
     performance_text = "📈 Ko'rsatkichlar" if lang == 'uz' else "📈 Показатели"
-    remaining_text = "⌛ Qolgan vaqtlar" if lang == 'uz' else "⌛ Оставшееся время"
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=status_text, callback_data='ctrl_realtime_status')],
-        [InlineKeyboardButton(text=remaining_text, callback_data='ctrl_realtime_remaining')],
         [InlineKeyboardButton(text=activities_text, callback_data='ctrl_realtime_activities')],
         [InlineKeyboardButton(text=alerts_text, callback_data='ctrl_realtime_alerts')],
         [InlineKeyboardButton(text=performance_text, callback_data='ctrl_realtime_performance')],
