@@ -24,7 +24,7 @@ from .staff_activity import get_manager_staff_activity_router
 from .status_management import get_manager_status_management_router
 from .technician_assignment import get_manager_technician_assignment_router
 from .word_documents import get_manager_word_documents_router
-from .connection_order import get_manager_staff_application_router
+
 from .notifications import get_manager_notifications_router
 from .applications_actions import get_manager_applications_actions_router
 from .applications_callbacks import get_manager_applications_callbacks_router
@@ -51,7 +51,7 @@ def get_manager_router():
     router.include_router(get_manager_status_management_router())
     router.include_router(get_manager_technician_assignment_router())
     router.include_router(get_manager_word_documents_router())
-    router.include_router(get_manager_staff_application_router())
+
     router.include_router(get_manager_connection_service_router())
     router.include_router(get_manager_technical_service_router())
     router.include_router(get_manager_notifications_router())
