@@ -8,9 +8,7 @@ from aiogram.fsm.context import FSMContext
 from states.controller_states import ControllerApplicationStates
 from filters.role_filter import RoleFilter
 from keyboards.controllers_buttons import (
-    get_application_creator_keyboard,
-    get_client_selection_keyboard,
-    get_priority_selection_keyboard
+    get_application_creator_keyboard
 )
 
 # Mock functions to replace utils and database imports
