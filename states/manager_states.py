@@ -58,4 +58,39 @@ class ManagerTechnicianAssignmentStates(StatesGroup):
 class ManagerWordDocumentStates(StatesGroup):
     """Word document states for manager"""
     creating_document = State()
-    selecting_document_type = State() 
+    selecting_document_type = State()
+
+
+class ManagerClientSearchStates(StatesGroup):
+    """Client search states for manager (controller-like)"""
+    selecting_client_search_method = State()
+    entering_phone = State()
+    entering_name = State()
+    entering_client_id = State()
+    entering_new_client_name = State()
+    selecting_client = State()
+
+
+class ManagerConnectionOrderStates(StatesGroup):
+    """Connection order creation states for manager (client-like)"""
+    selecting_region = State()
+    selecting_connection_type = State()
+    selecting_tariff = State()
+    entering_address = State()
+    asking_for_geo = State()
+    waiting_for_geo = State()
+    confirming_connection = State()
+
+
+class ManagerServiceOrderStates(StatesGroup):
+    """Service order creation states for manager (client-like)"""
+    selecting_region = State()
+    selecting_order_type = State()
+    waiting_for_abonent_id = State()
+    entering_description = State()
+    asking_for_media = State()
+    waiting_for_media = State()
+    entering_address = State()
+    asking_for_location = State()
+    waiting_for_location = State()
+    confirming_order = State() 
