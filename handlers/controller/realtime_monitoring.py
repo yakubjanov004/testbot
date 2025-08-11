@@ -367,7 +367,13 @@ def get_realtime_monitoring_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            keyboard = get_realtime_monitoring_keyboard(lang)
+            # Manager-like keyboard
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=("📋 Zayavkalar ro'yxati" if lang=='uz' else "📋 Список заявок"), callback_data="ctrl_realtime_requests")],
+                [InlineKeyboardButton(text=("🚨 Shoshilinch zayavkalar" if lang=='uz' else "🚨 Срочные заявки"), callback_data="ctrl_realtime_urgent")],
+                [InlineKeyboardButton(text=("⏰ Vaqt kuzatish" if lang=='uz' else "⏰ Отслеживание времени"), callback_data="ctrl_time_tracking")],
+                [InlineKeyboardButton(text=("🔄 Yangilash" if lang=='uz' else "🔄 Обновить"), callback_data="ctrl_refresh_realtime")],
+            ])
             
             await message.answer(
                 monitoring_text,
@@ -562,6 +568,7 @@ def get_realtime_monitoring_router():
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi")
 
+    
     @router.callback_query(F.data == "ctrl_back_to_realtime")
     async def back_to_realtime_monitoring(callback: CallbackQuery, state: FSMContext):
         """Back to real-time monitoring menu"""
@@ -599,6 +606,40 @@ def get_realtime_monitoring_router():
             )
             
         except Exception as e:
+            await callback.answer("❌ Xatolik yuz berdi")
+
+    # Simple refresh for entry dashboard
+    @router.callback_query(F.data == "ctrl_refresh_realtime")
+    async def realtime_refresh(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            # Reuse entry rendering
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            realtime_data = await get_realtime_data()
+            monitoring_text = (
+                "🕐 <b>Real vaqtda kuzatish</b>\n\n"
+                "📊 <b>Joriy holat:</b>\n"
+                f"• Faol arizalar: {realtime_data['active_applications']}\n"
+                f"• Kutilmoqda: {realtime_data['pending_applications']}\n"
+                f"• Jarayonda: {realtime_data['in_progress_applications']}\n"
+                f"• Bajarilgan: {realtime_data['completed_applications']}\n\n"
+                f"👨‍🔧 <b>Texniklar:</b>\n"
+                f"• Faol texniklar: {realtime_data['active_technicians']}\n"
+                f"• Mavjud texniklar: {realtime_data['available_technicians']}\n"
+                f"• Band texniklar: {realtime_data['busy_technicians']}\n\n"
+                f"⏰ <b>O'rtacha javob vaqti:</b> {realtime_data['avg_response_time']}\n"
+                f"🖥️ <b>Tizim ishlashi:</b> {realtime_data['system_uptime']}\n\n"
+                "Kerakli bo'limni tanlang:"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=("📋 Zayavkalar ro'yxati" if lang=='uz' else "📋 Список заявок"), callback_data="ctrl_realtime_requests")],
+                [InlineKeyboardButton(text=("🚨 Shoshilinch zayavkalar" if lang=='uz' else "🚨 Срочные заявки"), callback_data="ctrl_realtime_urgent")],
+                [InlineKeyboardButton(text=("⏰ Vaqt kuzatish" if lang=='uz' else "⏰ Отслеживание времени"), callback_data="ctrl_time_tracking")],
+                [InlineKeyboardButton(text=("🔄 Yangilash" if lang=='uz' else "🔄 Обновить"), callback_data="ctrl_refresh_realtime")],
+            ])
+            await callback.message.edit_text(monitoring_text, reply_markup=keyboard, parse_mode='HTML')
+        except Exception:
             await callback.answer("❌ Xatolik yuz berdi")
 
     # Refresh handlers
@@ -687,5 +728,170 @@ def get_realtime_monitoring_router():
             
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi")
+
+    # ===== Manager-like controllers: Requests list (1-by-1) =====
+    @router.callback_query(F.data == "ctrl_realtime_requests")
+    async def ctrl_realtime_requests(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            detailed = await get_detailed_realtime_data()
+            requests = detailed.get('urgent_requests_with_time', [])
+            if not requests:
+                await callback.answer("Faol zayavkalar yo'q", show_alert=True)
+                return
+            data = await state.get_data()
+            idx = data.get('ctrl_req_idx', 0)
+            if idx < 0 or idx >= len(requests):
+                idx = 0
+            req = requests[idx]
+            status_emo = get_status_emoji(req.get('current_role_minutes', 0))
+            text = (
+                f"📋 <b>Zayavka #{idx+1} / {len(requests)}</b>\n\n"
+                f"{status_emo} <b>{req.get('client_name','-')}</b>\n"
+                f"   🏷️ Turi: {req.get('workflow_type','-')}\n"
+                f"   👤 Joriy: {req.get('current_role_actor_name','-')} ({req.get('current_role_actor_role','-')})\n"
+                f"   ⏰ Joriy rolda: {req.get('current_role_duration','-')}\n"
+                f"   ⏰ Umumiy: {req.get('total_duration','-')}\n"
+                f"   📍 Manzil: {req.get('location','-')}\n"
+            )
+            kb_rows = []
+            if len(requests) > 1:
+                kb_rows.append([
+                    InlineKeyboardButton(text=("◀️ Oldingi" if lang=='uz' else "◀️ Предыдущая"), callback_data="ctrl_prev_request"),
+                    InlineKeyboardButton(text=f"{idx+1}/{len(requests)}", callback_data="noop"),
+                    InlineKeyboardButton(text=("Keyingi ▶️" if lang=='uz' else "Следующая ▶️"), callback_data="ctrl_next_request"),
+                ])
+            kb_rows.append([InlineKeyboardButton(text=("⬅️ Orqaga" if lang=='uz' else "⬅️ Назад"), callback_data="ctrl_back_to_realtime")])
+            await state.update_data(ctrl_req_idx=idx)
+            await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb_rows), parse_mode='HTML')
+        except Exception:
+            await callback.answer("❌ Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "ctrl_prev_request")
+    async def ctrl_prev_request(callback: CallbackQuery, state: FSMContext):
+        data = await state.get_data()
+        idx = max(0, data.get('ctrl_req_idx', 0) - 1)
+        await state.update_data(ctrl_req_idx=idx)
+        await ctrl_realtime_requests(callback, state)
+
+    @router.callback_query(F.data == "ctrl_next_request")
+    async def ctrl_next_request(callback: CallbackQuery, state: FSMContext):
+        detailed = await get_detailed_realtime_data()
+        total = len(detailed.get('urgent_requests_with_time', []))
+        data = await state.get_data()
+        idx = min(total-1, data.get('ctrl_req_idx', 0) + 1)
+        await state.update_data(ctrl_req_idx=idx)
+        await ctrl_realtime_requests(callback, state)
+
+    # ===== Urgent list (1-by-1) =====
+    @router.callback_query(F.data == "ctrl_realtime_urgent")
+    async def ctrl_realtime_urgent(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            rt = await get_realtime_data()
+            urgent = rt.get('urgent_requests', [])
+            if not urgent:
+                await callback.answer("Shoshilinch zayavkalar yo'q", show_alert=True)
+                return
+            data = await state.get_data()
+            idx = data.get('ctrl_urgent_idx', 0)
+            if idx < 0 or idx >= len(urgent):
+                idx = 0
+            req = urgent[idx]
+            duration = req.get('current_role_duration', '-')
+            text = (
+                f"🚨 <b>Shoshilinch zayavka</b>\n\n"
+                f"🔴 <b>{req.get('client_name','-')}</b>\n"
+                f"   ⏰ {duration}\n"
+                f"   👤 Joriy: {req.get('current_role_actor_name','-')} ({req.get('current_role_actor_role','-')})\n"
+                f"   📍 Manzil: {req.get('location','-')}\n"
+                f"   📅 Yaratilgan: {req.get('created_at','-')}\n"
+            )
+            rows = []
+            if len(urgent) > 1:
+                rows.append([
+                    InlineKeyboardButton(text=("◀️ Oldingi" if lang=='uz' else "◀️ Предыдущая"), callback_data="ctrl_prev_urgent"),
+                    InlineKeyboardButton(text=("Keyingi ▶️" if lang=='uz' else "Следующая ▶️"), callback_data="ctrl_next_urgent"),
+                ])
+            rows.append([InlineKeyboardButton(text=("⬅️ Orqaga" if lang=='uz' else "⬅️ Назад"), callback_data="ctrl_back_to_realtime")])
+            await state.update_data(ctrl_urgent_idx=idx)
+            await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=rows), parse_mode='HTML')
+        except Exception:
+            await callback.answer("❌ Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "ctrl_prev_urgent")
+    async def ctrl_prev_urgent(callback: CallbackQuery, state: FSMContext):
+        data = await state.get_data()
+        idx = max(0, data.get('ctrl_urgent_idx', 0) - 1)
+        await state.update_data(ctrl_urgent_idx=idx)
+        await ctrl_realtime_urgent(callback, state)
+
+    @router.callback_query(F.data == "ctrl_next_urgent")
+    async def ctrl_next_urgent(callback: CallbackQuery, state: FSMContext):
+        rt = await get_realtime_data()
+        total = len(rt.get('urgent_requests', []))
+        data = await state.get_data()
+        idx = min(total-1, data.get('ctrl_urgent_idx', 0) + 1)
+        await state.update_data(ctrl_urgent_idx=idx)
+        await ctrl_realtime_urgent(callback, state)
+
+    # ===== Time tracking (1-by-1) =====
+    @router.callback_query(F.data == "ctrl_time_tracking")
+    async def ctrl_time_tracking(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            detailed = await get_detailed_realtime_data()
+            reqs = detailed.get('urgent_requests_with_time', [])
+            if not reqs:
+                await callback.answer("Faol zayavkalar yo'q", show_alert=True)
+                return
+            data = await state.get_data()
+            idx = data.get('ctrl_time_idx', 0)
+            if idx < 0 or idx >= len(reqs):
+                idx = 0
+            req = reqs[idx]
+            total = req.get('total_duration', '-')
+            current = req.get('current_role_duration', '-')
+            cur_min = req.get('current_role_minutes', 0)
+            status_emo = get_status_emoji(cur_min)
+            text = (
+                f"⏰ <b>Vaqt kuzatish #{idx+1} / {len(reqs)}</b>\n\n"
+                f"{status_emo} <b>{req.get('client_name','-')}</b>\n"
+                f"   ⏰ Umumiy: {total}\n"
+                f"   🔄 Joriy rol: {req.get('current_role_actor_role','-')} ({current})\n"
+            )
+            rows = []
+            if len(reqs) > 1:
+                rows.append([
+                    InlineKeyboardButton(text=("◀️ Oldingi" if lang=='uz' else "◀️ Предыдущая"), callback_data="ctrl_prev_time"),
+                    InlineKeyboardButton(text=("Keyingi ▶️" if lang=='uz' else "Следующая ▶️"), callback_data="ctrl_next_time"),
+                ])
+            rows.append([InlineKeyboardButton(text=("⬅️ Orqaga" if lang=='uz' else "⬅️ Назад"), callback_data="ctrl_back_to_realtime")])
+            await state.update_data(ctrl_time_idx=idx)
+            await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=rows), parse_mode='HTML')
+        except Exception:
+            await callback.answer("❌ Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "ctrl_prev_time")
+    async def ctrl_prev_time(callback: CallbackQuery, state: FSMContext):
+        data = await state.get_data()
+        idx = max(0, data.get('ctrl_time_idx', 0) - 1)
+        await state.update_data(ctrl_time_idx=idx)
+        await ctrl_time_tracking(callback, state)
+
+    @router.callback_query(F.data == "ctrl_next_time")
+    async def ctrl_next_time(callback: CallbackQuery, state: FSMContext):
+        detailed = await get_detailed_realtime_data()
+        total = len(detailed.get('urgent_requests_with_time', []))
+        data = await state.get_data()
+        idx = min(total-1, data.get('ctrl_time_idx', 0) + 1)
+        await state.update_data(ctrl_time_idx=idx)
+        await ctrl_time_tracking(callback, state)
 
     return router 
