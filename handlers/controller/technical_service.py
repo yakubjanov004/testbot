@@ -1,8 +1,8 @@
 """
-Controller Technical Service - Client-like Flow
+Controller Technical Service - Client-like Flow with Client Search
 
 Allows controller to create a technical service request on behalf of a client.
-DB-less implementation, mirrors client flow and uses separate controller callbacks.
+DB-less implementation. First selects client via search, then mirrors client flow.
 """
 
 import logging
@@ -13,13 +13,14 @@ from aiogram.filters import StateFilter
 from datetime import datetime
 
 from filters.role_filter import RoleFilter
-from states.controller_states import ControllerServiceOrderStates
+from states.controller_states import ControllerServiceOrderStates, ControllerApplicationStates
 from keyboards.controllers_buttons import (
     get_controller_regions_keyboard,
     controller_zayavka_type_keyboard,
     controller_media_attachment_keyboard,
     controller_geolocation_keyboard,
     controller_confirmation_keyboard,
+    get_application_creator_keyboard,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ def get_controller_technical_service_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
+    # 1) Entry: show search method selector
     @router.message(F.text.in_(["🔧 Texnik xizmat yaratish"]))
     async def new_service_request(message: Message, state: FSMContext):
         try:
@@ -52,14 +54,16 @@ def get_controller_technical_service_router():
                 await message.answer("Sizda ruxsat yo'q.")
                 return
 
+            await state.update_data(current_flow='technical')
             await message.answer(
-                "Hududni tanlang:",
-                reply_markup=get_controller_regions_keyboard('uz')
+                "Mijozni qanday qidiramiz?",
+                reply_markup=get_application_creator_keyboard('uz')
             )
-            await state.set_state(ControllerServiceOrderStates.selecting_region)
+            await state.set_state(ControllerApplicationStates.selecting_client_search_method)
         except Exception:
             await message.answer("Xatolik yuz berdi. Qayta urinib ko'ring.")
 
+    # 2) Technical service flow (after client selected by connection_service search handlers)
     @router.callback_query(F.data.startswith("ctrl_region_"), StateFilter(ControllerServiceOrderStates.selecting_region))
     async def select_region(callback: CallbackQuery, state: FSMContext):
         try:
@@ -178,6 +182,7 @@ def get_controller_technical_service_router():
     async def show_service_confirmation(message_or_callback, state: FSMContext):
         try:
             data = await state.get_data()
+            selected_client = data.get('selected_client', {})
             region = data.get('region', '-')
             abonent_type = data.get('abonent_type', '-')
             abonent_id = data.get('abonent_id', '-')
@@ -187,6 +192,7 @@ def get_controller_technical_service_router():
             media = data.get('media')
 
             text = (
+                f"👤 <b>Mijoz:</b> {selected_client.get('full_name','N/A')}\n"
                 f"🏛️ <b>Hudud:</b> {region}\n"
                 f"👤 <b>Abonent turi:</b> {abonent_type}\n"
                 f"🆔 <b>Abonent ID:</b> {abonent_id}\n"

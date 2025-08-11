@@ -115,3 +115,19 @@ def get_controller_tariff_selection_keyboard(lang: str = 'uz') -> InlineKeyboard
         ]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_application_creator_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("📱 Telefon" if lang == 'uz' else "📱 Телефон"), callback_data="ctrl_search_phone"),
+            InlineKeyboardButton(text=("👤 Ism" if lang == 'uz' else "👤 Имя"), callback_data="ctrl_search_name")
+        ],
+        [
+            InlineKeyboardButton(text=("🆔 ID" if lang == 'uz' else "🆔 ID"), callback_data="ctrl_search_id"),
+            InlineKeyboardButton(text=("➕ Yangi mijoz" if lang == 'uz' else "➕ Новый клиент"), callback_data="ctrl_search_new")
+        ],
+        [
+            InlineKeyboardButton(text=("❌ Bekor qilish" if lang == 'uz' else "❌ Отменить"), callback_data="ctrl_cancel_creation")
+        ]
+    ])

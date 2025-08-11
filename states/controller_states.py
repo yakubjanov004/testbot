@@ -22,9 +22,13 @@ class ControllerStates(StatesGroup):
 
 
 class ControllerApplicationStates(StatesGroup):
-    """Application states for controller"""
+    """Application states for controller (search and common)"""
+    selecting_client_search_method = State()
     entering_phone = State()
     entering_name = State()
+    entering_client_id = State()
+    entering_new_client_name = State()
+    selecting_client = State()
     entering_description = State()
     entering_location = State()
     selecting_priority = State()
@@ -67,7 +71,7 @@ class ControllerRequestStates(StatesGroup):
     waiting_for_comment = State()
 
 
-# New: Controller flows mirroring client flows (DB-less)
+# Controller flows mirroring client flows (DB-less)
 class ControllerServiceOrderStates(StatesGroup):
     """Service order creation states for controller (client-like)"""
     selecting_region = State()
