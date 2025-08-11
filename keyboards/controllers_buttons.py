@@ -131,3 +131,27 @@ def get_application_creator_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
             InlineKeyboardButton(text=("❌ Bekor qilish" if lang == 'uz' else "❌ Отменить"), callback_data="ctrl_cancel_creation")
         ]
     ])
+
+
+# Realtime monitoring keyboards for controller
+
+def get_realtime_monitoring_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    status_text = "🟢 Jonli holat" if lang == 'uz' else "🟢 Живой статус"
+    activities_text = "📝 Faoliyatlar" if lang == 'uz' else "📝 Активности"
+    alerts_text = "⚠️ Ogohlantirishlar" if lang == 'uz' else "⚠️ Оповещения"
+    performance_text = "📈 Ko'rsatkichlar" if lang == 'uz' else "📈 Показатели"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=status_text, callback_data='ctrl_realtime_status')],
+        [InlineKeyboardButton(text=activities_text, callback_data='ctrl_realtime_activities')],
+        [InlineKeyboardButton(text=alerts_text, callback_data='ctrl_realtime_alerts')],
+        [InlineKeyboardButton(text=performance_text, callback_data='ctrl_realtime_performance')],
+    ])
+
+
+def get_realtime_refresh_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    refresh_text = "🔄 Yangilash" if lang == 'uz' else "🔄 Обновить"
+    back_text = "⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=refresh_text, callback_data='ctrl_realtime_refresh')],
+        [InlineKeyboardButton(text=back_text, callback_data='controllers_back')],
+    ])
