@@ -35,28 +35,28 @@ def get_manager_technical_service_router():
         await state.set_state(ManagerClientSearchStates.selecting_client_search_method)
 
     # Search method callbacks
-    @router.callback_query(F.data == "mgr_search_phone")
+    @router.callback_query(F.data == "mgr_search_phone", StateFilter(ManagerClientSearchStates.selecting_client_search_method))
     async def mgr_search_by_phone(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         await state.update_data(search_method='phone')
         await callback.message.edit_text("📱 Telefon raqamini kiriting:\nMasalan: +998901234567")
         await state.set_state(ManagerClientSearchStates.entering_phone)
 
-    @router.callback_query(F.data == "mgr_search_name")
+    @router.callback_query(F.data == "mgr_search_name", StateFilter(ManagerClientSearchStates.selecting_client_search_method))
     async def mgr_search_by_name(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         await state.update_data(search_method='name')
         await callback.message.edit_text("👤 Mijoz ismini kiriting:\nMasalan: Alisher Karimov")
         await state.set_state(ManagerClientSearchStates.entering_name)
 
-    @router.callback_query(F.data == "mgr_search_id")
+    @router.callback_query(F.data == "mgr_search_id", StateFilter(ManagerClientSearchStates.selecting_client_search_method))
     async def mgr_search_by_id(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         await state.update_data(search_method='id')
         await callback.message.edit_text("🆔 Mijoz ID sini kiriting:\nMasalan: 12345")
         await state.set_state(ManagerClientSearchStates.entering_client_id)
 
-    @router.callback_query(F.data == "mgr_search_new")
+    @router.callback_query(F.data == "mgr_search_new", StateFilter(ManagerClientSearchStates.selecting_client_search_method))
     async def mgr_create_new_client(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         await state.update_data(search_method='new')
@@ -89,6 +89,7 @@ def get_manager_technical_service_router():
             clients = [{'id': -1, 'full_name': query, 'phone': 'N/A'}]
 
         await state.update_data(found_clients=clients)
+        await state.set_state(ManagerClientSearchStates.selecting_client)
         from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
         ikb = InlineKeyboardMarkup(inline_keyboard=[
             *[[InlineKeyboardButton(text=f"{c['full_name']} - {c.get('phone','N/A')}", callback_data=f"mgr_select_client_{i}")] for i, c in enumerate(clients[:5])],
@@ -97,7 +98,7 @@ def get_manager_technical_service_router():
         ])
         await message.answer("Mijozni tanlang:", reply_markup=ikb)
 
-    @router.callback_query(lambda c: c.data.startswith("mgr_select_client_"))
+    @router.callback_query(lambda c: c.data.startswith("mgr_select_client_"), StateFilter(ManagerClientSearchStates.selecting_client))
     async def mgr_select_client(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         data = await state.get_data()
@@ -112,14 +113,14 @@ def get_manager_technical_service_router():
         await callback.message.answer("Hududni tanlang:", reply_markup=get_controller_regions_keyboard('uz'))
         await state.set_state(ManagerServiceOrderStates.selecting_region)
 
-    @router.callback_query(F.data == "mgr_search_again")
+    @router.callback_query(F.data == "mgr_search_again", StateFilter(ManagerClientSearchStates.selecting_client))
     async def mgr_search_again(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         await callback.message.edit_text("Qidirish usulini tanlang:")
         await callback.message.answer("Qidirish usulini tanlang:", reply_markup=get_manager_client_search_keyboard('uz'))
 
     # Service order flow (mirrors controller)
-    @router.callback_query(F.data.startswith("ctrl_region_"))
+    @router.callback_query(F.data.startswith("ctrl_region_"), StateFilter(ManagerServiceOrderStates.selecting_region))
     async def mgr_select_region(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         region = callback.data.replace("ctrl_region_", "")
@@ -127,7 +128,7 @@ def get_manager_technical_service_router():
         await callback.message.answer("Abonent turini tanlang:", reply_markup=controller_zayavka_type_keyboard('uz'))
         await state.set_state(ManagerServiceOrderStates.selecting_order_type)
 
-    @router.callback_query(F.data.startswith("ctrl_zayavka_type_"))
+    @router.callback_query(F.data.startswith("ctrl_zayavka_type_"), StateFilter(ManagerServiceOrderStates.selecting_order_type))
     async def mgr_select_abonent_type(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         abonent_type = callback.data.replace("ctrl_zayavka_type_", "")
@@ -147,7 +148,7 @@ def get_manager_technical_service_router():
         await message.answer("Foto yoki video yuborasizmi?", reply_markup=controller_media_attachment_keyboard('uz'))
         await state.set_state(ManagerServiceOrderStates.asking_for_media)
 
-    @router.callback_query(F.data.in_(["ctrl_attach_media_yes", "ctrl_attach_media_no"]))
+    @router.callback_query(F.data.in_(["ctrl_attach_media_yes", "ctrl_attach_media_no"]), StateFilter(ManagerServiceOrderStates.asking_for_media))
     async def mgr_ask_for_media(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         if callback.data == "ctrl_attach_media_yes":
@@ -175,7 +176,7 @@ def get_manager_technical_service_router():
         await message.answer("Geolokatsiya yuborasizmi?", reply_markup=controller_geolocation_keyboard('uz'))
         await state.set_state(ManagerServiceOrderStates.asking_for_location)
 
-    @router.callback_query(F.data.in_(["ctrl_send_location_yes", "ctrl_send_location_no"]))
+    @router.callback_query(F.data.in_(["ctrl_send_location_yes", "ctrl_send_location_no"]), StateFilter(ManagerServiceOrderStates.asking_for_location))
     async def mgr_ask_for_geo(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         if callback.data == "ctrl_send_location_yes":
@@ -217,7 +218,7 @@ def get_manager_technical_service_router():
             await message_or_callback.answer(text, parse_mode='HTML', reply_markup=get_manager_confirmation_keyboard('uz'))
         await state.set_state(ManagerServiceOrderStates.confirming_order)
 
-    @router.callback_query(F.data == "mgr_confirm_zayavka")
+    @router.callback_query(F.data == "mgr_confirm_zayavka", StateFilter(ManagerServiceOrderStates.confirming_order))
     async def mgr_confirm_service_order(callback: CallbackQuery, state: FSMContext):
         try:
             try:
@@ -236,7 +237,7 @@ def get_manager_technical_service_router():
         except Exception:
             await callback.answer("Xatolik yuz berdi")
 
-    @router.callback_query(F.data == "mgr_resend_zayavka")
+    @router.callback_query(F.data == "mgr_resend_zayavka", StateFilter(ManagerServiceOrderStates.confirming_order))
     async def mgr_resend_service_summary(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         await mgr_show_service_confirmation(callback, state)
