@@ -401,6 +401,65 @@ def get_controller_orders_router():
         else:
             await message_or_callback.message.edit_text(text, reply_markup=kb, parse_mode='HTML')
 
+    # ===== Single-order detailed view helpers =====
+    def _order_detail_keyboard(flt: str, index: int, total: int) -> InlineKeyboardMarkup:
+        rows = []
+        nav = []
+        if index > 0:
+            nav.append(InlineKeyboardButton(text="⬅️ Oldingi", callback_data=f"ctrl_orders_nav_prev_{flt}_{index-1}"))
+        nav.append(InlineKeyboardButton(text=f"{index+1}/{total}", callback_data="noop"))
+        if index < total - 1:
+            nav.append(InlineKeyboardButton(text="Keyingi ➡️", callback_data=f"ctrl_orders_nav_next_{flt}_{index+1}"))
+        if nav:
+            rows.append(nav)
+        rows.append([
+            InlineKeyboardButton(text="📋 Hammasi", callback_data="ctrl_orders_filter_all"),
+            InlineKeyboardButton(text="⏳ Faol", callback_data="ctrl_orders_filter_active"),
+            InlineKeyboardButton(text="✅ Bajarilgan", callback_data="ctrl_orders_filter_completed"),
+        ])
+        rows.append([
+            InlineKeyboardButton(text="🔄 Yangilash", callback_data=f"ctrl_orders_refresh_detail_{flt}_{index}"),
+            InlineKeyboardButton(text="⬅️ Orqaga", callback_data="controllers_back"),
+        ])
+        return InlineKeyboardMarkup(inline_keyboard=rows)
+
+    async def _render_order_detail(message_or_callback, flt: str = 'all', index: int = 0):
+        all_orders = await get_all_orders(limit=200)
+        filtered = _filter_orders(all_orders, flt)
+        total = len(filtered)
+        if total == 0:
+            text = "📋 <b>Arizalar</b>\nHozircha ma'lumot yo'q"
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Hammasi", callback_data="ctrl_orders_filter_all"),
+                 InlineKeyboardButton(text="⏳ Faol", callback_data="ctrl_orders_filter_active"),
+                 InlineKeyboardButton(text="✅ Bajarilgan", callback_data="ctrl_orders_filter_completed")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="controllers_back")]
+            ])
+            if isinstance(message_or_callback, Message):
+                await message_or_callback.answer(text, reply_markup=kb, parse_mode='HTML')
+            else:
+                await message_or_callback.message.edit_text(text, reply_markup=kb, parse_mode='HTML')
+            return
+        index = max(0, min(index, total - 1))
+        o = filtered[index]
+        text = (
+            f"📄 <b>Ariza ma'lumotlari</b>\n\n"
+            f"🔢 <b>Raqam:</b> {o.get('order_number', f'#{o['id']}')}\n"
+            f"👤 <b>Mijoz:</b> {o.get('client_name','N/A')}\n"
+            f"🛠 <b>Xizmat:</b> {o.get('service_type','-')}\n"
+            f"📅 <b>Sana:</b> {o.get('created_at','-')}\n"
+            f"📌 <b>Status:</b> {o.get('status','-')}\n"
+            f"⚡ <b>Ustuvorlik:</b> {o.get('priority','-')}\n"
+            f"👨‍💼 <b>Mas'ul:</b> {o.get('assigned_to','-')}\n"
+            f"📝 <b>Izoh:</b> {o.get('description','Yo\'q')}\n"
+            f"\n📊 <b>#{index+1}/{total}</b>"
+        )
+        kb = _order_detail_keyboard(flt, index, total)
+        if isinstance(message_or_callback, Message):
+            await message_or_callback.answer(text, reply_markup=kb, parse_mode='HTML')
+        else:
+            await message_or_callback.message.edit_text(text, reply_markup=kb, parse_mode='HTML')
+
     @router.message(F.text.in_(["📋 Arizalarni ko'rish"]))
     async def controller_view_orders(message: Message, state: FSMContext):
         try:
@@ -408,42 +467,42 @@ def get_controller_orders_router():
             if not user or user['role'] != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
-            await _render_orders_list(message, flt='all', page=1)
+            await _render_order_detail(message, flt='all', index=0)
         except Exception:
             await message.answer("Xatolik yuz berdi")
 
     @router.callback_query(F.data == "ctrl_orders_filter_all")
     async def orders_filter_all(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        await _render_orders_list(callback, flt='all', page=1)
+        await _render_order_detail(callback, flt='all', index=0)
 
     @router.callback_query(F.data == "ctrl_orders_filter_active")
     async def orders_filter_active(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        await _render_orders_list(callback, flt='active', page=1)
+        await _render_order_detail(callback, flt='active', index=0)
 
     @router.callback_query(F.data == "ctrl_orders_filter_completed")
     async def orders_filter_completed(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        await _render_orders_list(callback, flt='completed', page=1)
+        await _render_order_detail(callback, flt='completed', index=0)
 
-    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_prev_"))
-    async def orders_prev(callback: CallbackQuery, state: FSMContext):
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_nav_prev_"))
+    async def orders_nav_prev(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        _, _, _, flt, page = callback.data.split("_")
-        await _render_orders_list(callback, flt=flt, page=int(page))
+        _, _, _, flt, index = callback.data.split("_")
+        await _render_order_detail(callback, flt=flt, index=int(index))
 
-    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_next_"))
-    async def orders_next(callback: CallbackQuery, state: FSMContext):
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_nav_next_"))
+    async def orders_nav_next(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        _, _, _, flt, page = callback.data.split("_")
-        await _render_orders_list(callback, flt=flt, page=int(page))
+        _, _, _, flt, index = callback.data.split("_")
+        await _render_order_detail(callback, flt=flt, index=int(index))
 
-    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_refresh_"))
-    async def orders_refresh(callback: CallbackQuery, state: FSMContext):
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_refresh_detail_"))
+    async def orders_refresh_detail(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        _, _, _, flt, page = callback.data.split("_")
-        await _render_orders_list(callback, flt=flt, page=int(page))
+        _, _, _, flt, index = callback.data.split("_")
+        await _render_order_detail(callback, flt=flt, index=int(index))
 
     @router.callback_query(lambda c: c.data.startswith("ctrl_orders_view_"))
     async def orders_view(callback: CallbackQuery, state: FSMContext):
