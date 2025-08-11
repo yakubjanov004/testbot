@@ -11,11 +11,13 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from states.staff_application_states import StaffApplicationStates
 from filters.role_filter import RoleFilter
-from keyboards.manager_buttons import (
-    get_staff_creation_keyboard,
-    get_client_search_keyboard,
-    get_application_type_keyboard,
-    get_client_confirmation_keyboard
+from aiogram.filters import StateFilter
+from keyboards.manager_buttons import get_manager_client_search_keyboard, get_manager_confirmation_keyboard
+from keyboards.controllers_buttons import (
+    get_controller_regions_keyboard,
+    controller_zayavka_type_keyboard,
+    controller_geolocation_keyboard,
+    get_controller_tariff_selection_keyboard,
 )
 
 def get_manager_staff_application_router():
@@ -29,179 +31,145 @@ def get_manager_staff_application_router():
     
     @router.message(F.text == "🔌 Ulanish arizasi yaratish")
     async def manager_create_connection_request(message: Message, state: FSMContext):
-        """Manager connection request creation handler"""
+        """Manager connection request creation handler (controller-like)"""
         try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            # Mock application creation success
-            success = True
-            
-            if not success:
-                await message.answer("Xatolik yuz berdi!")
-                return
-            
-            # Store creator context in FSM data
-            await state.update_data(
-                creator_context={'role': 'manager', 'id': user['id']},
-                application_type='connection_request'
+            await state.update_data(current_flow='connection')
+            await message.answer(
+                "Mijozni qanday qidiramiz?",
+                reply_markup=get_manager_client_search_keyboard('uz')
             )
-            
-            # Set initial state and prompt for client selection
-            from states.staff_application_states import StaffApplicationStates
             await state.set_state(StaffApplicationStates.selecting_client_search_method)
-            
-            prompt_text = (
-                "🔌 Ulanish arizasi yaratish\n\n"
-                "Mijozni qanday qidirishni xohlaysiz?\n\n"
-                "📱 Telefon raqami bo'yicha\n"
-                "👤 Ism bo'yicha\n"
-                "🆔 Mijoz ID bo'yicha\n"
-                "➕ Yangi mijoz yaratish"
-            )
-            
-            # Create inline keyboard for client search options
-            keyboard = get_staff_creation_keyboard(lang=user.get('language', 'uz'))
-            
-            await message.answer(prompt_text, reply_markup=keyboard)
-            
         except Exception as e:
             print(f"Error in manager_create_connection_request: {e}")
             await message.answer("Xatolik yuz berdi")
-    
-    @router.message(F.text == "🔧 Texnik xizmat yaratish")
-    async def manager_create_technical_service(message: Message, state: FSMContext):
-        """Handle manager creating technical service request for client"""
+
+    @router.callback_query(F.data == "mgr_search_phone")
+    async def mgr_conn_search_by_phone(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(StaffApplicationStates.entering_client_phone)
+        await callback.message.edit_text("📱 Telefon raqamini kiriting:\nMasalan: +998901234567")
+
+    @router.callback_query(F.data == "mgr_search_name")
+    async def mgr_conn_search_by_name(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(StaffApplicationStates.entering_client_name)
+        await callback.message.edit_text("👤 Mijoz ismini kiriting:\nMasalan: Alisher Karimov")
+
+    @router.callback_query(F.data == "mgr_search_id")
+    async def mgr_conn_search_by_id(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(StaffApplicationStates.entering_client_id)
+        await callback.message.edit_text("🆔 Mijoz ID sini kiriting:\nMasalan: 12345")
+
+    @router.callback_query(F.data == "mgr_search_new")
+    async def mgr_conn_new_client(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(StaffApplicationStates.entering_new_client_name)
+        await callback.message.edit_text("➕ Yangi mijoz nomini kiriting:")
+
+    @router.callback_query(F.data == "mgr_cancel_creation")
+    async def mgr_conn_cancel(callback: CallbackQuery, state: FSMContext):
+        await state.clear()
+        await callback.message.edit_text("❌ Zayavka yaratish bekor qilindi")
+        await callback.answer()
+
+    @router.callback_query(lambda c: c.data.startswith("manager_client_search_"))
+    async def deprecated_manager_client_search_method(callback: CallbackQuery, state: FSMContext):
+        # Backward compatibility: ignore old callbacks if present
+        await callback.answer()
+
+    @router.callback_query(lambda c: c.data.startswith("mgr_select_client_"), StateFilter(StaffApplicationStates.selecting_client_search_method) | StateFilter(StaffApplicationStates.searching_client) | StateFilter(StaffApplicationStates.confirming_client_selection))
+    async def mgr_conn_select_client(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        # After selection continue connection flow
+        await callback.message.edit_text("Hududni tanlang:")
+        await callback.message.answer("Hududni tanlang:", reply_markup=get_controller_regions_keyboard('uz'))
+        await state.update_data(connection_flow_stage='selecting_region')
+
+    @router.callback_query(F.data.startswith("ctrl_region_"))
+    async def mgr_conn_select_region(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        region = callback.data.replace("ctrl_region_", "")
+        await state.update_data(region=region)
+        await callback.message.answer("Ulanish turini tanlang:", reply_markup=controller_zayavka_type_keyboard('uz'))
+        await state.update_data(connection_flow_stage='selecting_connection_type')
+
+    @router.callback_query(F.data.startswith("ctrl_zayavka_type_"))
+    async def mgr_conn_select_type(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        conn_type = callback.data.replace("ctrl_zayavka_type_", "")
+        await state.update_data(connection_type=conn_type)
+        await callback.message.answer("Tariflardan birini tanlang:", reply_markup=get_controller_tariff_selection_keyboard('uz'))
+        await state.update_data(connection_flow_stage='selecting_tariff')
+
+    @router.callback_query(F.data.in_(["ctrl_tariff_standard", "ctrl_tariff_new"]))
+    async def mgr_conn_select_tariff(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        tariff = "Standard" if callback.data == "ctrl_tariff_standard" else "Yangi"
+        await state.update_data(selected_tariff=tariff)
+        await callback.message.answer("Manzilingizni kiriting:")
+        await state.update_data(connection_flow_stage='entering_address')
+
+    @router.message(StateFilter(StaffApplicationStates.entering_address))
+    async def mgr_conn_get_address(message: Message, state: FSMContext):
+        await state.update_data(address=message.text)
+        await message.answer("Geolokatsiya yuborasizmi?", reply_markup=controller_geolocation_keyboard('uz'))
+        await state.set_state(StaffApplicationStates.asking_for_geo)
+
+    @router.callback_query(F.data.in_(["ctrl_send_location_yes", "ctrl_send_location_no"]))
+    async def mgr_conn_geo(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        if callback.data == "ctrl_send_location_yes":
+            await callback.message.answer("Geolokatsiyani yuboring:")
+            await state.set_state(StaffApplicationStates.waiting_for_geo)
+        else:
+            await _mgr_conn_show_confirmation(callback, state)
+
+    @router.message(StateFilter(StaffApplicationStates.waiting_for_geo), F.location)
+    async def mgr_conn_get_geo(message: Message, state: FSMContext):
+        await state.update_data(geo=message.location)
+        await _mgr_conn_show_confirmation(message, state)
+
+    async def _mgr_conn_show_confirmation(message_or_callback, state: FSMContext):
+        data = await state.get_data()
+        region = data.get('region', '-')
+        conn_type = data.get('connection_type', '-')
+        tariff = data.get('selected_tariff', '-')
+        address = data.get('address', '-')
+        geo = data.get('geo')
+        text = (
+            f"🏛️ <b>Hudud:</b> {region}\n"
+            f"🔌 <b>Ulanish turi:</b> {conn_type}\n"
+            f"💳 <b>Tarif:</b> {tariff}\n"
+            f"🏠 <b>Manzil:</b> {address}\n"
+            f"📍 <b>Geolokatsiya:</b> {'✅ Yuborilgan' if geo else '❌ Yuborilmagan'}"
+        )
+        if hasattr(message_or_callback, 'message'):
+            await message_or_callback.message.answer(text, parse_mode='HTML', reply_markup=get_manager_confirmation_keyboard('uz'))
+        else:
+            await message_or_callback.answer(text, parse_mode='HTML', reply_markup=get_manager_confirmation_keyboard('uz'))
+
+    @router.callback_query(F.data == "mgr_confirm_zayavka")
+    async def mgr_conn_confirm(callback: CallbackQuery, state: FSMContext):
         try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            # Mock application creation success
-            success = True
-            
-            if not success:
-                await message.answer("Xatolik yuz berdi!")
-                return
-            
-            # Store creator context in FSM data
-            await state.update_data(
-                creator_context={'role': 'manager', 'id': user['id']},
-                application_type='technical_service'
-            )
-            
-            # Set initial state and prompt for client selection
-            from states.staff_application_states import StaffApplicationStates
-            await state.set_state(StaffApplicationStates.selecting_client_search_method)
-            
-            prompt_text = (
-                "🔧 Texnik xizmat arizasi yaratish\n\n"
-                "Mijozni qanday qidirishni xohlaysiz?\n\n"
-                "📱 Telefon raqami bo'yicha\n"
-                "👤 Ism bo'yicha\n"
-                "🆔 Mijoz ID bo'yicha\n"
-                "➕ Yangi mijoz yaratish"
-            )
-            
-            # Create inline keyboard for client search options
-            keyboard = get_client_search_keyboard(lang=user.get('language', 'uz'))
-            
-            await message.answer(prompt_text, reply_markup=keyboard)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-    
-    @router.callback_query(F.data.startswith("manager_client_search_"))
-    async def handle_client_search_method(callback: CallbackQuery, state: FSMContext):
-        """Handle client search method selection"""
-        try:
+            try:
+                await callback.message.edit_reply_markup(reply_markup=None)
+            except Exception:
+                pass
             await callback.answer()
-            
-            # Mock user data
-            user = {
-                'id': callback.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            search_method = callback.data.split("manager_client_search_")[-1]  # phone, name, id, new
-            
-            # Update FSM data with search method
-            await state.update_data(client_search_method=search_method)
-            
-            if search_method == "phone":
-                from states.staff_application_states import StaffApplicationStates
-                await state.set_state(StaffApplicationStates.entering_client_phone)
-                prompt_text = (
-                    "📱 Mijoz telefon raqamini kiriting:\n\n"
-                    "Masalan: +998901234567"
-                )
-                
-            elif search_method == "name":
-                from states.staff_application_states import StaffApplicationStates
-                await state.set_state(StaffApplicationStates.entering_client_name)
-                prompt_text = (
-                    "👤 Mijoz ismini kiriting:\n\n"
-                    "To'liq ism va familiyani kiriting"
-                )
-                
-            elif search_method == "id":
-                from states.staff_application_states import StaffApplicationStates
-                await state.set_state(StaffApplicationStates.entering_client_id)
-                prompt_text = (
-                    "🆔 Mijoz ID raqamini kiriting:"
-                )
-                
-            elif search_method == "new":
-                from states.staff_application_states import StaffApplicationStates
-                await state.set_state(StaffApplicationStates.creating_new_client)
-                prompt_text = (
-                    "➕ Yangi mijoz yaratish\n\n"
-                    "Yangi mijoz ma'lumotlarini kiritishni boshlaymiz.\n"
-                    "Birinchi navbatda, mijoz ismini kiriting:"
-                )
-                await state.set_state(StaffApplicationStates.entering_new_client_name)
-            
-            await callback.message.edit_text(prompt_text)
-            
-        except Exception as e:
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-    
-    @router.callback_query(F.data == "manager_cancel_application_creation")
-    async def cancel_application_creation(callback: CallbackQuery, state: FSMContext):
-        """Cancel application creation and return to main menu"""
-        try:
-            await callback.answer()
-            
-            # Mock user data
-            user = {
-                'id': callback.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
+            request_id = f"UL_MGR_{callback.from_user.id}_{int(__import__('time').time())}"
+            await callback.message.answer(
+                "✅ Ulanish arizasi menejer tomonidan yaratildi!\n" +
+                f"Ariza ID: {request_id[:10]}\n" +
+                "Menejerlar tez orada mijoz bilan bog'lanadi.")
             await state.clear()
-            
-            cancel_text = (
-                "❌ Ariza yaratish bekor qilindi.\n"
-                "Bosh menuga qaytdingiz."
-            )
-            
-            await callback.message.edit_text(cancel_text)
-            
-        except Exception as e:
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
+        except Exception:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "mgr_resend_zayavka")
+    async def mgr_conn_resend(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await _mgr_conn_show_confirmation(callback, state)
     
     @router.message(StaffApplicationStates.entering_new_client_name)
     async def handle_new_client_name(message: Message, state: FSMContext):
@@ -461,7 +429,7 @@ async def _search_client_by_phone(message: Message, state: FSMContext, search_ms
             f"Bu mijoz uchun ariza yaratishni xohlaysizmi?"
         )
         
-        keyboard = get_client_confirmation_keyboard(lang=user.get('language', 'uz'))
+        keyboard = get_manager_confirmation_keyboard('uz')
         
         await search_msg.edit_text(found_text, reply_markup=keyboard)
         
@@ -493,7 +461,7 @@ async def _search_client_by_name(message: Message, state: FSMContext, search_msg
             f"Bu mijoz uchun ariza yaratishni xohlaysizmi?"
         )
         
-        keyboard = get_client_confirmation_keyboard(lang=user.get('language', 'uz'))
+        keyboard = get_manager_confirmation_keyboard('uz')
         
         await search_msg.edit_text(found_text, reply_markup=keyboard)
         
@@ -525,7 +493,7 @@ async def _search_client_by_id(message: Message, state: FSMContext, search_msg: 
             f"Bu mijoz uchun ariza yaratishni xohlaysizmi?"
         )
         
-        keyboard = get_client_confirmation_keyboard(lang=user.get('language', 'uz'))
+        keyboard = get_manager_confirmation_keyboard('uz')
         
         await search_msg.edit_text(found_text, reply_markup=keyboard)
         
@@ -535,4 +503,4 @@ async def _search_client_by_id(message: Message, state: FSMContext, search_msg: 
 
 def _create_application_type_keyboard():
     """Create keyboard for application type selection"""
-    return get_application_type_keyboard(lang='uz')
+    return controller_zayavka_type_keyboard('uz')
