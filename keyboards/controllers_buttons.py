@@ -155,3 +155,70 @@ def get_realtime_refresh_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=refresh_text, callback_data='ctrl_realtime_refresh')],
         [InlineKeyboardButton(text=back_text, callback_data='controllers_back')],
     ])
+
+
+# Inbox helpers
+def build_inbox_request_keyboard(
+    can_prev: bool,
+    can_next: bool,
+    request_full_id: str,
+    lang: str = 'uz'
+) -> InlineKeyboardMarkup:
+    rows: List[List[InlineKeyboardButton]] = []
+    # Assign buttons
+    rows.append([
+        InlineKeyboardButton(text=("📞 Call Center Supervisorga yuborish" if lang=='uz' else "📞 Отправить супервайзеру CC"), callback_data=f"ctrl_assign_ccsupervisor_{request_full_id}"),
+        InlineKeyboardButton(text=("🔧 Texnik tanlash" if lang=='uz' else "🔧 Назначить техника"), callback_data=f"ctrl_assign_tech_{request_full_id}"),
+    ])
+    # Navigation
+    nav: List[InlineKeyboardButton] = []
+    if can_prev:
+        nav.append(InlineKeyboardButton(text=("⬅️ Oldingi" if lang=='uz' else "⬅️ Предыдущая"), callback_data="ctrl_prev_any"))
+    if can_next:
+        nav.append(InlineKeyboardButton(text=("Keyingi ➡️" if lang=='uz' else "Следующая ➡️"), callback_data="ctrl_next_any"))
+    if nav:
+        rows.append(nav)
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def build_inbox_technicians_keyboard(request_full_id: str, technicians: List[Dict[str, Any]], lang: str = 'uz') -> InlineKeyboardMarkup:
+    rows: List[List[InlineKeyboardButton]] = []
+    for tech in technicians:
+        rows.append([
+            InlineKeyboardButton(
+                text=f"🔧 {tech.get('full_name','N/A')} ({tech.get('specialization','Texnik')}) - {tech.get('active_requests',0)} ariza",
+                callback_data=f"ctrl_select_tech_{request_full_id}_{tech['id']}"
+            )
+        ])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+# Export helpers
+def build_export_types_keyboard(export_types: List[str], lang: str = 'uz') -> InlineKeyboardMarkup:
+    names = {
+        'uz': {'orders': '📑 Buyurtmalar','statistics': '📊 Statistika','users': '👥 Texniklar','reports': '📋 Hisobotlar','quality': '🎯 Sifat nazorati'},
+        'ru': {'orders': '📑 Заказы','statistics': '📊 Статистика','users': '👥 Техники','reports': '📋 Отчеты','quality': '🎯 Контроль качества'},
+    }[lang]
+    rows: List[List[InlineKeyboardButton]] = []
+    for t in export_types:
+        rows.append([InlineKeyboardButton(text=names.get(t, t), callback_data=f"controller_export_{t}")])
+    rows.append([InlineKeyboardButton(text=("◀️ Orqaga" if lang=='uz' else "◀️ Назад"), callback_data="controller_export_back_main")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def build_export_formats_keyboard(formats: List[str], lang: str = 'uz') -> InlineKeyboardMarkup:
+    labels = {'csv': 'CSV', 'xlsx': 'Excel', 'docx': 'Word', 'pdf': 'PDF'}
+    rows: List[List[InlineKeyboardButton]] = []
+    for fmt in formats:
+        rows.append([InlineKeyboardButton(text=labels.get(fmt, fmt.upper()), callback_data=f"controller_format_{fmt}")])
+    rows.append([InlineKeyboardButton(text=("◀️ Orqaga" if lang=='uz' else "◀️ Назад"), callback_data="controller_export_back_types")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+# Language helpers (reply)
+def build_language_reply_keyboard(lang: str = 'uz') -> ReplyKeyboardMarkup:
+    back_text = "🔙 Orqaga" if lang=='uz' else "🔙 Назад"
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton("🇺🇿 O'zbekcha")],[KeyboardButton(back_text)]],
+        resize_keyboard=True
+    )
