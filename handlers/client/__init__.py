@@ -23,6 +23,7 @@ from .main_menu import get_client_main_menu_router
 from .connection_order import get_connection_order_router
 from .service_order import get_service_order_router
 from .profile import get_client_profile_router
+from .bot_guide import get_client_bot_guide_router
 from .orders import get_orders_router
 
 def get_client_router():
@@ -36,6 +37,7 @@ def get_client_router():
     router.include_router(get_service_order_router())
     router.include_router(get_orders_router())
     router.include_router(get_client_profile_router())
+    router.include_router(get_client_bot_guide_router())
     router.include_router(get_client_contact_router())
     router.include_router(get_client_help_router())
     router.include_router(get_client_feedback_router())

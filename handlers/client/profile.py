@@ -7,7 +7,13 @@ This module handles client profile functionality.
 from aiogram import F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
-from keyboards.client_buttons import get_client_profile_menu, get_edit_profile_keyboard, get_client_profile_back_keyboard
+from keyboards.client_buttons import (
+    get_client_profile_menu,
+    get_edit_profile_keyboard,
+    get_client_profile_back_keyboard,
+    get_client_profile_reply_keyboard,
+    get_main_menu_keyboard,
+)
 from states.client_states import ProfileStates
 from filters.role_filter import RoleFilter
 from utils.logger import get_logger
@@ -66,127 +72,103 @@ def get_client_profile_router():
     router.callback_query.filter(role_filter)
 
     @client_only
-    @router.message(F.text.in_(['👤 Profil']))
+    @router.message(F.text.in_(['👤 Kabinet', '👤 Кабинет']))
     async def client_profile_handler(message: Message, state: FSMContext):
-        """Mijoz profili bilan ishlash"""
+        """Cabinet entry with reply keyboard"""
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
             if not user:
                 await message.answer("Foydalanuvchi topilmadi.")
                 return
-            
-            profile_text = "Profil menyusi. Kerakli amalni tanlang."
-            
-            sent_message = await message.answer(
-                text=profile_text,
-                reply_markup=get_client_profile_menu('uz')
+
+            lang = user.get('language', 'uz')
+            profile_text = (
+                "👤 Kabinet. Amalni tanlang." if lang == 'uz' else "👤 Кабинет. Выберите действие."
             )
-            
+
+            await message.answer(
+                text=profile_text,
+                reply_markup=get_client_profile_reply_keyboard(lang)
+            )
+
             await state.set_state(ProfileStates.profile_menu)
-            
         except Exception as e:
             logger.error(f"Error in client_profile_handler: {e}")
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @client_only
-    @router.callback_query(F.data == "client_view_info")
-    async def handle_view_info(callback: CallbackQuery):
-        """View client information"""
+    @router.message(F.text.in_(["👁️ Ma'lumotlarni ko'rish", "👁️ Просмотр информации"]))
+    async def handle_view_info_reply(message: Message):
+        """View client information via reply menu"""
         try:
-            await callback.answer()
-            
-            user = await get_user_by_telegram_id(callback.from_user.id)
+            user = await get_user_by_telegram_id(message.from_user.id)
             if not user:
-                await callback.message.edit_text("Foydalanuvchi topilmadi.")
+                await message.answer("Foydalanuvchi topilmadi.")
                 return
-            
-            # To'liq ma'lumot
+
+            lang = user.get('language', 'uz')
             info_text = (
-                f"👤 <b>Profil ma'lumotlari - To'liq ma'lumot</b>\n\n"
+                f"👤 <b>Profil ma'lumotlari</b>\n\n"
                 f"🆔 <b>ID:</b> {user['id']}\n"
-                f"👤 <b>To'liq ism:</b> {user['full_name']}\n"
+                f"👤 <b>Ism:</b> {user['full_name']}\n"
                 f"📞 <b>Telefon:</b> {user['phone_number']}\n"
                 f"📍 <b>Manzil:</b> {user['address']}\n"
                 f"🏘️ <b>Hudud:</b> {user['region']}\n"
                 f"📅 <b>Ro'yxatdan o'tgan:</b> {user['created_at']}\n"
                 f"🌐 <b>Til:</b> {user['language']}"
             )
-            
-            await callback.message.edit_text(
-                text=info_text,
-                reply_markup=get_edit_profile_keyboard('uz')
-            )
-            
+            await message.answer(info_text, reply_markup=get_client_profile_reply_keyboard(lang), parse_mode='HTML')
         except Exception as e:
-            logger.error(f"Error in handle_view_info: {e}")
-            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+            logger.error(f"Error in handle_view_info_reply: {e}")
+            await message.answer("❌ Xatolik yuz berdi")
 
     @client_only
-    @router.callback_query(F.data == "client_order_stats")
-    async def handle_order_stats(callback: CallbackQuery):
-        """View order statistics"""
+    @router.message(F.text.in_(["📋 Mening buyurtmalarim", "📋 Мои заявки"]))
+    async def handle_show_orders_reply(message: Message):
+        """Bridge to orders section from cabinet"""
         try:
-            await callback.answer()
-            
-            # To'liq statistika
-            stats_text = (
-                f"📊 <b>Buyurtmalar statistikasi - To'liq ma'lumot</b>\n\n"
-                f"📋 <b>Jami buyurtmalar:</b> 5 ta\n\n"
-                f"🔧 <b>Texnik xizmatlar:</b> 3 ta\n"
-                f"• Faol: 1 ta\n"
-                f"• Bajarilgan: 2 ta\n\n"
-                f"🔌 <b>Ulanishlar:</b> 2 ta\n"
-                f"• Faol: 1 ta\n"
-                f"• Bajarilgan: 1 ta\n\n"
-                f"📈 <b>O'rtacha baho:</b> ⭐⭐⭐⭐⭐\n"
-                f"⏰ <b>O'rtacha bajarilish vaqti:</b> 2.5 kun\n"
-                f"💰 <b>Jami xizmat narxi:</b> 1,250,000 so'm\n\n"
-                f"📅 <b>So'nggi faoliyat:</b> 2024-01-15"
+            user = await get_user_by_telegram_id(message.from_user.id)
+            lang = user.get('language', 'uz')
+            info = (
+                "📋 Buyurtmalaringizni ko'rish uchun buyurtmalar bo'limi ochildi."
+                if lang == 'uz' else
+                "📋 Открыт раздел ваших заявок."
             )
-            
-            keyboard = get_client_profile_back_keyboard('uz')
-            
-            await callback.message.edit_text(stats_text, reply_markup=keyboard, parse_mode='HTML')
-            
+            await message.answer(info)
+            # Optionally instruct user to press '📋 Mening buyurtmalarim' in orders handler
+            from handlers.client.orders import get_orders_router  # local import to avoid cycles
+            # No direct call; orders router already handles the same reply text
         except Exception as e:
-            logger.error(f"Error in handle_order_stats: {e}")
-            await callback.answer("❌ Xatolik yuz berdi")
+            logger.error(f"Error in handle_show_orders_reply: {e}")
+            await message.answer("❌ Xatolik yuz berdi")
 
     @client_only
     @router.callback_query(F.data == "client_profile_back")
     async def handle_back_to_profile(callback: CallbackQuery):
-        """Back to profile menu"""
+        """Back to profile menu (inline -> reply cabinet)"""
         try:
             await callback.answer()
-            
-            profile_text = "Profil menyusi. Kerakli amalni tanlang."
-            
-            await callback.message.edit_text(
-                text=profile_text,
-                reply_markup=get_client_profile_menu('uz')
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz')
+            profile_text = (
+                "👤 Kabinet. Amalni tanlang." if lang == 'uz' else "👤 Кабинет. Выберите действие."
             )
-            
+            await callback.message.edit_text(profile_text)
+            await callback.message.answer(profile_text, reply_markup=get_client_profile_reply_keyboard(lang))
         except Exception as e:
             logger.error(f"Error in handle_back_to_profile: {e}")
             await callback.answer("❌ Xatolik yuz berdi")
 
     @client_only
-    @router.callback_query(F.data == "client_edit_profile")
-    async def handle_edit_profile(callback: CallbackQuery):
-        """Edit profile menu"""
+    @router.message(F.text.in_(["✏️ Ismni o'zgartirish", "✏️ Изменить имя"]))
+    async def handle_edit_name_reply(message: Message, state: FSMContext):
+        """Start name editing from reply cabinet"""
         try:
-            await callback.answer()
-            
-            edit_text = "Qaysi ma'lumotni o'zgartirmoqchisiz?"
-            
-            await callback.message.edit_text(
-                text=edit_text,
-                reply_markup=get_edit_profile_keyboard('uz')
-            )
-            
+            await message.answer("Yangi to'liq ismingizni kiriting:")
+            await state.set_state(ProfileStates.editing_name)
         except Exception as e:
-            logger.error(f"Error in handle_edit_profile: {e}")
-            await callback.answer("❌ Xatolik yuz berdi")
+            logger.error(f"Error in handle_edit_name_reply: {e}")
+            await message.answer("❌ Xatolik yuz berdi")
 
     @client_only
     @router.callback_query(F.data == "client_edit_name")
@@ -220,7 +202,7 @@ def get_client_profile_router():
             
             if success:
                 success_text = f"✅ Ism muvaffaqiyatli o'zgartirildi: {new_name}"
-                await message.answer(success_text, reply_markup=get_client_profile_menu('uz'))
+                await message.answer(success_text, reply_markup=get_client_profile_reply_keyboard('uz'))
             else:
                 await message.answer("❌ Ism o'zgartirishda xatolik yuz berdi.")
             
@@ -262,7 +244,7 @@ def get_client_profile_router():
             
             if success:
                 success_text = f"✅ Manzil muvaffaqiyatli o'zgartirildi: {new_address}"
-                await message.answer(success_text, reply_markup=get_client_profile_menu('uz'))
+                await message.answer(success_text, reply_markup=get_client_profile_reply_keyboard('uz'))
             else:
                 await message.answer("❌ Manzil o'zgartirishda xatolik yuz berdi.")
             

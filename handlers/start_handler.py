@@ -9,6 +9,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from loader import get_user_role
+from utils.mock_user_store import upsert_user
 from utils.role_system import show_role_menu
 
 def get_start_router():
@@ -20,15 +21,31 @@ def get_start_router():
         """Handle /start command"""
         try:
             user_role = get_user_role(message.from_user.id)
+
+            # Mock persist user on first start
+            is_created, saved = await upsert_user(
+                message.from_user.id,
+                {
+                    "telegram_id": message.from_user.id,
+                    "username": message.from_user.username,
+                    "first_name": message.from_user.first_name,
+                    "last_name": message.from_user.last_name,
+                    "language": message.from_user.language_code or "uz",
+                    "role": user_role,
+                    "is_bot": message.from_user.is_bot,
+                },
+            )
             
             # Clear any existing state
             await state.clear()
             
             # Show welcome message
+            created_note = "🆕 Ro'yxatdan o'tdingiz." if is_created else "🔄 Ma'lumotlaringiz yangilandi."
             welcome_text = (
                 f"👋 Xush kelibsiz, {message.from_user.first_name}!\n\n"
                 f"🤖 Alfa Connect botiga xush kelibsiz!\n"
-                f"👤 Sizning rolingiz: {user_role.upper()}\n\n"
+                f"👤 Sizning rolingiz: {user_role.upper()}\n"
+                f"{created_note}\n\n"
                 f"Quyidagi menyulardan birini tanlang:"
             )
             

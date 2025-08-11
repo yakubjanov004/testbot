@@ -1,15 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from typing import List, Dict, Any
-import hashlib
 
-def safe_callback_data(data: str, max_length: int = 64) -> str:
-    """Create safe callback data within Telegram limits"""
-    if len(data) <= max_length:
-        return data
-    
-    # Create hash for long data
-    hash_obj = hashlib.md5(data.encode())
-    return f"hash_{hash_obj.hexdigest()[:50]}"
 
 def get_contact_keyboard(lang="uz"):
     """Kontakt ulashish klaviaturasi"""
@@ -49,19 +40,6 @@ def get_main_menu_keyboard(lang="uz"):
     )
     return keyboard
 
-def get_feedback_keyboard(lang="uz"):
-    """Feedback keyboard for client"""
-    write_feedback_text = "📝 Fikr yozish" if lang == "uz" else "📝 Написать отзыв"
-    view_feedback_text = "👁️ Fikrlarni ko'rish" if lang == "uz" else "👁️ Просмотр отзывов"
-    rate_service_text = "⭐ Xizmatni baholash" if lang == "uz" else "⭐ Оценить услугу"
-    
-    keyboard = [
-        [KeyboardButton(text=write_feedback_text)],
-        [KeyboardButton(text=view_feedback_text)],
-        [KeyboardButton(text=rate_service_text)]
-    ]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
-
 def get_help_menu_keyboard(lang="uz"):
     """Help menu keyboard for client"""
     faq_text = "❓ Tez-tez so'raladigan savollar" if lang == "uz" else "❓ Часто задаваемые вопросы"
@@ -85,6 +63,13 @@ def get_back_to_help_menu_keyboard(lang="uz"):
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
+def get_back_to_help_menu_inline(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Inline back button for help menu"""
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=back_text, callback_data="client_back_help")]]
+    )
+
 def get_back_keyboard(lang="uz"):
     """Foydalanuvchiga har doim faqat 'Asosiy menyu' tugmasini chiqaradi"""
     main_menu_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"
@@ -96,6 +81,25 @@ def get_back_keyboard(lang="uz"):
     )
     return keyboard
 
+
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+
+def get_contact_options_keyboard(lang: str = "uz"):
+
+    call_text = "📞 Qo'ng'iroq qilish" if lang == "uz" else "📞 Позвонить"
+    chat_text = "💬 Onlayn chat" if lang == "uz" else "💬 Онлайн-чат"
+    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
+    
+    reply_keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=call_text)],
+            [KeyboardButton(text=chat_text, web_app=WebAppInfo(url="https://webapp-gamma-three.vercel.app/"))],
+            [KeyboardButton(text=back_text)],
+        ],
+        resize_keyboard=True,
+    )
+
+    return reply_keyboard
 
 def get_language_keyboard(role="client"):
     """Til tanlash klaviaturasi - role asosida callback data"""
@@ -190,6 +194,21 @@ def get_back_to_profile_menu(lang="uz"):
     )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+def get_client_profile_reply_keyboard(lang: str = 'uz') -> ReplyKeyboardMarkup:
+    """Reply keyboard for client profile (cabinet) section"""
+    view_info_text = "👁️ Ma'lumotlarni ko'rish" if lang == 'uz' else "👁️ Просмотр информации"
+    view_orders_text = "📋 Mening buyurtmalarim" if lang == 'uz' else "📋 Мои заявки"
+    edit_name_text = "✏️ Ismni o'zgartirish" if lang == 'uz' else "✏️ Изменить имя"
+    back_text = "◀️ Orqaga" if lang == 'uz' else "◀️ Назад"
+
+    keyboard = [
+        [KeyboardButton(text=view_info_text)],
+        [KeyboardButton(text=view_orders_text)],
+        [KeyboardButton(text=edit_name_text)],
+        [KeyboardButton(text=back_text)],
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
 def get_client_help_menu(lang="uz"):
     """Client help menu"""
     faq_text = "❓ Tez-tez so'raladigan savollar" if lang == "uz" else "❓ Часто задаваемые вопросы"
@@ -225,43 +244,6 @@ def get_client_help_menu(lang="uz"):
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-def get_client_help_back_inline(lang="uz"):
-    """Faqat orqaga tugmasi uchun inline keyboard"""
-    back_text = "◀️ Orqaga" if lang == "uz" else "◀️ Назад"
-    keyboard = [
-        [InlineKeyboardButton(
-            text=back_text,
-            callback_data="client_back_help"
-        )]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-def get_client_profile_edit_menu(lang="uz"):
-    """Client profile edit menu"""
-    edit_name_text = "✏️ Ism o'zgartirish" if lang == "uz" else "✏️ Изменить имя"
-    edit_address_text = "📍 Manzil o'zgartirish" if lang == "uz" else "📍 Изменить адрес"
-    
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                text=edit_name_text,
-                callback_data="client_edit_name"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text=edit_address_text,
-                callback_data="client_edit_address"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="◀️ Orqaga" if lang == "uz" else "◀️ Назад",
-                callback_data="client_profile_back"
-            )
-        ]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 def get_cancel_edit_keyboard(lang="uz"):
     """Cancel edit keyboard"""
