@@ -13,7 +13,11 @@ from aiogram.filters import StateFilter
 from datetime import datetime
 
 from filters.role_filter import RoleFilter
-from states.controller_states import ControllerConnectionOrderStates, ControllerApplicationStates
+from states.controller_states import (
+    ControllerConnectionOrderStates,
+    ControllerApplicationStates,
+    ControllerServiceOrderStates,
+)
 from keyboards.controllers_buttons import (
     get_controller_regions_keyboard,
     controller_zayavka_type_keyboard,
@@ -168,10 +172,9 @@ def get_controller_connection_service_router():
             await callback.message.answer("Hududni tanlang:", reply_markup=get_controller_regions_keyboard('uz'))
             await state.set_state(ControllerConnectionOrderStates.selecting_region)
         else:
-            # For safety, if flow set differently, just default to connection
             await callback.message.edit_text("Hududni tanlang:")
             await callback.message.answer("Hududni tanlang:", reply_markup=get_controller_regions_keyboard('uz'))
-            await state.set_state(ControllerConnectionOrderStates.selecting_region)
+            await state.set_state(ControllerServiceOrderStates.selecting_region)
 
     @router.callback_query(F.data == "ctrl_search_again")
     async def search_again(callback: CallbackQuery, state: FSMContext):
