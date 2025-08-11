@@ -24,399 +24,173 @@ def get_manager_staff_activity_router():
     async def show_staff_activity_menu(message: Message, state: FSMContext):
         """Manager staff activity handler"""
         try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
             activity_text = "👥 Xodimlar faoliyati:"
-            
-            # Create staff activity keyboard
             keyboard = _create_staff_activity_keyboard()
-            
             await message.answer(activity_text, reply_markup=keyboard)
-            
-        except Exception as e:
+        except Exception:
             await message.answer("Xatolik yuz berdi")
 
-    @router.message(F.text == "🟢 Onlayn xodimlar")
-    async def staff_online_handler(message: Message, state: FSMContext):
-        """Show online staff"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            await show_online_staff(message)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+    # Inline callbacks for staff activity sections
+    @router.callback_query(F.data == "staff_performance")
+    async def cb_staff_performance(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await show_staff_performance(callback.message)
 
-    @router.message(F.text == "📊 Samaradorlik")
-    async def staff_performance_handler(message: Message, state: FSMContext):
-        """Show staff performance"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            await show_staff_performance(message)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+    @router.callback_query(F.data == "staff_workload")
+    async def cb_staff_workload(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await show_staff_workload(callback.message)
 
-    @router.message(F.text == "📋 Ish yuki")
-    async def staff_workload_handler(message: Message, state: FSMContext):
-        """Show staff workload"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            await show_staff_workload(message)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+    @router.callback_query(F.data == "staff_user_detail")
+    async def cb_staff_user_detail(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.update_data(staff_user_index=0)
+        await show_staff_user_detail(callback, state)
 
-    @router.message(F.text == "📅 Davomat")
-    async def staff_attendance_handler(message: Message, state: FSMContext):
-        """Show staff attendance"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            await show_staff_attendance(message)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+    @router.callback_query(F.data == "staff_user_prev")
+    async def cb_staff_user_prev(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        data = await state.get_data()
+        idx = max(0, int(data.get('staff_user_index', 0)) - 1)
+        await state.update_data(staff_user_index=idx)
+        await show_staff_user_detail(callback, state)
 
-    @router.message(F.text == "👨‍💼 Kichik menejerlar ishi")
-    async def staff_junior_work_handler(message: Message, state: FSMContext):
-        """Show junior manager work"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            await show_junior_manager_work(message)
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+    @router.callback_query(F.data == "staff_user_next")
+    async def cb_staff_user_next(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        data = await state.get_data()
+        idx = int(data.get('staff_user_index', 0)) + 1
+        await state.update_data(staff_user_index=idx)
+        await show_staff_user_detail(callback, state)
 
-    @router.message(F.text == "🔙 Orqaga")
-    async def staff_back_handler(message: Message, state: FSMContext):
-        """Return to main menu"""
-        try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            # Return to main menu
-            from keyboards.manager_buttons import get_manager_main_keyboard
-            await message.answer(
-                "Asosiy menyu:",
-                reply_markup=get_manager_main_keyboard()
-            )
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-
-    async def show_online_staff(message):
-        """Show currently online staff"""
-        try:
-            # Mock online staff data
-            online_staff = [
-                {
-                    'full_name': 'Test Technician 1',
-                    'role': 'technician',
-                    'minutes_ago': 5
-                },
-                {
-                    'full_name': 'Test Manager 1',
-                    'role': 'manager',
-                    'minutes_ago': 10
-                },
-                {
-                    'full_name': 'Test Call Center 1',
-                    'role': 'call_center',
-                    'minutes_ago': 15
-                },
-                {
-                    'full_name': 'Test Warehouse 1',
-                    'role': 'warehouse',
-                    'minutes_ago': 20
-                },
-                {
-                    'full_name': 'Test Junior Manager 1',
-                    'role': 'junior_manager',
-                    'minutes_ago': 25
-                }
-            ]
-            
-            role_emojis = {
-                'technician': '👨‍🔧',
-                'manager': '👨‍💼',
-                'call_center': '📞',
-                'warehouse': '📦',
-                'junior_manager': '👨‍💼'
-            }
-            
-            online_text = "🟢 <b>Onlayn xodimlar:</b>\n\n"
-            for staff in online_staff:
-                emoji = role_emojis.get(staff['role'], '')
-                online_text += f"{emoji} {staff['full_name']} ({staff['role']}) - {staff['minutes_ago']} daqiqa oldin\n"
-            
-            await message.answer(online_text, parse_mode='HTML')
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
+    @router.callback_query(F.data == "staff_back")
+    async def cb_staff_back(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        from keyboards.manager_buttons import get_manager_main_keyboard
+        await callback.message.edit_text("Asosiy menyu:")
+        await callback.message.answer("Asosiy menyu:", reply_markup=get_manager_main_keyboard())
 
     async def show_staff_performance(message):
         """Show staff performance statistics"""
         try:
-            # Mock performance data
             performance = [
-                {
-                    'full_name': 'Test Technician 1',
-                    'completed_tasks': 15,
-                    'total_tasks': 20
-                },
-                {
-                    'full_name': 'Test Manager 1',
-                    'completed_tasks': 25,
-                    'total_tasks': 30
-                },
-                {
-                    'full_name': 'Test Call Center 1',
-                    'completed_tasks': 40,
-                    'total_tasks': 45
-                },
-                {
-                    'full_name': 'Test Warehouse 1',
-                    'completed_tasks': 30,
-                    'total_tasks': 35
-                },
-                {
-                    'full_name': 'Test Junior Manager 1',
-                    'completed_tasks': 20,
-                    'total_tasks': 25
-                }
+                {'full_name': 'Technician A', 'completed_tasks': 32, 'total_tasks': 40},
+                {'full_name': 'Technician B', 'completed_tasks': 25, 'total_tasks': 33},
+                {'full_name': 'Controller C', 'completed_tasks': 41, 'total_tasks': 50},
+                {'full_name': 'Junior Manager D', 'completed_tasks': 19, 'total_tasks': 24},
             ]
-            
             text = "📊 <b>Xodimlar samaradorligi:</b>\n\n"
-            for staff in performance:
-                percentage = int((staff['completed_tasks'] / staff['total_tasks']) * 100)
-                text += f"👤 {staff['full_name']}: {staff['completed_tasks']} / {staff['total_tasks']} ({percentage}%)\n"
-            
+            for s in performance:
+                pct = int((s['completed_tasks'] / s['total_tasks']) * 100) if s['total_tasks'] else 0
+                text += f"👤 {s['full_name']}: {s['completed_tasks']} / {s['total_tasks']} ({pct}%)\n"
             await message.answer(text, parse_mode='HTML')
-            
-        except Exception as e:
+        except Exception:
             await message.answer("Xatolik yuz berdi")
 
     async def show_staff_workload(message):
         """Show staff workload statistics"""
         try:
-            # Mock workload data
             workload = [
-                {
-                    'full_name': 'Test Technician 1',
-                    'total_tasks': 8,
-                    'completed_tasks': 6,
-                    'pending_tasks': 2
-                },
-                {
-                    'full_name': 'Test Manager 1',
-                    'total_tasks': 12,
-                    'completed_tasks': 10,
-                    'pending_tasks': 2
-                },
-                {
-                    'full_name': 'Test Call Center 1',
-                    'total_tasks': 15,
-                    'completed_tasks': 13,
-                    'pending_tasks': 2
-                },
-                {
-                    'full_name': 'Test Warehouse 1',
-                    'total_tasks': 10,
-                    'completed_tasks': 8,
-                    'pending_tasks': 2
-                },
-                {
-                    'full_name': 'Test Junior Manager 1',
-                    'total_tasks': 6,
-                    'completed_tasks': 5,
-                    'pending_tasks': 1
-                }
+                {'full_name': 'Technician A', 'total_tasks': 10, 'completed_tasks': 7, 'pending_tasks': 3},
+                {'full_name': 'Technician B', 'total_tasks': 12, 'completed_tasks': 9, 'pending_tasks': 3},
+                {'full_name': 'Controller C', 'total_tasks': 8, 'completed_tasks': 6, 'pending_tasks': 2},
+                {'full_name': 'Junior Manager D', 'total_tasks': 6, 'completed_tasks': 5, 'pending_tasks': 1},
             ]
-            
             text = "📋 <b>Ish yuki:</b>\n\n"
-            for staff in workload:
-                text += f"👤 {staff['full_name']}: {staff['total_tasks']} ta (✅ {staff['completed_tasks']}, ⏳ {staff['pending_tasks']})\n"
-            
-            await message.answer(text, parse_mode='HTML')
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-
-    async def show_staff_attendance(message):
-        """Show staff attendance statistics"""
-        try:
-            # Mock attendance data
-            attendance = [
-                {
-                    'full_name': 'Test Technician 1',
-                    'attendance_days': 22,
-                    'total_days': 25,
-                    'percentage': 88
-                },
-                {
-                    'full_name': 'Test Manager 1',
-                    'attendance_days': 24,
-                    'total_days': 25,
-                    'percentage': 96
-                },
-                {
-                    'full_name': 'Test Call Center 1',
-                    'attendance_days': 23,
-                    'total_days': 25,
-                    'percentage': 92
-                },
-                {
-                    'full_name': 'Test Warehouse 1',
-                    'attendance_days': 21,
-                    'total_days': 25,
-                    'percentage': 84
-                },
-                {
-                    'full_name': 'Test Junior Manager 1',
-                    'attendance_days': 20,
-                    'total_days': 25,
-                    'percentage': 80
-                }
-            ]
-            
-            text = "📅 <b>Davomat:</b>\n\n"
-            for staff in attendance:
-                text += f"👤 {staff['full_name']}: {staff['attendance_days']} kun ({staff['percentage']}%)\n"
-            
-            await message.answer(text, parse_mode='HTML')
-            
-        except Exception as e:
-            await message.answer("Xatolik yuz berdi")
-
-    async def show_junior_manager_work(message):
-        """Show junior manager work statistics"""
-        try:
-            # Mock junior manager data
-            junior_data = [
-                {
-                    'full_name': 'Test Junior Manager 1',
-                    'phone_number': '+998901234567',
-                    'completed_week': 12,
-                    'in_progress': 3,
-                    'new_tasks': 2,
-                    'avg_completion_hours': 4.5
-                },
-                {
-                    'full_name': 'Test Junior Manager 2',
-                    'phone_number': '+998901234568',
-                    'completed_week': 15,
-                    'in_progress': 2,
-                    'new_tasks': 1,
-                    'avg_completion_hours': 3.8
-                },
-                {
-                    'full_name': 'Test Junior Manager 3',
-                    'phone_number': '+998901234569',
-                    'completed_week': 8,
-                    'in_progress': 5,
-                    'new_tasks': 3,
-                    'avg_completion_hours': 6.2
-                }
-            ]
-            
-            junior_text = "👨‍💼 <b>Kichik menejerlar ishi (7 kun):</b>\n\n"
-            for junior in junior_data:
-                avg_hours = round(junior['avg_completion_hours'], 1)
-                junior_text += (
-                    f"👨‍💼 <b>{junior['full_name']}</b>\n"
-                    f"   📞 {junior['phone_number']}\n"
-                    f"   ✅ Bajarilgan: {junior['completed_week']}\n"
-                    f"   ⏳ Jarayonda: {junior['in_progress']}\n"
-                    f"   🆕 Yangi: {junior['new_tasks']}\n"
-                    f"   ⏱️ O'rtacha vaqt: {avg_hours} soat\n\n"
+            for s in workload:
+                text += (
+                    f"👤 {s['full_name']}: {s['total_tasks']} ta ("
+                    f"✅ {s['completed_tasks']}, ⏳ {s['pending_tasks']})\n"
                 )
-            
-            await message.answer(junior_text, parse_mode='HTML')
-            
-        except Exception as e:
+            await message.answer(text, parse_mode='HTML')
+        except Exception:
             await message.answer("Xatolik yuz berdi")
+
+    async def show_staff_user_detail(message_or_callback, state: FSMContext):
+        """Per-employee detailed card with navigation"""
+        staff_list = [
+            {
+                'full_name': 'Technician A',
+                'role': 'technician',
+                'completed_today': 5,
+                'in_progress': 2,
+                'cancelled': 0,
+                'success_rate': 92,
+                'avg_completion_hours': 3.4,
+                'tasks_by_type': {'Ulanish': 3, 'Texnik xizmat': 4},
+                'last_7_days_completed': 21,
+                'last_7_days_avg_hours': 3.9,
+            },
+            {
+                'full_name': 'Technician B',
+                'role': 'technician',
+                'completed_today': 3,
+                'in_progress': 3,
+                'cancelled': 1,
+                'success_rate': 84,
+                'avg_completion_hours': 4.2,
+                'tasks_by_type': {'Ulanish': 4, 'Texnik xizmat': 3},
+                'last_7_days_completed': 18,
+                'last_7_days_avg_hours': 4.5,
+            },
+            {
+                'full_name': 'Junior Manager D',
+                'role': 'junior_manager',
+                'completed_today': 2,
+                'in_progress': 1,
+                'cancelled': 0,
+                'success_rate': 88,
+                'avg_completion_hours': 2.8,
+                'tasks_by_type': {'Ulanish': 2, 'Tekshirish': 1},
+                'last_7_days_completed': 14,
+                'last_7_days_avg_hours': 3.1,
+            },
+        ]
+        data = await state.get_data()
+        idx = max(0, min(int(data.get('staff_user_index', 0)), len(staff_list) - 1))
+        s = staff_list[idx]
+        role_map = {'technician': '👨‍🔧 Texnik', 'junior_manager': '👨‍💼 Kichik menejer', 'manager': '👨‍💼 Menejer'}
+        by_type_lines = "\n".join([f"   • {k}: {v} ta" for k, v in s['tasks_by_type'].items()])
+        text = (
+            f"👤 <b>{s['full_name']}</b> — {role_map.get(s['role'], s['role'])}\n\n"
+            f"✅ <b>Bugun bajarilgan:</b> {s['completed_today']} ta\n"
+            f"⏳ <b>Jarayonda:</b> {s['in_progress']} ta\n"
+            f"❌ <b>Bekor qilingan:</b> {s['cancelled']} ta\n"
+            f"📈 <b>Muvaffaqiyat:</b> {s['success_rate']}%\n"
+            f"⏱️ <b>O'rtacha bajarish vaqti:</b> {s['avg_completion_hours']} soat\n\n"
+            f"🗂 <b>Ish turlari bo'yicha:</b>\n{by_type_lines}\n\n"
+            f"📅 <b>Oxirgi 7 kun:</b> {s['last_7_days_completed']} ta, o'rtacha {s['last_7_days_avg_hours']} soat\n"
+            f"\n📊 <b>#{idx+1}/{len(staff_list)}</b>"
+        )
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text='⬅️ Oldingi', callback_data='staff_user_prev') if idx > 0 else InlineKeyboardButton(text=f'{idx+1}/{len(staff_list)}', callback_data='noop'),
+                InlineKeyboardButton(text='Keyingi ➡️', callback_data='staff_user_next') if idx < len(staff_list)-1 else InlineKeyboardButton(text=f'{idx+1}/{len(staff_list)}', callback_data='noop')
+            ],
+            [InlineKeyboardButton(text='⬅️ Orqaga', callback_data='staff_back')]
+        ])
+        if isinstance(message_or_callback, CallbackQuery):
+            try:
+                await message_or_callback.message.edit_text(text, reply_markup=kb, parse_mode='HTML')
+            except Exception:
+                await message_or_callback.message.answer(text, reply_markup=kb, parse_mode='HTML')
+        else:
+            await message_or_callback.answer(text, reply_markup=kb, parse_mode='HTML')
 
     return router
 
 
 def _create_staff_activity_keyboard():
-    """Create keyboard for staff activity menu"""
+    """Create keyboard for staff activity menu (updated)"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(
-                text="🟢 Onlayn xodimlar",
-                callback_data="staff_online"
-            ),
-            InlineKeyboardButton(
-                text="📊 Samaradorlik",
-                callback_data="staff_performance"
-            )
+            InlineKeyboardButton(text="📊 Samaradorlik", callback_data="staff_performance"),
+            InlineKeyboardButton(text="📋 Ish yuki", callback_data="staff_workload"),
         ],
         [
-            InlineKeyboardButton(
-                text="📋 Ish yuki",
-                callback_data="staff_workload"
-            ),
-            InlineKeyboardButton(
-                text="📅 Davomat",
-                callback_data="staff_attendance"
-            )
+            InlineKeyboardButton(text="👤 Xodimlar kesimi", callback_data="staff_user_detail"),
         ],
         [
-            InlineKeyboardButton(
-                text="👨‍💼 Kichik menejerlar ishi",
-                callback_data="staff_junior_work"
-            )
+            InlineKeyboardButton(text="🔙 Orqaga", callback_data="staff_back")
         ],
-        [
-            InlineKeyboardButton(
-                text="🔙 Orqaga",
-                callback_data="staff_back"
-            )
-        ]
     ])
