@@ -22,6 +22,7 @@ from .orders import get_controller_orders_router
 from .realtime_monitoring import get_realtime_monitoring_router
 from .technical_service import get_controller_technical_service_router
 from .export import get_controller_export_router
+from .technicians import get_controller_technicians_router
 
 
 def get_controller_router():
@@ -37,6 +38,7 @@ def get_controller_router():
     router.include_router(get_controller_orders_router())
     router.include_router(get_realtime_monitoring_router())
     router.include_router(get_controller_technical_service_router())
+    router.include_router(get_controller_technicians_router())
     router.include_router(get_controller_export_router())
 
     return router
