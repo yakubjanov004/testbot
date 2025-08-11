@@ -1,5 +1,100 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from typing import List
+
+
+def get_manager_main_menu(lang='uz'):
+    """Manager uchun asosiy menyu"""
+    texts = {
+        'uz': {
+            'inbox': '📥 Inbox',
+            'view_applications': '📋 Arizalarni ko\'rish',
+            'create_connection': '🔌 Ulanish arizasi yaratish',
+            'create_technical': '🔧 Texnik xizmat yaratish',
+            'realtime_monitoring': '🕐 Real vaqtda kuzatish',
+            'monitoring': '📊 Monitoring',
+            'staff_activity': '👥 Xodimlar faoliyati',
+            'status_change': '🔄 Status o\'zgartirish',
+            'export': '📤 Export',
+            'change_language': '🌐 Tilni o\'zgartirish'
+        },
+        'ru': {
+            'inbox': '📥 Входящие',
+            'view_applications': '📋 Просмотр заявок',
+            'create_connection': '🔌 Создать заявку на подключение',
+            'create_technical': '🔧 Создать техническое обслуживание',
+            'realtime_monitoring': '🕐 Мониторинг в реальном времени',
+            'monitoring': '📊 Мониторинг',
+            'staff_activity': '👥 Активность сотрудников',
+            'status_change': '🔄 Изменить статус',
+            'export': '📤 Экспорт',
+            'change_language': '🌐 Изменить язык'
+        }
+    }
+    
+    t = texts.get(lang, texts['uz'])
+    
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=t['inbox']),
+                KeyboardButton(text=t['view_applications'])
+            ],
+            [
+                KeyboardButton(text=t['create_connection']),
+                KeyboardButton(text=t['create_technical'])
+            ],
+            [
+                KeyboardButton(text=t['realtime_monitoring']),
+                KeyboardButton(text=t['monitoring'])
+            ],
+            [
+                KeyboardButton(text=t['staff_activity']),
+                KeyboardButton(text=t['status_change'])
+            ],
+            [
+                KeyboardButton(text=t['export']),
+                KeyboardButton(text=t['change_language'])
+            ]
+        ],
+        resize_keyboard=True
+    )
+    
+    return keyboard
+
+
+def get_back_button(lang='uz'):
+    """Orqaga qaytish tugmasi"""
+    texts = {
+        'uz': '⬅️ Orqaga',
+        'ru': '⬅️ Назад'
+    }
+    
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=texts.get(lang, texts['uz']))]
+        ],
+        resize_keyboard=True
+    )
+    
+    return keyboard
+
+
+def get_back_to_main_menu(lang='uz'):
+    """Asosiy menyuga qaytish tugmasi"""
+    texts = {
+        'uz': '🏠 Asosiy menyu',
+        'ru': '🏠 Главное меню'
+    }
+    
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=texts.get(lang, texts['uz']))]
+        ],
+        resize_keyboard=True
+    )
+    
+    return keyboard
 
 def get_manager_main_keyboard(lang='uz'):
     """Generate main keyboard for manager with locale support, 2 buttons per row where possible"""

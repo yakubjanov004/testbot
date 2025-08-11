@@ -1,28 +1,98 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import List, Dict, Any
 
-def get_controller_main_keyboard(lang="uz"):
-    """Controller main keyboard - returns main menu keyboard"""
-    return controllers_main_menu(lang)
 
-def controllers_main_menu(lang='uz'):
-    """Controllers asosiy menyu (soddalashtirilgan, 2tadan chiroyli)"""
-    if lang == 'uz':
-        keyboard = [
-            [KeyboardButton(text="📥 Inbox"), KeyboardButton(text="📊 Monitoring")],
-            [KeyboardButton(text="🎯 Sifat nazorati"), KeyboardButton(text="🔌 Ulanish arizasi yaratish")],
-            [KeyboardButton(text="🔧 Texnik xizmat yaratish"), KeyboardButton(text="🕐 Real vaqtda kuzatish")],
-            [KeyboardButton(text="📤 Export"), KeyboardButton(text="🌐 Tilni o'zgartirish")]
-        ]
-    else:
-        keyboard = [
-            [KeyboardButton(text="📥 Входящие"), KeyboardButton(text="📊 Мониторинг")],
-            [KeyboardButton(text="🎯 Контроль качества"), KeyboardButton(text="🔌 Создать заявку на подключение")],
-            [KeyboardButton(text="🔧 Создать техническую заявку"), KeyboardButton(text="🕐 Мониторинг в реальном времени")],
-            [KeyboardButton(text="📤 Экспорт"), KeyboardButton(text="🌐 Изменить язык")]
-        ]
+def get_controller_main_menu(lang='uz'):
+    """Controller uchun asosiy menyu"""
+    texts = {
+        'uz': {
+            'inbox': '📥 Inbox',
+            'view_applications': '📋 Arizalarni ko\'rish',
+            'create_connection': '🔌 Ulanish arizasi yaratish',
+            'create_technical': '🔧 Texnik xizmat yaratish',
+            'realtime_monitoring': '🕐 Real vaqtda kuzatish',
+            'monitoring': '📊 Monitoring',
+            'staff_activity': '👥 Xodimlar faoliyati',
+            'export': '📤 Export',
+            'change_language': '🌐 Tilni o\'zgartirish'
+        },
+        'ru': {
+            'inbox': '📥 Входящие',
+            'view_applications': '📋 Просмотр заявок',
+            'create_connection': '🔌 Создать заявку на подключение',
+            'create_technical': '🔧 Создать техническое обслуживание',
+            'realtime_monitoring': '🕐 Мониторинг в реальном времени',
+            'monitoring': '📊 Мониторинг',
+            'staff_activity': '👥 Активность сотрудников',
+            'export': '📤 Экспорт',
+            'change_language': '🌐 Изменить язык'
+        }
+    }
     
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+    t = texts.get(lang, texts['uz'])
+    
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=t['inbox']),
+                KeyboardButton(text=t['view_applications'])
+            ],
+            [
+                KeyboardButton(text=t['create_connection']),
+                KeyboardButton(text=t['create_technical'])
+            ],
+            [
+                KeyboardButton(text=t['realtime_monitoring']),
+                KeyboardButton(text=t['monitoring'])
+            ],
+            [
+                KeyboardButton(text=t['staff_activity']),
+                KeyboardButton(text=t['export'])
+            ],
+            [
+                KeyboardButton(text=t['change_language'])
+            ]
+        ],
+        resize_keyboard=True
+    )
+    
+    return keyboard
+
+
+def get_back_button(lang='uz'):
+    """Orqaga qaytish tugmasi"""
+    texts = {
+        'uz': '⬅️ Orqaga',
+        'ru': '⬅️ Назад'
+    }
+    
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=texts.get(lang, texts['uz']))]
+        ],
+        resize_keyboard=True
+    )
+    
+    return keyboard
+
+
+def get_back_to_main_menu(lang='uz'):
+    """Asosiy menyuga qaytish tugmasi"""
+    texts = {
+        'uz': '🏠 Asosiy menyu',
+        'ru': '🏠 Главное меню'
+    }
+    
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=texts.get(lang, texts['uz']))]
+        ],
+        resize_keyboard=True
+    )
+    
+    return keyboard
+
 
 def get_controller_workflow_keyboard(request_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
     """Controller uchun workflow tugmalari"""
