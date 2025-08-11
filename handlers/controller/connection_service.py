@@ -302,4 +302,13 @@ def get_controller_connection_service_router():
         except Exception:
             await callback.answer("Xatolik yuz berdi")
 
+    @router.callback_query(F.data == "ctrl_resend_zayavka", StateFilter(ControllerConnectionOrderStates.confirming_connection))
+    async def resend_connection_summary(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            data = await state.get_data()
+            await show_connection_confirmation(callback, state, geo=data.get('geo'))
+        except Exception:
+            await callback.answer("Xatolik yuz berdi")
+
     return router

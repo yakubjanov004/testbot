@@ -233,4 +233,12 @@ def get_controller_technical_service_router():
         except Exception:
             await callback.answer("Xatolik yuz berdi")
 
+    @router.callback_query(F.data == "ctrl_resend_zayavka", StateFilter(ControllerServiceOrderStates.confirming_order))
+    async def resend_service_summary(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            await show_service_confirmation(callback, state)
+        except Exception:
+            await callback.answer("Xatolik yuz berdi")
+
     return router
