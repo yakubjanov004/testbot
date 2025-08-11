@@ -28,7 +28,7 @@ async def search_clients_by_name(name: str):
     ]
 
 
-def get_manager_connection_service_router():
+def get_manager_connection_order_router():
     router = Router()
 
     # Role guard

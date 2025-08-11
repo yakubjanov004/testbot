@@ -36,7 +36,7 @@ from .realtime_monitoring import get_manager_realtime_monitoring_router
 from .reports import get_manager_reports_router
 from .export import get_manager_export_router
 from .technician_order import get_manager_technical_service_router
-from .connection_service import get_manager_connection_service_router
+from .connection_order import get_manager_connection_order_router
 
 def get_manager_router():
     """Get the complete manager router with all handlers"""
@@ -52,7 +52,7 @@ def get_manager_router():
     router.include_router(get_manager_technician_assignment_router())
     router.include_router(get_manager_word_documents_router())
 
-    router.include_router(get_manager_connection_service_router())
+    router.include_router(get_manager_connection_order_router())
     router.include_router(get_manager_technical_service_router())
     router.include_router(get_manager_notifications_router())
     router.include_router(get_manager_applications_actions_router())
