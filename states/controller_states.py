@@ -64,4 +64,30 @@ class ControllerTechnicianStates(StatesGroup):
 class ControllerRequestStates(StatesGroup):
     """Request states for controller"""
     waiting_for_technician = State()
-    waiting_for_comment = State() 
+    waiting_for_comment = State()
+
+
+# New: Controller flows mirroring client flows (DB-less)
+class ControllerServiceOrderStates(StatesGroup):
+    """Service order creation states for controller (client-like)"""
+    selecting_region = State()
+    selecting_order_type = State()
+    waiting_for_abonent_id = State()
+    entering_description = State()
+    asking_for_media = State()
+    waiting_for_media = State()
+    entering_address = State()
+    asking_for_location = State()
+    waiting_for_location = State()
+    confirming_order = State()
+
+
+class ControllerConnectionOrderStates(StatesGroup):
+    """Connection order creation states for controller (client-like)"""
+    selecting_region = State()
+    selecting_connection_type = State()
+    selecting_tariff = State()
+    entering_address = State()
+    asking_for_geo = State()
+    waiting_for_geo = State()
+    confirming_connection = State() 
