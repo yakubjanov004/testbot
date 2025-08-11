@@ -227,17 +227,17 @@ def get_junior_manager_main_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
     """Updated main menu keyboard for junior manager"""
     inbox = "📥 Inbox"
     create_connection = "🔌 Ulanish arizasi yaratish" if lang == 'uz' else "🔌 Создать заявку на подключение"
-    view_applications = "📋 Arizalarni ko'rish" if lang == 'uz' else "📋 Просмотр заявок"
-    workflow_management = "⚙️ Workflow boshqaruvi" if lang == 'uz' else "⚙️ Управление процессами"
-    statistics = "📊 Statistikalar" if lang == 'uz' else "📊 Статистика"
+    view_applications = "📋 Zayavkalarni ko'rish" if lang == 'uz' else "📋 Просмотр заявок"
+    filter_applications = "🔍 Zayavkani filtrlash" if lang == 'uz' else "🔍 Фильтровать заявки"
+    reports = "📊 Hisobotlar" if lang == 'uz' else "📊 Отчеты"
     change_language = "🌐 Tilni o'zgartirish" if lang == 'uz' else "🌐 Изменить язык"
     
     keyboard = [
         [KeyboardButton(text=inbox)],
         [KeyboardButton(text=create_connection)],
         [KeyboardButton(text=view_applications)],
-        [KeyboardButton(text=workflow_management)],
-        [KeyboardButton(text=statistics)],
+        [KeyboardButton(text=filter_applications)],
+        [KeyboardButton(text=reports)],
         [KeyboardButton(text=change_language)]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)

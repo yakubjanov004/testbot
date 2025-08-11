@@ -26,7 +26,7 @@ from .details_input import get_junior_manager_details_input_router
 from .inbox import get_junior_manager_inbox_router
 from .language import get_junior_manager_language_router
 from .orders import get_junior_manager_orders_router
-from .staff_application_creation import get_junior_manager_staff_application_router
+from .connection_order import get_junior_manager_connection_order_router
 from .statistics import get_junior_manager_statistics_router
 from .workflow_management import get_junior_manager_workflow_router
 
@@ -46,7 +46,7 @@ def get_junior_manager_router():
     router.include_router(get_junior_manager_inbox_router())
     router.include_router(get_junior_manager_language_router())
     router.include_router(get_junior_manager_orders_router())
-    router.include_router(get_junior_manager_staff_application_router())
+    router.include_router(get_junior_manager_connection_order_router())
     router.include_router(get_junior_manager_statistics_router())
     router.include_router(get_junior_manager_workflow_router())
     

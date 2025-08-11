@@ -64,7 +64,7 @@ def get_junior_manager_statistics_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(["📊 Statistika", "📊 Статистика"]))
+    @router.message(F.text.in_(["📊 Hisobotlar", "📊 Отчеты"]))
     async def view_statistics(message: Message, state: FSMContext):
         """Junior manager view statistics handler"""
         try:

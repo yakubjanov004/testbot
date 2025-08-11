@@ -91,26 +91,26 @@ def get_junior_manager_application_creation_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish"]))
-    async def start_application_creation(message: Message, state: FSMContext):
-        """Start application creation process"""
-        try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                return
-
-            lang = user.get('language', 'uz')
-            
-            text = "🔍 Mijozni qidirish usulini tanlang:"
-            
-            await message.answer(
-                text,
-                reply_markup=get_client_search_menu(lang=lang)
-            )
-            
-        except Exception as e:
-            print(f"Error in start_application_creation: {e}")
-            await message.answer("Xatolik yuz berdi")
+    # @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish"]))
+    # async def start_application_creation(message: Message, state: FSMContext):
+    #     """Start application creation process"""
+    #     try:
+    #         user = await get_user_by_telegram_id(message.from_user.id)
+    #         if not user or user['role'] != 'junior_manager':
+    #             return
+    #         
+    #         lang = user.get('language', 'uz')
+    #         
+    #         text = "🔍 Mijozni qidirish usulini tanlang:"
+    #         
+    #         await message.answer(
+    #             text,
+    #             reply_markup=get_client_search_menu(lang=lang)
+    #         )
+    #         
+    #     except Exception as e:
+    #         print(f"Error in start_application_creation: {e}")
+    #         await message.answer("Xatolik yuz berdi")
 
     @router.message(JuniorManagerApplicationStates.creating_new_client)
     async def handle_new_client_name(message: Message, state: FSMContext):
