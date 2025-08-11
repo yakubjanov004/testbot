@@ -601,6 +601,11 @@ def get_realtime_monitoring_router():
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi")
 
+    # Simple refresh for live status
+    @router.callback_query(F.data == "ctrl_realtime_refresh")
+    async def realtime_refresh(callback: CallbackQuery, state: FSMContext):
+        await view_live_status(callback, state)
+
     # Refresh handlers
     @router.callback_query(F.data.startswith("ctrl_refresh_"))
     async def refresh_realtime_data(callback: CallbackQuery, state: FSMContext):
