@@ -40,7 +40,7 @@ async def get_all_orders(limit: int = 50):
             'client_name': 'Test Client 2',
             'service_type': 'TV xizmati',
             'status': 'Jarayonda',
-            'priority': 'O\'rta',
+            'priority': "O'rta",
             'created_at': '2024-01-15 09:15',
             'assigned_to': 'Malika Yusupova'
         }
@@ -339,4 +339,145 @@ def get_controller_orders_router():
             error_text = "Xatolik yuz berdi"
             await message.answer(error_text)
 
+    # ===== New: "📋 Arizalarni ko'rish" full list with filters and pagination =====
+    def _filter_orders(orders: List[Dict[str, Any]], flt: str) -> List[Dict[str, Any]]:
+        if flt == 'all':
+            return orders
+        if flt == 'active':
+            return [o for o in orders if o.get('status') in ['Yangi', 'Jarayonda']]
+        if flt == 'completed':
+            return [o for o in orders if o.get('status') == 'Bajarilgan']
+        return orders
+
+    def _orders_list_keyboard(orders: List[Dict[str, Any]], flt: str, page: int, total_pages: int) -> InlineKeyboardMarkup:
+        rows = []
+        # Order buttons
+        for o in orders:
+            rows.append([InlineKeyboardButton(
+                text=f"{o.get('order_number', f'#{o['id']}')} · {o.get('client_name','N/A')}",
+                callback_data=f"ctrl_orders_view_{o['id']}_{flt}_{page}"
+            )])
+        # Nav row
+        nav = []
+        if page > 1:
+            nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"ctrl_orders_prev_{flt}_{page-1}"))
+        nav.append(InlineKeyboardButton(text=f"{page}/{total_pages}", callback_data="noop"))
+        if page < total_pages:
+            nav.append(InlineKeyboardButton(text="➡️", callback_data=f"ctrl_orders_next_{flt}_{page+1}"))
+        rows.append(nav)
+        # Filter row
+        rows.append([
+            InlineKeyboardButton(text=("📋 Hammasi"), callback_data="ctrl_orders_filter_all"),
+            InlineKeyboardButton(text=("⏳ Faol"), callback_data="ctrl_orders_filter_active"),
+            InlineKeyboardButton(text=("✅ Bajarilgan"), callback_data="ctrl_orders_filter_completed"),
+        ])
+        # Actions
+        rows.append([
+            InlineKeyboardButton(text="🔄 Yangilash", callback_data=f"ctrl_orders_refresh_{flt}_{page}"),
+            InlineKeyboardButton(text="⬅️ Orqaga", callback_data="controllers_back"),
+        ])
+        return InlineKeyboardMarkup(inline_keyboard=rows)
+
+    async def _render_orders_list(message_or_callback, flt: str = 'all', page: int = 1, per_page: int = 5):
+        all_orders = await get_all_orders(limit=200)
+        filtered = _filter_orders(all_orders, flt)
+        total = len(filtered)
+        total_pages = max(1, (total + per_page - 1) // per_page)
+        page = max(1, min(page, total_pages))
+        start = (page - 1) * per_page
+        slice_ = filtered[start:start+per_page]
+        text = (
+            f"📋 <b>Arizalar ro'yxati</b>\n"
+            f"Filtr: {('Hammasi' if flt=='all' else 'Faol' if flt=='active' else 'Bajarilgan')} · Sahifa {page}/{total_pages}\n\n"
+        )
+        if slice_:
+            for o in slice_:
+                text += (f"🔹 <b>{o.get('order_number', f'#{o['id']}')}</b> — {o.get('client_name','N/A')} · {o.get('status','')}\n")
+        else:
+            text += "Hozircha ma'lumot yo'q"
+        kb = _orders_list_keyboard(slice_, flt, page, total_pages)
+        if isinstance(message_or_callback, Message):
+            await message_or_callback.answer(text, reply_markup=kb, parse_mode='HTML')
+        else:
+            await message_or_callback.message.edit_text(text, reply_markup=kb, parse_mode='HTML')
+
+    @router.message(F.text.in_(["📋 Arizalarni ko'rish"]))
+    async def controller_view_orders(message: Message, state: FSMContext):
+        try:
+            user = await get_user_by_telegram_id(message.from_user.id)
+            if not user or user['role'] != 'controller':
+                await message.answer("Sizda controller huquqi yo'q.")
+                return
+            await _render_orders_list(message, flt='all', page=1)
+        except Exception:
+            await message.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "ctrl_orders_filter_all")
+    async def orders_filter_all(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await _render_orders_list(callback, flt='all', page=1)
+
+    @router.callback_query(F.data == "ctrl_orders_filter_active")
+    async def orders_filter_active(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await _render_orders_list(callback, flt='active', page=1)
+
+    @router.callback_query(F.data == "ctrl_orders_filter_completed")
+    async def orders_filter_completed(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await _render_orders_list(callback, flt='completed', page=1)
+
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_prev_"))
+    async def orders_prev(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        _, _, _, flt, page = callback.data.split("_")
+        await _render_orders_list(callback, flt=flt, page=int(page))
+
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_next_"))
+    async def orders_next(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        _, _, _, flt, page = callback.data.split("_")
+        await _render_orders_list(callback, flt=flt, page=int(page))
+
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_refresh_"))
+    async def orders_refresh(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        _, _, _, flt, page = callback.data.split("_")
+        await _render_orders_list(callback, flt=flt, page=int(page))
+
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_view_"))
+    async def orders_view(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            parts = callback.data.split("_")
+            # ctrl orders view {id} {flt} {page}
+            order_id = int(parts[3])
+            flt = parts[4]
+            page = int(parts[5])
+            order = await get_single_order_details(order_id)
+            text = (
+                f"📄 <b>Ariza ma'lumotlari</b>\n\n"
+                f"🔢 <b>Raqam:</b> {order.get('order_number')}\n"
+                f"👤 <b>Mijoz:</b> {order.get('client_name')}\n"
+                f"🛠 <b>Xizmat:</b> {order.get('service_type')}\n"
+                f"📅 <b>Sana:</b> {order.get('created_at')}\n"
+                f"📌 <b>Status:</b> {order.get('status')}\n"
+                f"⚡ <b>Ustuvorlik:</b> {order.get('priority')}\n"
+                f"👨‍💼 <b>Mas'ul:</b> {order.get('assigned_to')}\n"
+                f"📝 <b>Izoh:</b> {order.get('description')}\n"
+            )
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Ro'yxatga qaytish", callback_data=f"ctrl_orders_back_{flt}_{page}")],
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="controllers_back")],
+            ])
+            await callback.message.edit_text(text, reply_markup=kb, parse_mode='HTML')
+        except Exception:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(lambda c: c.data.startswith("ctrl_orders_back_"))
+    async def orders_back_to_list(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        _, _, _, flt, page = callback.data.split("_")
+        await _render_orders_list(callback, flt=flt, page=int(page))
+ 
     return router
