@@ -176,19 +176,25 @@ def get_controller_technicians_router():
     @router.callback_query(lambda c: c.data.startswith('ctrl_tech_nav_prev_'))
     async def tech_nav_prev(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        _, _, _, flt, index = callback.data.split('_')
+        parts = callback.data.split('_')
+        flt = parts[4]
+        index = parts[5]
         await _render_tech_detail(callback, flt=flt, index=int(index))
 
     @router.callback_query(lambda c: c.data.startswith('ctrl_tech_nav_next_'))
     async def tech_nav_next(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        _, _, _, flt, index = callback.data.split('_')
+        parts = callback.data.split('_')
+        flt = parts[4]
+        index = parts[5]
         await _render_tech_detail(callback, flt=flt, index=int(index))
 
     @router.callback_query(lambda c: c.data.startswith('ctrl_tech_refresh_detail_'))
     async def tech_refresh_detail(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        _, _, _, flt, index = callback.data.split('_')
+        parts = callback.data.split('_')
+        flt = parts[4]
+        index = parts[5]
         await _render_tech_detail(callback, flt=flt, index=int(index))
 
     return router
