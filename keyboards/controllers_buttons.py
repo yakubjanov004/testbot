@@ -222,3 +222,27 @@ def build_language_reply_keyboard(lang: str = 'uz') -> ReplyKeyboardMarkup:
         keyboard=[[KeyboardButton("🇺🇿 O'zbekcha")],[KeyboardButton(back_text)]],
         resize_keyboard=True
     )
+
+
+# Monitoring helpers (for controller monitoring.py)
+def get_monitoring_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    detailed_text = "📊 Batafsil statistika" if lang == 'uz' else "📊 Подробная статистика"
+    system_text = "🖥️ Tizim holati" if lang == 'uz' else "🖥️ Состояние системы"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=detailed_text, callback_data='view_detailed_statistics')],
+        [InlineKeyboardButton(text=system_text, callback_data='view_system_status')],
+    ])
+
+
+def get_controller_back_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    back_text = "⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=back_text, callback_data='back_to_monitoring')]
+    ])
+
+
+def get_monitoring_detailed_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    back_text = "⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=back_text, callback_data='back_to_monitoring')]
+    ])
