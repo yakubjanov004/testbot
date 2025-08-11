@@ -78,4 +78,25 @@ class JuniorManagerDetailsInputStates(StatesGroup):
 class JuniorManagerWorkflowStates(StatesGroup):
     """Workflow states for junior manager"""
     workflow_monitoring = State()
-    workflow_optimization = State() 
+    workflow_optimization = State()
+
+
+class JuniorManagerClientSearchStates(StatesGroup):
+    """Client search states for junior manager"""
+    selecting_client_search_method = State()
+    entering_phone = State()
+    entering_name = State()
+    entering_client_id = State()
+    entering_new_client_name = State()
+    selecting_client = State()
+
+
+class JuniorManagerConnectionOrderStates(StatesGroup):
+    """Connection order states for junior manager"""
+    selecting_region = State()
+    selecting_connection_type = State()
+    selecting_tariff = State()
+    entering_address = State()
+    asking_for_geo = State()
+    waiting_for_geo = State()
+    confirming_connection = State() 

@@ -6,15 +6,24 @@ Manages connection order creation for junior manager
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
-from states.staff_application_states import StaffApplicationStates
+from states.junior_manager_states import (
+    JuniorManagerClientSearchStates,
+    JuniorManagerConnectionOrderStates,
+)
 from keyboards.junior_manager_buttons import (
-    get_junior_manager_main_keyboard_updated,
+    get_junior_manager_main_menu,
     get_client_search_menu_updated,
-    get_application_priority_keyboard_updated,
-    get_application_confirmation_keyboard_updated
+    get_application_confirmation_keyboard_updated,
+)
+from keyboards.controllers_buttons import (
+    get_controller_regions_keyboard,
+    controller_zayavka_type_keyboard,
+    controller_geolocation_keyboard,
+    get_controller_tariff_selection_keyboard,
 )
 
 # Mock functions to replace utils and database imports
@@ -29,284 +38,231 @@ async def get_user_by_telegram_id(telegram_id: int):
         'phone_number': '+998901234567'
     }
 
-async def search_clients_by_name(query: str, exact_match: bool = False):
-    """Mock search clients by name"""
+async def search_clients_by_phone(phone: str):
+    """Mock search by phone"""
     return [
-        {
-            'id': 1,
-            'full_name': 'Aziz Karimov',
-            'phone': '+998901234567',
-            'address': 'Tashkent, Chorsu'
-        }
+        {'id': 1, 'full_name': 'Ali Valiyev', 'phone': phone},
+        {'id': 2, 'full_name': 'Vali Aliev', 'phone': phone},
     ]
 
-async def create_new_client(client_data: Dict):
-    """Mock create new client"""
-    return {
-        'id': 1,
-        'full_name': client_data.get('name', ''),
-        'phone': client_data.get('phone', ''),
-        'address': client_data.get('address', '')
-    }
-
-async def get_client_by_id(client_id: int):
-    """Mock get client by ID"""
-    return {
-        'id': client_id,
-        'full_name': f'Test Client {client_id}',
-        'phone': '+998901234567',
-        'address': 'Tashkent, Test Address'
-    }
-
-class RoleBasedApplicationHandler:
-    """Mock role-based application handler"""
-    
-    async def start_application_creation(self, creator_role: str, creator_id: int, application_type: str):
-        """Mock start application creation"""
-        return {
-            'success': True,
-            'application_id': f'APP_{creator_role}_{creator_id}_{application_type}'
-        }
-
-def get_junior_manager_main_keyboard(lang: str = 'uz'):
-    """Mock junior manager main keyboard"""
-    return get_junior_manager_main_keyboard_updated(lang)
-
-
-def get_client_search_menu(lang: str = 'uz'):
-    """Mock client search menu"""
-    return get_client_search_menu_updated(lang)
-
-
-def get_application_priority_keyboard(lang: str = 'uz'):
-    """Mock application priority keyboard"""
-    return get_application_priority_keyboard_updated(lang)
-
-
-def get_application_confirmation_keyboard(lang: str = 'uz'):
-    """Mock application confirmation keyboard"""
-    return get_application_confirmation_keyboard_updated(lang)
+async def search_clients_by_name(name: str):
+    """Mock search by name"""
+    return [
+        {'id': 3, 'full_name': name, 'phone': '+998901112233'}
+    ]
 
 
 def get_junior_manager_connection_order_router():
     """Get junior manager connection order router"""
     router = Router()
     
-    # Apply role filter
+    # Role filter
     role_filter = RoleFilter("junior_manager")
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(['\ud83d\udd0c Ulanish arizasi yaratish']))
-    async def junior_manager_create_connection_request(message: Message, state: FSMContext):
-        """Handle junior manager creating connection request"""
-        user_id = message.from_user.id
-        
+    # 1) Entry point: start with selecting search method
+    @router.message(F.text == "🔌 Ulanish arizasi yaratish")
+    async def start_connection_order(message: Message, state: FSMContext):
+        await state.update_data(current_flow='connection')
+        await message.answer(
+            "Mijozni qanday qidiramiz?",
+            reply_markup=get_client_search_menu_updated('uz')
+        )
+        await state.set_state(JuniorManagerClientSearchStates.selecting_client_search_method)
+
+    # 2) Search flow selection
+    @router.callback_query(F.data == "search_by_phone", StateFilter(JuniorManagerClientSearchStates.selecting_client_search_method))
+    async def jm_search_by_phone(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(JuniorManagerClientSearchStates.entering_phone)
+        await callback.message.edit_text("📱 Telefon raqamini kiriting:\nMasalan: +998901234567")
+
+    @router.callback_query(F.data == "search_by_name", StateFilter(JuniorManagerClientSearchStates.selecting_client_search_method))
+    async def jm_search_by_name(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(JuniorManagerClientSearchStates.entering_name)
+        await callback.message.edit_text("👤 Mijoz ismini kiriting:\nMasalan: Alisher Karimov")
+
+    @router.callback_query(F.data == "search_by_id", StateFilter(JuniorManagerClientSearchStates.selecting_client_search_method))
+    async def jm_search_by_id(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(JuniorManagerClientSearchStates.entering_client_id)
+        await callback.message.edit_text("🆔 Mijoz ID sini kiriting:\nMasalan: 12345")
+
+    @router.callback_query(F.data == "create_new_client", StateFilter(JuniorManagerClientSearchStates.selecting_client_search_method))
+    async def jm_create_new_client(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(JuniorManagerClientSearchStates.entering_new_client_name)
+        await callback.message.edit_text("➕ Yangi mijoz nomini kiriting:")
+
+    @router.callback_query(F.data == "back_to_main")
+    async def jm_back_to_main(callback: CallbackQuery, state: FSMContext):
+        await state.clear()
+        await callback.answer()
+        await callback.message.edit_text("🏠 Bosh menyu")
+        await callback.message.answer("Kerakli bo'limni tanlang:", reply_markup=get_junior_manager_main_menu('uz'))
+
+    @router.message(StateFilter(JuniorManagerClientSearchStates.entering_phone))
+    async def jm_process_phone_search(message: Message, state: FSMContext):
+        phone = message.text.strip()
+        clients = await search_clients_by_phone(phone)
+        await _jm_show_clients_list(message, state, clients)
+
+    @router.message(StateFilter(JuniorManagerClientSearchStates.entering_name))
+    async def jm_process_name_search(message: Message, state: FSMContext):
+        name = message.text.strip()
+        clients = await search_clients_by_name(name)
+        await _jm_show_clients_list(message, state, clients)
+
+    @router.message(StateFilter(JuniorManagerClientSearchStates.entering_client_id))
+    async def jm_process_id_search(message: Message, state: FSMContext):
+        client_id = message.text.strip()
+        clients = [{'id': int(client_id) if client_id.isdigit() else 9999, 'full_name': f'Mijoz #{client_id}', 'phone': '+998900000000'}]
+        await _jm_show_clients_list(message, state, clients)
+
+    @router.message(StateFilter(JuniorManagerClientSearchStates.entering_new_client_name))
+    async def jm_process_new_client(message: Message, state: FSMContext):
+        full_name = message.text.strip()
+        clients = [{'id': -1, 'full_name': full_name, 'phone': 'N/A'}]
+        await _jm_show_clients_list(message, state, clients)
+
+    async def _jm_show_clients_list(message: Message, state: FSMContext, clients):
+        if not clients:
+            await message.answer("Mijoz topilmadi. Qayta urinib ko'ring.")
+            await state.set_state(JuniorManagerClientSearchStates.selecting_client_search_method)
+            await message.answer("Qidirish usulini tanlang:", reply_markup=get_client_search_menu_updated('uz'))
+            return
+        await state.update_data(found_clients=clients)
+        await state.set_state(JuniorManagerClientSearchStates.selecting_client)
+
+        rows = []
+        for i, c in enumerate(clients[:5]):
+            rows.append([InlineKeyboardButton(text=f"{c['full_name']} - {c.get('phone','N/A')}", callback_data=f"jm_select_client_{i}")])
+        rows.append([InlineKeyboardButton(text="🔍 Boshqa qidirish", callback_data="jm_search_again")])
+        rows.append([InlineKeyboardButton(text="❌ Bekor qilish", callback_data="jm_cancel_creation")])
+        kb = InlineKeyboardMarkup(inline_keyboard=rows)
+        await message.answer("Mijozni tanlang:", reply_markup=kb)
+
+    @router.callback_query(lambda c: c.data.startswith("jm_select_client_"), StateFilter(JuniorManagerClientSearchStates.selecting_client))
+    async def jm_select_client(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        data = await state.get_data()
+        clients = data.get('found_clients', [])
+        idx = int(callback.data.split('_')[-1])
+        if idx >= len(clients):
+            await callback.answer("Xato", show_alert=True)
+            return
+        await state.update_data(selected_client=clients[idx])
+        await callback.message.edit_text("Hududni tanlang:")
+        await callback.message.answer("Hududni tanlang:", reply_markup=get_controller_regions_keyboard('uz'))
+        await state.set_state(JuniorManagerConnectionOrderStates.selecting_region)
+
+    @router.callback_query(F.data == "jm_search_again")
+    async def jm_search_again(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(JuniorManagerClientSearchStates.selecting_client_search_method)
+        await callback.message.edit_text("Qidirish usulini tanlang:")
+        await callback.message.answer("Qidirish usulini tanlang:", reply_markup=get_client_search_menu_updated('uz'))
+
+    @router.callback_query(F.data == "jm_cancel_creation")
+    async def jm_cancel_creation(callback: CallbackQuery, state: FSMContext):
+        await state.clear()
+        await callback.message.edit_text("❌ Zayavka yaratish bekor qilindi")
+        await callback.answer()
+
+    # 3) Connection order flow
+    @router.callback_query(F.data.startswith("ctrl_region_"), StateFilter(JuniorManagerConnectionOrderStates.selecting_region))
+    async def jm_select_region(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        region = callback.data.replace("ctrl_region_", "")
+        await state.update_data(region=region)
+        await callback.message.answer("Ulanish turini tanlang:", reply_markup=controller_zayavka_type_keyboard('uz'))
+        await state.set_state(JuniorManagerConnectionOrderStates.selecting_connection_type)
+
+    @router.callback_query(F.data.startswith("ctrl_zayavka_type_"), StateFilter(JuniorManagerConnectionOrderStates.selecting_connection_type))
+    async def jm_select_connection_type(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        connection_type = callback.data.replace("ctrl_zayavka_type_", "")
+        await state.update_data(connection_type=connection_type)
+        await callback.message.answer("Tariflardan birini tanlang:", reply_markup=get_controller_tariff_selection_keyboard('uz'))
+        await state.set_state(JuniorManagerConnectionOrderStates.selecting_tariff)
+
+    @router.callback_query(F.data.in_(["ctrl_tariff_standard", "ctrl_tariff_new"]), StateFilter(JuniorManagerConnectionOrderStates.selecting_tariff))
+    async def jm_select_tariff(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        tariff = "Standard" if callback.data == "ctrl_tariff_standard" else "Yangi"
+        await state.update_data(selected_tariff=tariff)
+        await callback.message.answer("Manzilingizni kiriting:")
+        await state.set_state(JuniorManagerConnectionOrderStates.entering_address)
+
+    @router.message(StateFilter(JuniorManagerConnectionOrderStates.entering_address))
+    async def jm_get_connection_address(message: Message, state: FSMContext):
+        await state.update_data(address=message.text)
+        await message.answer("Geolokatsiya yuborasizmi?", reply_markup=controller_geolocation_keyboard('uz'))
+        await state.set_state(JuniorManagerConnectionOrderStates.asking_for_geo)
+
+    @router.callback_query(F.data.in_(["ctrl_send_location_yes", "ctrl_send_location_no"]), StateFilter(JuniorManagerConnectionOrderStates.asking_for_geo))
+    async def jm_ask_for_geo(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        if callback.data == "ctrl_send_location_yes":
+            await callback.message.answer("Geolokatsiyani yuboring:")
+            await state.set_state(JuniorManagerConnectionOrderStates.waiting_for_geo)
+        else:
+            await _jm_show_connection_confirmation(callback, state, geo=None)
+
+    @router.message(StateFilter(JuniorManagerConnectionOrderStates.waiting_for_geo), F.location)
+    async def jm_get_geo(message: Message, state: FSMContext):
+        await state.update_data(geo=message.location)
+        await _jm_show_connection_confirmation(message, state, geo=message.location)
+
+    async def _jm_show_connection_confirmation(message_or_callback, state: FSMContext, geo=None):
+        data = await state.get_data()
+        selected_client = data.get('selected_client', {})
+        region = data.get('region', '-')
+        connection_type = data.get('connection_type', '-')
+        tariff = data.get('selected_tariff', '-')
+        address = data.get('address', '-')
+
+        text = (
+            f"👤 <b>Mijoz:</b> {selected_client.get('full_name','N/A')}\n"
+            f"🏛️ <b>Hudud:</b> {region}\n"
+            f"🔌 <b>Ulanish turi:</b> {connection_type}\n"
+            f"💳 <b>Tarif:</b> {tariff}\n"
+            f"🏠 <b>Manzil:</b> {address}\n"
+            f"📍 <b>Geolokatsiya:</b> {'✅ Yuborilgan' if geo else '❌ Yuborilmagan'}"
+        )
+
+        if hasattr(message_or_callback, 'message'):
+            await message_or_callback.message.answer(text, parse_mode='HTML', reply_markup=get_application_confirmation_keyboard_updated('uz'))
+        else:
+            await message_or_callback.answer(text, parse_mode='HTML', reply_markup=get_application_confirmation_keyboard_updated('uz'))
+        await state.set_state(JuniorManagerConnectionOrderStates.confirming_connection)
+
+    @router.callback_query(F.data == "confirm_application", StateFilter(JuniorManagerConnectionOrderStates.confirming_connection))
+    async def jm_confirm_connection_order(callback: CallbackQuery, state: FSMContext):
         try:
-            user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'junior_manager':
-                await message.answer("Sizda ruxsat yo'q.")
-                return
-            
-            lang = user.get('language', 'uz')
-            
-            # Initialize application creation
-            app_handler = RoleBasedApplicationHandler()
-            result = await app_handler.start_application_creation(
-                creator_role='junior_manager',
-                creator_id=user['id'],
-                application_type='connection_request'
+            try:
+                await callback.message.edit_reply_markup(reply_markup=None)
+            except Exception:
+                pass
+            await callback.answer()
+
+            request_id = f"UL_JM_{callback.from_user.id}_{int(datetime.now().timestamp())}"
+            success_msg = (
+                "✅ Ulanish arizasi yaratildi!\n"
+                f"Ariza ID: {request_id[:10]}\n"
+                "Tez orada siz bilan bog'lanamiz."
             )
-            
-            if result['success']:
-                text = (
-                    "\ud83d\udd0c <b>Ulanish arizasi yaratish</b>\n\n"
-                    "Mijozni qanday qidirishni xohlaysiz?\n\n"
-                    "\ud83d\udcf1 Telefon raqami bo'yicha\n"
-                    "\ud83d\dc64 Ism bo'yicha\n"
-                    "\ud83c\udd94 ID bo'yicha\n"
-                    "➕ Yangi mijoz qo'shish"
-                )
-                
-                await message.answer(
-                    text,
-                    reply_markup=get_client_search_menu(lang),
-                    parse_mode='HTML'
-                )
-            else:
-                await message.answer("Ariza yaratishda xatolik yuz berdi")
-            
-        except Exception as e:
-            print(f"Error in junior_manager_create_connection_request: {str(e)}")
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
-
-    @router.message(F.text.in_(['\ud83d\udd27 Texnik xizmat yaratish']))
-    async def junior_manager_technical_service_denied(message: Message, state: FSMContext):
-        """Handle technical service creation denial for junior manager"""
-        try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await message.answer("Sizda ruxsat yo'q.")
-                return
-
-            lang = user.get('language', 'uz')
-            
-            text = """❌ **Ruxsat yo'q**
-
-Kichik menejer faqat ulanish arizalarini yarata oladi.
-Texnik xizmat arizalarini yaratish uchun controller bilan bog'laning."""
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="\ud83d\udd0c Ulanish arizasi yaratish", callback_data="jm_create_connection"),
-                    InlineKeyboardButton(text="\ud83d\udcde Controller bilan bog'lanish", callback_data="jm_contact_controller")
-                ],
-                [
-                    InlineKeyboardButton(text="\ud83d\udd19 Orqaga", callback_data="jm_back_to_main")
-                ]
-            ])
-            
-            await message.answer(
-                text,
-                reply_markup=keyboard,
-                parse_mode="Markdown"
-            )
-            
-        except Exception as e:
-            print(f"Error in junior_manager_technical_service_denied: {e}")
-            await message.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
-
-    @router.callback_query(F.data.startswith("jm_client_search_"))
-    async def handle_junior_manager_client_search_method(callback: CallbackQuery, state: FSMContext):
-        """Handle client search method selection"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await callback.answer("Ruxsat yo'q", show_alert=True)
-                return
-
-            lang = user.get('language', 'uz')
-            search_method = callback.data.split("_")[-1]
-            
-            if search_method == "phone":
-                text = """\ud83d\udcf1 **Telefon raqami bilan qidirish**
-
-Mijoz telefon raqamini kiriting:"""
-                await state.set_state(StaffApplicationStates.entering_client_phone)
-                
-            elif search_method == "name":
-                text = """\ud83d\dc64 **Ism bilan qidirish**
-
-Mijoz ismini kiriting:"""
-                await state.set_state(StaffApplicationStates.entering_client_name)
-                
-            elif search_method == "id":
-                text = """\ud83c\udd94 **ID bilan qidirish**
-
-Mijoz ID raqamini kiriting:"""
-                await state.set_state(StaffApplicationStates.entering_client_id)
-                
-            else:
-                await callback.answer("Noto'g'ri amal", show_alert=True)
-                return
-            
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="\ud83d\udd19 Orqaga", callback_data="jm_back_to_client_search")
-                ]
-            ])
-            
-            await callback.message.edit_text(
-                text,
-                reply_markup=keyboard,
-                parse_mode="Markdown"
-            )
-            
-        except Exception as e:
-            print(f"Error in handle_junior_manager_client_search_method: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    @router.callback_query(F.data == "jm_cancel_application_creation")
-    async def junior_manager_cancel_application_creation(callback: CallbackQuery, state: FSMContext):
-        """Cancel application creation"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await callback.answer("Ruxsat yo'q", show_alert=True)
-                return
-
-            lang = user.get('language', 'uz')
-            
-            # Clear state
+            await callback.message.answer(success_msg)
             await state.clear()
-            
-            text = """❌ **Ariza yaratish bekor qilindi**
+        except Exception:
+            await callback.answer("Xatolik yuz berdi")
 
-Boshqa amallar uchun quyidagi tugmalardan foydalaning:"""
-            
-            keyboard = get_junior_manager_main_keyboard(lang)
-            
-            await callback.message.edit_text(
-                text,
-                reply_markup=keyboard,
-                parse_mode="Markdown"
-            )
-            
-            await callback.answer("Ariza yaratish bekor qilindi")
-            
-        except Exception as e:
-            print(f"Error in junior_manager_cancel_application_creation: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
-    @router.message(StaffApplicationStates.entering_client_phone)
-    async def handle_junior_manager_client_phone_input(message: Message, state: FSMContext):
-        """Handle client phone number input"""
-        try:
-            user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await message.answer("Sizda ruxsat yo'q.")
-                return
-
-            lang = user.get('language', 'uz')
-            phone = message.text.strip()
-            
-            # Validate phone number
-            if not phone or len(phone) < 10:
-                await message.answer("❌ Noto'g'ri telefon raqam. Iltimos, to'g'ri raqam kiriting.")
-                return
-            
-            # Search for client by phone
-            clients = await search_clients_by_name(phone, exact_match=True)
-            
-            if clients:
-                # Client found
-                await _simulate_junior_manager_client_found(message, state, None, phone, lang)
-            else:
-                # Client not found, offer to create new
-                text = f"""❌ **Mijoz topilmadi**
-
-Telefon raqam: {phone}
-
-Bu mijoz tizimda mavjud emas. Yangi mijoz qo'shishni xohlaysizmi?"""
-                
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                    [
-                        InlineKeyboardButton(text="➕ Yangi mijoz qo'shish", callback_data="jm_create_new_client"),
-                        InlineKeyboardButton(text="\ud83d\udd0d Boshqa qidirish", callback_data="jm_client_search_phone")
-                    ],
-                    [
-                        InlineKeyboardButton(text="\ud83d\udd19 Orqaga", callback_data="jm_back_to_client_search")
-                    ]
-                ])
-                
-                await message.answer(
-                    text,
-                    reply_markup=keyboard,
-                    parse_mode="Markdown"
-                )
-        except Exception as e:
-            print(f"Error in handle_junior_manager_client_phone_input: {e}")
-            await message.answer("Xatolik yuz berdi")
+    @router.callback_query(F.data == "cancel_application", StateFilter(JuniorManagerConnectionOrderStates.confirming_connection))
+    async def jm_cancel_connection_order(callback: CallbackQuery, state: FSMContext):
+        await state.clear()
+        await callback.message.edit_text("❌ Zayavka yaratish bekor qilindi")
+        await callback.answer()
 
     return router
