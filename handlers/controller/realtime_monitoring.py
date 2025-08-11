@@ -372,7 +372,6 @@ def get_realtime_monitoring_router():
                 [InlineKeyboardButton(text=("📋 Zayavkalar ro'yxati" if lang=='uz' else "📋 Список заявок"), callback_data="ctrl_realtime_requests")],
                 [InlineKeyboardButton(text=("🚨 Shoshilinch zayavkalar" if lang=='uz' else "🚨 Срочные заявки"), callback_data="ctrl_realtime_urgent")],
                 [InlineKeyboardButton(text=("⏰ Vaqt kuzatish" if lang=='uz' else "⏰ Отслеживание времени"), callback_data="ctrl_time_tracking")],
-                [InlineKeyboardButton(text=("📊 Workflow tarix" if lang=='uz' else "📊 История workflow"), callback_data="ctrl_workflow_history")],
                 [InlineKeyboardButton(text=("🔄 Yangilash" if lang=='uz' else "🔄 Обновить"), callback_data="ctrl_refresh_realtime")],
             ])
             
@@ -637,7 +636,6 @@ def get_realtime_monitoring_router():
                 [InlineKeyboardButton(text=("📋 Zayavkalar ro'yxati" if lang=='uz' else "📋 Список заявок"), callback_data="ctrl_realtime_requests")],
                 [InlineKeyboardButton(text=("🚨 Shoshilinch zayavkalar" if lang=='uz' else "🚨 Срочные заявки"), callback_data="ctrl_realtime_urgent")],
                 [InlineKeyboardButton(text=("⏰ Vaqt kuzatish" if lang=='uz' else "⏰ Отслеживание времени"), callback_data="ctrl_time_tracking")],
-                [InlineKeyboardButton(text=("📊 Workflow tarix" if lang=='uz' else "📊 История workflow"), callback_data="ctrl_workflow_history")],
                 [InlineKeyboardButton(text=("🔄 Yangilash" if lang=='uz' else "🔄 Обновить"), callback_data="ctrl_refresh_realtime")],
             ])
             await callback.message.edit_text(monitoring_text, reply_markup=keyboard, parse_mode='HTML')
