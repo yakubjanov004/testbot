@@ -119,8 +119,8 @@ def zayavka_type_keyboard(lang="uz"):
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=person_physical_text, callback_data="zayavka_type_b2b")],
-            [InlineKeyboardButton(text=person_legal_text, callback_data="zayavka_type_b2c")]
+            [InlineKeyboardButton(text=person_physical_text, callback_data="zayavka_type_b2c")],
+            [InlineKeyboardButton(text=person_legal_text, callback_data="zayavka_type_b2b")]
         ]
     )
     return keyboard
