@@ -22,24 +22,10 @@ def get_manager_staff_activity_router():
 
     @router.message(F.text == "👥 Xodimlar faoliyati")
     async def show_staff_activity_menu(message: Message, state: FSMContext):
-        """Manager staff activity handler"""
+        """Manager staff activity handler (only junior managers' work)"""
         try:
-            # Mock user data
-            user = {
-                'id': message.from_user.id,
-                'role': 'manager',
-                'language': 'uz',
-                'full_name': 'Test Manager'
-            }
-            
-            activity_text = "👥 Xodimlar faoliyati:"
-            
-            # Create staff activity keyboard
-            keyboard = _create_staff_activity_keyboard()
-            
-            await message.answer(activity_text, reply_markup=keyboard)
-            
-        except Exception as e:
+            await show_junior_manager_work(message)
+        except Exception:
             await message.answer("Xatolik yuz berdi")
 
     @router.message(F.text == "🟢 Onlayn xodimlar")

@@ -103,7 +103,7 @@ def get_manager_applications_list_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(["📋 Hammasini ko'rish"]))
+    @router.message(F.text.in_(["📋 Arizalarni ko'rish"]))
     async def view_all_applications(message: Message, state: FSMContext):
         """Manager view all applications handler"""
         try:

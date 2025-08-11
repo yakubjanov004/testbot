@@ -44,22 +44,13 @@ def get_manager_router():
     router.include_router(get_manager_main_menu_router())
     router.include_router(get_manager_language_router())
     router.include_router(get_manager_inbox_router())
-    router.include_router(get_manager_statistics_router())
-    router.include_router(get_manager_staff_activity_router())
-    router.include_router(get_manager_status_management_router())
-    router.include_router(get_manager_technician_assignment_router())
-    router.include_router(get_manager_word_documents_router())
-    router.include_router(get_manager_staff_application_router())
-    router.include_router(get_manager_notifications_router())
-    router.include_router(get_manager_applications_actions_router())
-    router.include_router(get_manager_applications_callbacks_router())
-    router.include_router(get_manager_applications_list_router())
-    router.include_router(get_manager_applications_search_router())
-    router.include_router(get_manager_applications_router())
-    router.include_router(get_manager_filters_router())
     router.include_router(get_manager_realtime_monitoring_router())
-    router.include_router(get_manager_reports_router())
-    router.include_router(get_manager_export_router())
+    router.include_router(get_manager_statistics_router())  # 📊 Monitoring
+    router.include_router(get_manager_staff_activity_router())  # 👥 Xodimlar faoliyati (junior managers only)
+    router.include_router(get_manager_status_management_router())  # 🔄 Status o'zgartirish
+    router.include_router(get_manager_staff_application_router())  # 🔌/🔧 yaratish
+    router.include_router(get_manager_applications_list_router())  # 📋 Arizalarni ko'rish
+    router.include_router(get_manager_export_router())  # 📤 Export
     
     return router
 

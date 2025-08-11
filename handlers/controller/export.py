@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, BufferedInputFile, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
-from keyboards.controllers_buttons import get_controller_main_keyboard
+from keyboards.controllers_buttons import get_controller_main_keyboard as _unused__get_controller_main_keyboard  # kept for compatibility
 from states.controller_states import ControllerMainMenuStates
 from utils.export_utils import create_export_file, get_available_export_types, get_available_export_formats
 from filters.role_filter import RoleFilter

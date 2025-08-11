@@ -44,7 +44,7 @@ def get_controller_main_menu_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(["🎛️ Controller", "🎛️ Nazoratchi"]))
+    @router.message(F.text.in_(["/start", "🏠 Bosh menyu", "🎛️ Controller", "🎛️ Nazoratchi"]))
     async def controllers_start(message: Message, state: FSMContext):
         """Controllers panel asosiy menyu"""
         user_id = message.from_user.id

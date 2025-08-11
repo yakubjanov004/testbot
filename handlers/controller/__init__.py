@@ -40,20 +40,16 @@ def get_controller_router():
     
     # Include handlers in priority order
     router.include_router(get_controller_main_menu_router())
-    router.include_router(get_controller_application_creator_router())
-    router.include_router(get_controller_inbox_router())
-    router.include_router(get_controller_language_router())
-    router.include_router(get_controller_monitoring_router())
-    router.include_router(get_controller_orders_router())
-    router.include_router(get_controller_quality_router())
-    router.include_router(get_realtime_monitoring_router())
-    router.include_router(get_controller_reports_router())
-    router.include_router(get_controller_staff_application_router())
-    router.include_router(get_controller_technical_service_router())
-    router.include_router(get_controller_technician_management_router())
-    router.include_router(get_controller_technicians_router())
-    router.include_router(get_workflow_manager_router())
-    router.include_router(get_controller_export_router())
+    router.include_router(get_controller_application_creator_router())  # 🔌/🔧 yaratish
+    router.include_router(get_controller_inbox_router())  # 📥 Inbox
+    router.include_router(get_controller_language_router())  # 🌐 Til
+    router.include_router(get_controller_monitoring_router())  # 📊 Monitoring
+    router.include_router(get_realtime_monitoring_router())  # 🕐 Real vaqtda
+    from .applications_list import get_controller_applications_list_router
+    router.include_router(get_controller_applications_list_router())  # 📋 Arizalarni ko'rish
+    from .staff_activity import get_controller_staff_activity_router
+    router.include_router(get_controller_staff_activity_router())  # 👥 Xodimlar faoliyati (technicians only)
+    router.include_router(get_controller_export_router())  # 📤 Export
     
     return router
 

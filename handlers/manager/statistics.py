@@ -25,7 +25,7 @@ def get_manager_statistics_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
     
-    @router.message(F.text == "📊 Statistika")
+    @router.message(F.text.in_(["📊 Monitoring", "📊 Statistika"]))
     async def manager_statistics_menu(message: Message):
         """Manager statistics main menu"""
         try:

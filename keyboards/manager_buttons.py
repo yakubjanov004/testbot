@@ -33,15 +33,13 @@ def get_manager_main_keyboard(lang='uz'):
     inbox_text = "📥 Inbox"
     change_language_text = "🌐 Tilni o'zgartirish" if lang == "uz" else "🌐 Изменить язык"
     
-    # 2tadan qilib chiqadigan keyboard
+    # Asosiy menyu (2 tadan qator)
     keyboard = [
+        [KeyboardButton(text=inbox_text), KeyboardButton(text=view_applications_text)],
         [KeyboardButton(text=create_connection_text), KeyboardButton(text=create_technical_text)],
-        [KeyboardButton(text=view_applications_text), KeyboardButton(text=filter_applications_text)],
-        [KeyboardButton(text=change_status_text), KeyboardButton(text=technician_assignment_text)],
-        [KeyboardButton(text=notifications_text), KeyboardButton(text=generate_report_text)],
-        [KeyboardButton(text=staff_activity_text), KeyboardButton(text=realtime_monitoring_text)],
-        [KeyboardButton(text=word_documents_text), KeyboardButton(text=export_text)],
-        [KeyboardButton(text=inbox_text), KeyboardButton(text=change_language_text)]
+        [KeyboardButton(text=realtime_monitoring_text), KeyboardButton(text=generate_report_text)],
+        [KeyboardButton(text=staff_activity_text), KeyboardButton(text=change_status_text)],
+        [KeyboardButton(text=export_text), KeyboardButton(text=change_language_text)]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
