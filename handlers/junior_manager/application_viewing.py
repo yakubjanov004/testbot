@@ -90,7 +90,7 @@ def get_junior_manager_application_viewing_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(["📋 Arizalarni ko'rish"]))
+    @router.message(F.text.in_(["📋 Zayavkalarni ko'rish", "📋 Arizalarni ko'rish"]))
     async def view_applications(message: Message, state: FSMContext):
         """View applications list"""
         try:
@@ -102,24 +102,39 @@ def get_junior_manager_application_viewing_router():
             
             # Get applications
             applications = await get_junior_manager_applications(user['id'], limit=50)
+            await state.update_data(jm_apps=applications)
             
             if applications:
                 text = f"📋 Sizning arizalaringiz ({len(applications)} ta):\n\n"
-                
                 await message.answer(
                     text,
-                    reply_markup=get_application_list_keyboard(applications, lang=lang)
+                    reply_markup=get_application_list_keyboard(applications, page=0, lang=lang)
                 )
             else:
                 text = """📋 Hozircha arizalar yo'q.
 
 🔌 Yangi ariza yaratishni xohlaysizmi?"""
-                
                 await message.answer(text)
             
         except Exception as e:
             print(f"Error in view_applications: {e}")
             await message.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data.startswith("jm_apps_page_"))
+    async def paginate_applications(callback: CallbackQuery, state: FSMContext):
+        """Handle applications pagination"""
+        try:
+            await callback.answer()
+            data = await state.get_data()
+            applications = data.get('jm_apps') or []
+            page_str = callback.data.split('_')[-1]
+            page = int(page_str) if page_str.isdigit() else 0
+            text = f"📋 Sizning arizalaringiz ({len(applications)} ta):\n\n"
+            await callback.message.edit_reply_markup(
+                reply_markup=get_application_list_keyboard(applications, page=page, lang='uz')
+            )
+        except Exception as e:
+            print(f"Error in paginate_applications: {e}")
 
     @router.callback_query(F.data.startswith("jm_view_app_"))
     async def handle_application_view(callback: CallbackQuery, state: FSMContext):
@@ -134,7 +149,8 @@ def get_junior_manager_application_viewing_router():
             app_id = int(callback.data.split("_")[-1])
             
             # Get application details
-            applications = await get_junior_manager_applications(user['id'], limit=1000)
+            data = await state.get_data()
+            applications = data.get('jm_apps') or await get_junior_manager_applications(user['id'], limit=1000)
             application = next((app for app in applications if app['id'] == app_id), None)
             
             if application:
@@ -147,7 +163,7 @@ def get_junior_manager_application_viewing_router():
                 
                 priority_text = {
                     'low': 'Past',
-                    'medium': 'O\'rta',
+                    'medium': "O'rta",
                     'high': 'Yuqori',
                     'urgent': 'Shoshilinch'
                 }.get(application.get('priority', 'medium'), application.get('priority', 'medium'))
@@ -161,19 +177,21 @@ def get_junior_manager_application_viewing_router():
 📊 Holat: {status_text}
 📝 Tafsilotlar: {application.get('details', 'N/A')}
 📅 Yaratilgan: {application.get('created_at', 'N/A')}"""
-                
-                # Create action keyboard
                 await callback.message.edit_text(
                     text,
                     reply_markup=get_application_action_keyboard(app_id, application.get('status'), lang=lang)
                 )
             else:
-                text = "❌ Ariza topilmadi"
-                await callback.answer(text, show_alert=True)
+                await callback.answer("❌ Ariza topilmadi", show_alert=True)
             
         except Exception as e:
             print(f"Error in handle_application_view: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("jm_details_app_"))
+    async def handle_application_details(callback: CallbackQuery, state: FSMContext):
+        """Handle explicit details request button"""
+        await handle_application_view(callback, state)
 
     @router.callback_query(F.data.startswith("jm_cancel_app_"))
     async def handle_application_cancellation(callback: CallbackQuery, state: FSMContext):
@@ -184,11 +202,11 @@ def get_junior_manager_application_viewing_router():
                 await callback.answer("Ruxsat yo'q", show_alert=True)
                 return
 
-            lang = user.get('language', 'uz')
             app_id = int(callback.data.split("_")[-1])
             
             # Check if application belongs to this junior manager
-            applications = await get_junior_manager_applications(user['id'], limit=1000)
+            data = await state.get_data()
+            applications = data.get('jm_apps') or await get_junior_manager_applications(user['id'], limit=1000)
             application = next((app for app in applications if app['id'] == app_id), None)
             
             if not application:
@@ -196,23 +214,16 @@ def get_junior_manager_application_viewing_router():
                 return
             
             if application.get('status') == 'cancelled':
-                text = "❌ Ariza allaqachon bekor qilingan"
-                await callback.answer(text, show_alert=True)
+                await callback.answer("❌ Ariza allaqachon bekor qilingan", show_alert=True)
                 return
             
-            # Cancel application
+            # Cancel application (mock)
             success = await update_application_status_as_junior_manager(app_id, 'cancelled')
             
             if success:
-                text = f"""✅ Ariza #{app_id} muvaffaqiyatli bekor qilindi.
-
-Статус заявки изменен на 'отменена'."""
-                
-                await callback.message.edit_text(text)
-                print(f"Junior Manager {user['id']} cancelled application {app_id}")
+                await callback.message.edit_text(f"✅ Ariza #{app_id} bekor qilindi.")
             else:
-                text = "❌ Arizani bekor qilishda xatolik"
-                await callback.answer(text, show_alert=True)
+                await callback.answer("❌ Arizani bekor qilishda xatolik", show_alert=True)
             
             await callback.answer()
             
@@ -220,52 +231,30 @@ def get_junior_manager_application_viewing_router():
             print(f"Error cancelling application: {e}")
             await callback.answer("Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data.startswith("jm_details_app_"))
-    async def handle_application_details_view(callback: CallbackQuery, state: FSMContext):
-        """Handle detailed application view"""
-        # This is the same as jm_view_app_ but can be extended for more detailed view
-        await handle_application_view(callback, state)
-
-    @router.callback_query(F.data.startswith("jm_apps_page_"))
-    async def handle_application_pagination(callback: CallbackQuery, state: FSMContext):
-        """Handle application list pagination"""
-        try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            if not user or user['role'] != 'junior_manager':
-                await callback.answer("Ruxsat yo'q", show_alert=True)
-                return
-            
-            lang = user.get('language', 'uz')
-            page = int(callback.data.split("_")[-1])
-            
-            # Get applications for the page
-            applications = await get_junior_manager_applications(user['id'], limit=50)
-            
-            text = f"📋 Sizning arizalaringiz ({len(applications)} ta):\n\n"
-            
-            await callback.message.edit_text(
-                text, 
-                reply_markup=get_application_list_keyboard(applications, page=page, lang=lang)
-            )
-            await callback.answer()
-            
-        except Exception as e:
-            print(f"Error handling pagination: {e}")
-            await callback.answer("Xatolik yuz berdi", show_alert=True)
-
     @router.callback_query(F.data == "jm_close_menu")
-    async def handle_close_menu(callback: CallbackQuery, state: FSMContext):
-        """Handle menu closing"""
+    async def close_applications_menu(callback: CallbackQuery, state: FSMContext):
         try:
-            user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz') if user else 'uz'
-            
-            text = "✅ Menyu yopildi"
-            await callback.message.edit_text(text)
             await callback.answer()
-            
+            try:
+                await callback.message.edit_reply_markup(reply_markup=None)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    @router.callback_query(F.data == "jm_track_all")
+    async def back_to_applications(callback: CallbackQuery, state: FSMContext):
+        try:
+            await callback.answer()
+            data = await state.get_data()
+            applications = data.get('jm_apps') or []
+            await callback.message.edit_text(
+                text=f"📋 Sizning arizalaringiz ({len(applications)} ta):\n\n"
+            )
+            await callback.message.edit_reply_markup(
+                reply_markup=get_application_list_keyboard(applications, page=0, lang='uz')
+            )
         except Exception as e:
-            print(f"Error closing menu: {e}")
-            await callback.answer()
+            print(f"Error in back_to_applications: {e}")
 
     return router 

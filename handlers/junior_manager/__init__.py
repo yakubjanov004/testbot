@@ -17,37 +17,16 @@ This module provides junior manager functionality including:
 
 from aiogram import Router
 from .main_menu import get_junior_manager_main_menu_router
-
-from .application_creation import get_junior_manager_application_creation_router
 from .application_viewing import get_junior_manager_application_viewing_router
-from .client_search import get_junior_manager_client_search_router
-from .details_input import get_junior_manager_details_input_router
-
-from .inbox import get_junior_manager_inbox_router
-from .language import get_junior_manager_language_router
-from .orders import get_junior_manager_orders_router
 from .connection_order import get_junior_manager_connection_order_router
-from .statistics import get_junior_manager_statistics_router
-from .workflow_management import get_junior_manager_workflow_router
 
 def get_junior_manager_router():
-    """Get the complete junior manager router with all handlers"""
-    from aiogram import Router
+    """Get the complete junior manager router with consolidated handlers"""
     router = Router()
     
-    # Include handlers in priority order
+    # Include essential handlers only
     router.include_router(get_junior_manager_main_menu_router())
-
-    router.include_router(get_junior_manager_application_creation_router())
     router.include_router(get_junior_manager_application_viewing_router())
-    router.include_router(get_junior_manager_client_search_router())
-    router.include_router(get_junior_manager_details_input_router())
-
-    router.include_router(get_junior_manager_inbox_router())
-    router.include_router(get_junior_manager_language_router())
-    router.include_router(get_junior_manager_orders_router())
     router.include_router(get_junior_manager_connection_order_router())
-    router.include_router(get_junior_manager_statistics_router())
-    router.include_router(get_junior_manager_workflow_router())
     
     return router
