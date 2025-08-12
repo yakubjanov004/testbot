@@ -18,17 +18,13 @@ This module provides call center functionality including:
 
 from aiogram import Router
 from .main_menu import get_call_center_main_menu_router
-from .chat import get_call_center_chat_router
-from .clients import get_call_center_clients_router
-from .client_rating import get_call_center_client_rating_router
-from .direct_resolution import get_call_center_direct_resolution_router
-from .feedback import get_call_center_feedback_router
 from .inbox import get_call_center_inbox_router
 from .language import get_call_center_language_router
 from .orders import get_call_center_orders_router
-from .staff_application_creation import get_call_center_staff_application_creation_router
 from .statistics import get_call_center_statistics_router
-from .supervisor import get_call_center_supervisor_router
+from .connection_order_cc import get_call_center_connection_order_router
+from .technician_order_cc import get_call_center_technical_service_router
+from .client_search import get_call_center_client_search_router
 
 def get_call_center_router():
     """Get the complete call center router with all handlers"""
@@ -37,16 +33,12 @@ def get_call_center_router():
     
     # Include handlers in priority order
     router.include_router(get_call_center_main_menu_router())
-    router.include_router(get_call_center_chat_router())
-    router.include_router(get_call_center_clients_router())
-    router.include_router(get_call_center_client_rating_router())
-    router.include_router(get_call_center_direct_resolution_router())
-    router.include_router(get_call_center_feedback_router())
     router.include_router(get_call_center_inbox_router())
     router.include_router(get_call_center_language_router())
     router.include_router(get_call_center_orders_router())
-    router.include_router(get_call_center_staff_application_creation_router())
+    router.include_router(get_call_center_client_search_router())
+    router.include_router(get_call_center_connection_order_router())
+    router.include_router(get_call_center_technical_service_router())
     router.include_router(get_call_center_statistics_router())
-    router.include_router(get_call_center_supervisor_router())
     
     return router
