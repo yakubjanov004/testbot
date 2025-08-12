@@ -31,12 +31,14 @@ def get_admin_statistics_router():
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["📊 Statistika", "📊 Статистика"]))
     async def statistics_menu(message: Message, state: FSMContext):
         """Statistics main menu"""
-        text = "📊 <b>Statistika bo'limi</b>\n\nTizim statistikalarini ko'rish uchun turini tanlang."
-        
-        sent_message = await message.answer(
-            text,
-            reply_markup=get_statistics_keyboard('uz')
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
+        text = (
+            "📊 <b>Bo'lim: Statistika</b>\n\nTizim statistikalarini ko'rish uchun turini tanlang." if lang == 'uz'
+            else "📊 <b>Раздел: Статистика</b>\n\nВыберите тип статистики для просмотра."
         )
+
+        sent_message = await message.answer(text, reply_markup=get_statistics_keyboard(lang))
         await state.set_state(AdminStatisticsStates.statistics)
 
     @router.message(F.text.in_(["📈 Umumiy statistika", "📈 Общая статистика"]))

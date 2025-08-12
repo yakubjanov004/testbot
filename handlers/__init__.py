@@ -57,13 +57,6 @@ def setup_handlers(dp: Dispatcher):
         admin_router = get_admin_router()
         dp.include_router(admin_router)
 
-        # Finally, include a fallback router to gracefully handle any
-        # unregistered callback_data values so that users get feedback
-        # instead of silent failures. This must be last to avoid
-        # intercepting valid callbacks handled above.
-        from handlers.unhandled import get_unhandled_router
-        unhandled_router = get_unhandled_router()
-        dp.include_router(unhandled_router)
         
         print("✅ All handlers setup completed successfully")
         

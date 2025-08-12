@@ -31,12 +31,14 @@ def get_admin_users_router():
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["👥 Foydalanuvchilar", "👥 Пользователи"]))
     async def users_menu(message: Message, state: FSMContext):
         """Users main menu"""
-        text = "👥 <b>Foydalanuvchilar boshqaruvi</b>\n\nFoydalanuvchilarni boshqarish uchun turini tanlang."
-        
-        sent_message = await message.answer(
-            text,
-            reply_markup=get_users_keyboard('uz')
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
+        text = (
+            "👥 <b>Foydalanuvchilar boshqaruvi</b>\n\nFunktsiyani tanlang." if lang == 'uz'
+            else "👥 <b>Управление пользователями</b>\n\nВыберите действие."
         )
+
+        sent_message = await message.answer(text, reply_markup=get_users_keyboard(lang))
         await state.set_state(AdminUsersStates.users)
 
     @router.message(F.text.in_(["🔍 Foydalanuvchi qidirish", "🔍 Поиск пользователя"]))

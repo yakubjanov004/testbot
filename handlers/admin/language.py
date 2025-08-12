@@ -38,11 +38,16 @@ def get_admin_language_router():
         )
 
     @router.callback_query(F.data.in_(["lang_uz", "lang_ru"]))
-    async def change_admin_language(call: CallbackQuery):
+    async def change_admin_language(call: CallbackQuery, state: FSMContext):
         """Change admin language"""
         await call.answer()
         
         new_lang = call.data.split("_")[1]  # uz or ru
+        # Persist language choice
+        try:
+            await state.update_data(lang=new_lang)
+        except Exception:
+            pass
         
         if new_lang == 'uz':
             text = (

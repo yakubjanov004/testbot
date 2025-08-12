@@ -49,19 +49,28 @@ def get_admin_orders_router():
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["📝 Zayavkalar", "📝 Заявки"]))
     async def orders_menu(message: Message, state: FSMContext):
         """Show orders menu"""
-        text = (
-            f"📊 <b>Zayavkalar statistikasi</b>\n\n"
-            f"Yangi: 15\n"
-            f"Jarayonda: 8\n"
-            f"Bajarilgan: 32\n"
-            f"Bekor qilingan: 3\n\n"
-            f"Zayavkalar bo'yicha qidirish va filtrlash uchun quyidagi tugmalardan foydalaning:"
-        )
-        
-        sent_message = await message.answer(
-            text,
-            reply_markup=get_zayavka_main_keyboard('uz')
-        )
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
+        if lang == 'ru':
+            text = (
+                f"📊 <b>Статистика заявок</b>\n\n"
+                f"Новые: 15\n"
+                f"В процессе: 8\n"
+                f"Выполненные: 32\n"
+                f"Отмененные: 3\n\n"
+                f"Используйте кнопки ниже для поиска и фильтрации заявок:"
+            )
+        else:
+            text = (
+                f"📊 <b>Zayavkalar statistikasi</b>\n\n"
+                f"Yangi: 15\n"
+                f"Jarayonda: 8\n"
+                f"Bajarilgan: 32\n"
+                f"Bekor qilingan: 3\n\n"
+                f"Zayavkalar bo'yicha qidirish va filtrlash uchun quyidagi tugmalardan foydalaning:"
+            )
+
+        sent_message = await message.answer(text, reply_markup=get_zayavka_main_keyboard(lang))
         
         # Save message ID for cleanup
         await state.update_data(last_message_id=sent_message.message_id)
@@ -69,44 +78,34 @@ def get_admin_orders_router():
     @router.message(F.text.in_(['📂 Holat bo\'yicha', '📂 По статусу']))
     async def handle_status_menu(message: Message, state: FSMContext):
         """Handle status menu"""
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
         text = (
-            f"📂 <b>Holat bo'yicha qidirish</b>\n\n"
-            f"Holatni tanlang:"
-        )
-        
-        # Switch to section keyboard
-        sent_message = await message.answer(
-            text,
-            reply_markup=get_zayavka_section_keyboard('uz')
-        )
-        await state.update_data(last_message_id=sent_message.message_id)
-        
-        # Show inline keyboard with pagination
-        await message.answer(
-            text,
-            reply_markup=get_zayavka_status_filter_keyboard('uz', page=1, total_pages=1)
+            f"📂 <b>Holat bo'yicha qidirish</b>\n\nHolatni tanlang:" if lang == 'uz' else
+            f"📂 <b>Поиск по статусу</b>\n\nВыберите статус:"
         )
 
-    @router.message(F.text == "🔍 Qidirish / Filtrlash")
-    async def handle_filter_menu(message: Message, state: FSMContext):
-        """Handle filter menu selection"""
-        text = (
-            f"🔍 <b>Qidirish / Filtrlash</b>\n\n"
-            f"Qidirish turini tanlang:"
-        )
-        
-        # Switch to section keyboard
-        sent_message = await message.answer(
-            text,
-            reply_markup=get_zayavka_section_keyboard('uz')
-        )
+        sent_message = await message.answer(text, reply_markup=get_zayavka_section_keyboard(lang))
         await state.update_data(last_message_id=sent_message.message_id)
         
         # Show inline keyboard with pagination
-        await message.answer(
-            text,
-            reply_markup=get_zayavka_filter_menu_keyboard('uz', page=1, total_pages=2, admin=True)
+        await message.answer(text, reply_markup=get_zayavka_status_filter_keyboard(lang, page=1, total_pages=1))
+
+    @router.message(F.text.in_(["🔍 Qidirish / Filtrlash", "🔍 Поиск / Фильтр"]))
+    async def handle_filter_menu(message: Message, state: FSMContext):
+        """Handle filter menu selection"""
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
+        text = (
+            f"🔍 <b>Qidirish / Filtrlash</b>\n\nQidirish turini tanlang:" if lang == 'uz' else
+            f"🔍 <b>Поиск / Фильтр</b>\n\nВыберите тип поиска:"
         )
+
+        sent_message = await message.answer(text, reply_markup=get_zayavka_section_keyboard(lang))
+        await state.update_data(last_message_id=sent_message.message_id)
+        
+        # Show inline keyboard with pagination
+        await message.answer(text, reply_markup=get_zayavka_filter_menu_keyboard(lang, page=1, total_pages=2, admin=True))
 
     @router.callback_query(F.data.startswith("zayavka:status:"))
     async def handle_status_selection(callback: CallbackQuery, state: FSMContext):
@@ -139,9 +138,9 @@ def get_admin_orders_router():
                 text += format_order(order, 'uz')
                 text += "\n\n"
             
-            await callback.message.edit_reply_markup(
-                reply_markup=get_zayavka_status_filter_keyboard('uz', page=new_page, total_pages=1)
-            )
+            data = await state.get_data()
+            lang = data.get('lang', 'uz')
+            await callback.message.edit_reply_markup(reply_markup=get_zayavka_status_filter_keyboard(lang, page=new_page, total_pages=1))
             await callback.answer()
             return
 
@@ -170,14 +169,16 @@ def get_admin_orders_router():
             
         # Show first 10 orders
         text = "Zayavkalar:\n\n"
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
         for order in orders[:10]:
-            text += format_order(order, 'uz')
+            text += format_order(order, lang)
             text += "\n\n"
             
         await state.update_data(selected_status=status)
-        await callback.message.edit_reply_markup(
-            reply_markup=get_zayavka_status_filter_keyboard('uz', page=1, total_pages=1)
-        )
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
+        await callback.message.edit_reply_markup(reply_markup=get_zayavka_status_filter_keyboard(lang, page=1, total_pages=1))
         await callback.answer()
 
     @router.callback_query(F.data.startswith("zayavka:filter:"))
@@ -194,9 +195,9 @@ def get_admin_orders_router():
             state_data = await state.get_data()
             active_filter = state_data.get('filter_type')
             
-            await callback.message.edit_reply_markup(
-                reply_markup=get_zayavka_filter_menu_keyboard('uz', page=new_page, active_filter=active_filter, admin=True)
-            )
+            data = await state.get_data()
+            lang = data.get('lang', 'uz')
+            await callback.message.edit_reply_markup(reply_markup=get_zayavka_filter_menu_keyboard(lang, page=new_page, active_filter=active_filter, admin=True))
             await callback.answer()
             return
 
@@ -222,11 +223,13 @@ def get_admin_orders_router():
             await state.set_state(AdminOrderStates.filtering)
     
         await callback.message.edit_text(text)
-        
+
         # Send new message with filter keyboard (replace with edit_text for inline UX)
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
         await callback.message.edit_text(
-            "Qidirish turini tanlang:",
-            reply_markup=get_zayavka_filter_menu_keyboard('uz', active_filter=action if action in ["date", "category"] else None, admin=True)
+            "Qidirish turini tanlang:" if lang == 'uz' else "Выберите тип поиска:",
+            reply_markup=get_zayavka_filter_menu_keyboard(lang, active_filter=action if action in ["date", "category"] else None, admin=True)
         )
         await state.update_data(filter_type=action)
         await callback.answer()

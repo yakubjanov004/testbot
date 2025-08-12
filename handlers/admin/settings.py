@@ -31,12 +31,11 @@ def get_admin_settings_router():
     @router.message(StateFilter(AdminMainMenuStates.main_menu), F.text.in_(["⚙️ Sozlamalar", "⚙️ Настройки"]))
     async def settings_menu(message: Message, state: FSMContext):
         """Settings main menu"""
-        text = "Sozlamalar bo'limi (stub)."
-        
-        sent_message = await message.answer(
-            text,
-            reply_markup=get_settings_keyboard('uz')
-        )
+        data = await state.get_data()
+        lang = data.get('lang', 'uz')
+        text = "Sozlamalar bo'limi" if lang == 'uz' else "Раздел настроек"
+
+        sent_message = await message.answer(text, reply_markup=get_settings_keyboard(lang))
         await state.set_state(AdminSettingsStates.settings)
 
     @router.message(F.text.in_(["🔧 Tizim sozlamalari", "🔧 Системные настройки"]))
