@@ -83,3 +83,12 @@ class CallCenterServiceOrderStates(StatesGroup):
     asking_for_location = State()
     waiting_for_location = State()
     confirming_order = State() 
+
+
+class CallCenterStandaloneSearchStates(StatesGroup):
+    """Standalone client search states for call center main menu search"""
+    selecting_method = State()
+    entering_phone = State()
+    entering_name = State()
+    entering_id = State()
+    selecting_client = State() 

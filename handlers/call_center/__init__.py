@@ -24,6 +24,7 @@ from .orders import get_call_center_orders_router
 from .statistics import get_call_center_statistics_router
 from .connection_order_cc import get_call_center_connection_order_router
 from .technician_order_cc import get_call_center_technical_service_router
+from .client_search import get_call_center_client_search_router
 
 def get_call_center_router():
     """Get the complete call center router with all handlers"""
@@ -35,6 +36,7 @@ def get_call_center_router():
     router.include_router(get_call_center_inbox_router())
     router.include_router(get_call_center_language_router())
     router.include_router(get_call_center_orders_router())
+    router.include_router(get_call_center_client_search_router())
     router.include_router(get_call_center_connection_order_router())
     router.include_router(get_call_center_technical_service_router())
     router.include_router(get_call_center_statistics_router())
