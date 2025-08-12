@@ -11,9 +11,9 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from filters.role_filter import RoleFilter
 from keyboards.junior_manager_buttons import (
-    get_workflow_management_menu_updated,
-    get_application_tracking_menu_updated,
-    get_task_monitoring_menu_updated
+    get_workflow_management_menu,
+    get_application_tracking_menu,
+    get_task_monitoring_menu
 )
 
 # Mock functions to replace utils and database imports
@@ -100,15 +100,18 @@ async def update_application_status_as_junior_manager(application_id: int, statu
 # Mock keyboard functions
 def get_workflow_management_menu(lang: str = 'uz'):
     """Mock workflow management menu keyboard"""
-    return get_workflow_management_menu_updated(lang)
+    from keyboards.junior_manager_buttons import get_workflow_management_menu as _k
+    return _k(lang)
 
-def get_application_tracking_menu(lang: str = 'uz'):
+def get_application_tracking_menu(lang: str = 'uz') -> InlineKeyboardMarkup:
     """Mock application tracking menu keyboard"""
-    return get_application_tracking_menu_updated(lang)
+    from keyboards.junior_manager_buttons import get_application_tracking_menu as _k
+    return _k(lang)
 
-def get_task_monitoring_menu(lang: str = 'uz'):
+def get_task_monitoring_menu(lang: str = 'uz') -> InlineKeyboardMarkup:
     """Mock task monitoring menu keyboard"""
-    return get_task_monitoring_menu_updated(lang)
+    from keyboards.junior_manager_buttons import get_task_monitoring_menu as _k
+    return _k(lang)
 
 # Mock states
 from aiogram.fsm.state import State, StatesGroup

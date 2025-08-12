@@ -11,10 +11,10 @@ from datetime import datetime
 from filters.role_filter import RoleFilter
 from states.staff_application_states import StaffApplicationStates
 from keyboards.junior_manager_buttons import (
-    get_junior_manager_main_keyboard_updated,
-    get_client_search_menu_updated,
-    get_application_priority_keyboard_updated,
-    get_application_confirmation_keyboard_updated
+    get_junior_manager_main_keyboard,
+    get_client_search_menu,
+    get_application_priority_keyboard,
+    get_application_confirmation_keyboard
 )
 
 # Mock functions to replace utils and database imports
@@ -68,21 +68,9 @@ class RoleBasedApplicationHandler:
             'application_id': f'APP_{creator_role}_{creator_id}_{application_type}'
         }
 
-def get_junior_manager_main_keyboard(lang: str = 'uz'):
-    """Mock junior manager main keyboard"""
-    return get_junior_manager_main_keyboard_updated(lang)
 
-def get_client_search_menu(lang: str = 'uz'):
-    """Mock client search menu"""
-    return get_client_search_menu_updated(lang)
 
-def get_application_priority_keyboard(lang: str = 'uz'):
-    """Mock application priority keyboard"""
-    return get_application_priority_keyboard_updated(lang)
 
-def get_application_confirmation_keyboard(lang: str = 'uz'):
-    """Mock application confirmation keyboard"""
-    return get_application_confirmation_keyboard_updated(lang)
 
 def get_junior_manager_staff_application_router():
     """Get junior manager staff application router"""

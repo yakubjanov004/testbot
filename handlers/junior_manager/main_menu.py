@@ -6,7 +6,7 @@ Manages main menu for junior manager
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_junior_manager_main_menu
+from keyboards.junior_manager_buttons import get_junior_manager_main_keyboard
 from states.junior_manager_states import JuniorManagerMainMenuStates
 from filters.role_filter import RoleFilter
 
@@ -56,7 +56,7 @@ def get_junior_manager_main_menu_router():
                 "Xush kelibsiz! Quyidagi bo'limlardan birini tanlang:"
             )
             
-            await message.answer(welcome_text, reply_markup=get_junior_manager_main_menu(lang), parse_mode='HTML')
+            await message.answer(welcome_text, reply_markup=get_junior_manager_main_keyboard(lang), parse_mode='HTML')
             
         except Exception as e:
             print(f"Error in show_main_menu: {str(e)}")
