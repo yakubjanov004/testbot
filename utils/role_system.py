@@ -186,7 +186,7 @@ async def show_call_center_menu(message: Message):
     """Show call center menu"""
     from keyboards.call_center_buttons import get_call_center_main_keyboard
     
-    text = "📞 Call Center paneliga xush kelibsiz!\n\nQuyidagi funksiyalardan birini tanlang:"
+    text = "📞 Call Center — Asosiy menyu.\nKerakli bo'limni tanlang."
     keyboard = get_call_center_main_keyboard('uz')
     
     await message.answer(text, reply_markup=keyboard)
@@ -195,7 +195,7 @@ async def show_call_center_supervisor_menu(message: Message):
     """Show call center supervisor menu"""
     from keyboards.call_center_supervisor_buttons import get_call_center_supervisor_main_keyboard
     
-    text = "👨‍💼 Call Center Supervisor paneliga xush kelibsiz!\n\nQuyidagi funksiyalardan birini tanlang:"
+    text = "👨‍💼 Call Center Supervisor — Asosiy menyu.\nKerakli bo'limni tanlang."
     keyboard = get_call_center_supervisor_main_keyboard('uz')
     
     await message.answer(text, reply_markup=keyboard)

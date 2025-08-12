@@ -28,10 +28,7 @@ def get_call_center_supervisor_router():
     @router.message(F.text.in_(["📞 Call Center Supervisor", "📞 Руководитель call-центра"]))
     async def call_center_supervisor_start(message: Message, state: FSMContext):
         """Call center supervisor start"""
-        text = (
-            "📞 <b>Call Center Supervisor</b>\n\n"
-            "Call center operatorlarini boshqarish va nazorat qilish uchun bo'limni tanlang."
-        )
+        text = "👨‍💼 Call Center Supervisor — Asosiy menyu.\nKerakli bo'limni tanlang."
         
         await message.answer(
             text,
@@ -119,7 +116,7 @@ def get_call_center_supervisor_router():
         
         lang = 'uz'  # Default language
         
-        welcome_text = "📞 Call center supervisor paneliga xush kelibsiz!" if lang == 'uz' else "📞 Добро пожаловать в панель руководителя call-центра!"
+        welcome_text = "👨‍💼 Call Center Supervisor — Asosiy menyu.\nKerakli bo'limni tanlang."
         
         await callback.message.edit_text(
             welcome_text,

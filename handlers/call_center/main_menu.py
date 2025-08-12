@@ -128,15 +128,7 @@ async def show_call_center_main_menu(message: Message):
     # Mock dashboard stats
     stats = await get_call_center_stats()
     
-    welcome_text = (
-        f"📞 <b>{'Call Center Panel' if lang == 'uz' else 'Панель call-центра'}</b>\n\n"
-        f"📊 <b>{'Bugungi holat' if lang == 'uz' else 'Состояние сегодня'}:</b>\n"
-        f"📞 {'Bugungi qo\'ng\'iroqlar' if lang == 'uz' else 'Звонки сегодня'}: <b>{stats.get('calls_today', 0)}</b>\n"
-        f"📋 {'Bugungi buyurtmalar' if lang == 'uz' else 'Заказы сегодня'}: <b>{stats.get('orders_today', 0)}</b>\n"
-        f"⏳ {'Kutilayotgan' if lang == 'uz' else 'Ожидающие'}: <b>{stats.get('pending_callbacks', 0)}</b>\n"
-        f"💬 {'Faol chatlar' if lang == 'uz' else 'Активные чаты'}: <b>{stats.get('active_chats', 0)}</b>\n"
-        f"🎯 {'Konversiya' if lang == 'uz' else 'Конверсия'}: <b>{stats.get('conversion_rate', 0)}%</b>"
-    )
+    welcome_text = "📞 Call Center — Asosiy menyu.\nKerakli bo'limni tanlang."
     
     await message.answer(
         welcome_text,

@@ -43,7 +43,7 @@ def get_call_center_supervisor_main_menu_router():
         
         await state.clear()
         
-        welcome_text = "📞 Call Center Supervisor paneliga xush kelibsiz!"
+        welcome_text = "👨‍💼 Call Center Supervisor — Asosiy menyu.\nKerakli bo'limni tanlang."
         
         await message.answer(
             welcome_text,
@@ -56,7 +56,7 @@ def get_call_center_supervisor_main_menu_router():
         """Handle call center supervisor main menu button"""
         lang = 'uz'  # Default language
         
-        main_menu_text = "Bosh menyu"
+        main_menu_text = "👨‍💼 Call Center Supervisor — Asosiy menyu.\nKerakli bo'limni tanlang."
         
         await message.answer(
             main_menu_text,
