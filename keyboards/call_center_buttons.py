@@ -16,7 +16,7 @@ def get_call_center_main_keyboard(lang: str = 'uz') -> ReplyKeyboardMarkup:
     else:
         webapp_text = "💬 Onlayn Chat Web App"
         keyboard = [
-            [KeyboardButton(text="📥 Inbox"), KeyboardButton(text="📝 Buyurtmalar")],
+            [KeyboardButton(text="📥 Inbox"), KeyboardButton(text="📋 Buyurtmalar")],
             [KeyboardButton(text="🔍 Mijoz qidirish")],
             [KeyboardButton(text="🔌 Ulanish arizasi yaratish"), KeyboardButton(text="🔧 Texnik xizmat yaratish")],
             [KeyboardButton(text="📊 Statistikalar"), KeyboardButton(text="🌐 Tilni o'zgartirish")],
