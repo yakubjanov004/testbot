@@ -87,37 +87,6 @@ def get_call_center_main_menu_router():
             reply_markup=call_center_main_menu_reply(lang)
         )
 
-    @router.message(F.text.in_(['ℹ️ Yordam', 'ℹ️ Помощь']))
-    async def call_center_help(message: Message, state: FSMContext):
-        """Call center help"""
-        lang = await get_user_language(message.from_user.id)
-        
-        if lang == 'uz':
-            help_text = (
-                "📞 <b>Call Center yordam</b>\n\n"
-                "🔧 <b>Asosiy funksiyalar:</b>\n"
-                "📞 Qo'ng'iroqlar boshqaruvi\n"
-                "📋 Buyurtmalar yaratish\n"
-                "🔍 Mijoz qidirish\n"
-                "💬 Chat sessiyalari\n"
-                "⭐️ Fikr-mulohaza\n"
-                "📊 Statistika\n\n"
-                "💡 Qo'shimcha ma'lumot uchun admin bilan bog'laning."
-            )
-        else:
-            help_text = (
-                "📞 <b>Помощь call-центра</b>\n\n"
-                "🔧 <b>Основные функции:</b>\n"
-                "📞 Управление звонками\n"
-                "📋 Создание заказов\n"
-                "🔍 Поиск клиентов\n"
-                "💬 Сессии чата\n"
-                "⭐️ Обратная связь\n"
-                "📊 Статистика\n\n"
-                "💡 Для дополнительной информации свяжитесь с администратором."
-            )
-        
-        await message.answer(help_text, parse_mode='HTML')
 
     return router
 

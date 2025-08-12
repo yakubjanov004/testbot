@@ -14,7 +14,7 @@ from typing import Dict, Any, List, Optional
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
     get_statistics_menu, get_analytics_dashboard_keyboard, 
-    get_performance_dashboard_keyboard, get_analytics_menu,
+    get_performance_dashboard_keyboard,
     get_supervisor_statistics_keyboard
 )
 

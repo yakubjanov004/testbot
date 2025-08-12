@@ -27,7 +27,7 @@ def get_call_center_supervisor_orders_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(['📋 Buyurtmalar', '📋 Заказы']))
+    @router.message(F.text.in_(['📝 Buyurtmalar', '📝 Заказы', '📋 Buyurtmalar', '📋 Заказы']))
     async def call_center_supervisor_orders(message: Message, state: FSMContext):
         """Handle call center supervisor orders"""
         lang = 'uz'  # Default language
@@ -164,7 +164,7 @@ def get_call_center_supervisor_orders_router():
         await call.answer()
         
         order_id = int(call.data.split("_")[-1])
-        
+        lang = 'uz'
         text = (
             f"📋 <b>Buyurtma #{order_id}</b>\n\n"
             f"👤 <b>Mijoz:</b> Bekzod Toirov\n"
@@ -177,7 +177,7 @@ def get_call_center_supervisor_orders_router():
             f"Amalni tanlang:"
         )
         
-        keyboard = get_supervisor_orders_keyboard(lang)
+        keyboard = get_supervisor_orders_keyboard(lang, order_id)
         
         await call.message.edit_text(text, reply_markup=keyboard)
 

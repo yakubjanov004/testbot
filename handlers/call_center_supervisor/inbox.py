@@ -15,7 +15,6 @@ from states.call_center_supervisor_states import CallCenterSupervisorMainMenuSta
 from filters.role_filter import RoleFilter
 from aiogram.filters import StateFilter
 from keyboards.call_center_supervisor_buttons import (
-    get_supervisor_operator_assignment_keyboard,
     get_supervisor_back_to_inbox_keyboard,
     get_supervisor_navigation_keyboard
 )

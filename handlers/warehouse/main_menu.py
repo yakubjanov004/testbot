@@ -276,7 +276,7 @@ Kerakli bo'limni tanlang:
             success_text = "✅ Til muvaffaqiyatli o'zgartirildi!"
             
             # Create inline keyboard for back to main menu
-            back_keyboard = get_warehouse_back_to_main_keyboard(lang)
+            back_keyboard = get_warehouse_back_to_main_keyboard(new_lang)
             
             await callback.message.edit_text(
                 text=success_text,

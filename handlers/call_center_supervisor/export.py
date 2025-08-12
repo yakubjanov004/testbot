@@ -5,10 +5,9 @@ from datetime import datetime
 from filters.role_filter import RoleFilter
 from states.call_center_supervisor_states import CallCenterSupervisorMainMenuStates
 from keyboards.call_center_supervisor_buttons import (
-    get_call_center_supervisor_main_keyboard,
+    get_call_center_supervisor_main_menu,
     get_supervisor_export_types_keyboard,
-    get_supervisor_export_formats_keyboard,
-    get_supervisor_export_back_types_keyboard
+    get_supervisor_export_formats_keyboard
 )
 from utils.export_utils import create_export_file, get_available_export_types, get_available_export_formats
 
@@ -95,7 +94,7 @@ def get_call_center_supervisor_export_router():
                 await callback.message.delete()
                 await callback.message.answer(
                     "🏠 Bosh menyu" if lang == 'uz' else "🏠 Главное меню",
-                    reply_markup=get_call_center_supervisor_main_keyboard(lang)
+                    reply_markup=get_call_center_supervisor_main_menu(lang)
                 )
                 await state.set_state(CallCenterSupervisorMainMenuStates.main_menu)
                 return
@@ -260,7 +259,7 @@ def get_call_center_supervisor_export_router():
                         f"📅 Дата: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
                         f"Экспорт успешно завершен!"
                     ),
-                    reply_markup=get_call_center_supervisor_main_keyboard(lang)
+                    reply_markup=get_call_center_supervisor_main_menu(lang)
                 )
                 await state.set_state(CallCenterSupervisorMainMenuStates.main_menu)
                 
@@ -272,7 +271,7 @@ def get_call_center_supervisor_export_router():
                     f"Iltimos, qayta urinib ko'ring." if lang == 'uz' else
                     f"❌ Ошибка при экспорте:\n{str(e)}\n\n"
                     f"Пожалуйста, попробуйте еще раз.",
-                    reply_markup=get_call_center_supervisor_main_keyboard(lang)
+                    reply_markup=get_call_center_supervisor_main_menu(lang)
                 )
                 await state.set_state(CallCenterSupervisorMainMenuStates.main_menu)
             
@@ -280,7 +279,7 @@ def get_call_center_supervisor_export_router():
             print(f"Error in export format handler: {str(e)}")
             await callback.message.answer(
                 "❌ Export xatoligi yuz berdi" if lang == 'uz' else "❌ Ошибка экспорта",
-                reply_markup=get_call_center_supervisor_main_keyboard(lang)
+                reply_markup=get_call_center_supervisor_main_menu(lang)
             )
             await state.set_state(CallCenterSupervisorMainMenuStates.main_menu)
 

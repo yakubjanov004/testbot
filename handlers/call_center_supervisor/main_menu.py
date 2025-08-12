@@ -13,11 +13,8 @@ from typing import Dict, Any, Optional
 # Keyboard imports
 from keyboards.call_center_supervisor_buttons import (
     get_call_center_supervisor_main_menu, get_staff_actions_menu,
-    get_order_management_menu, get_client_search_menu, get_order_action_menu,
-    get_staff_assignment_menu, get_status_change_menu, get_quick_actions_menu,
-    get_supervisor_dashboard_menu, get_advanced_staff_management_menu,
-    get_advanced_order_management_menu, get_analytics_dashboard_keyboard,
-    get_notification_management_keyboard, get_supervisor_settings_keyboard
+    get_analytics_dashboard_keyboard,
+    get_staff_activity_menu
 )
 
 # States imports
