@@ -7,188 +7,242 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
-from typing import Optional, Dict, Any
+from datetime import datetime
 
-# Keyboard imports
-from keyboards.call_center_buttons import get_application_type_inline_menu
-
-# States imports
-from states.staff_application_states import StaffApplicationStates
 from filters.role_filter import RoleFilter
+from states.call_center_states import (
+    CallCenterClientSearchStates,
+    CallCenterConnectionOrderStates,
+)
+from keyboards.call_center_buttons import get_call_center_client_search_keyboard
+from keyboards.controllers_buttons import (
+    get_controller_regions_keyboard,
+    controller_zayavka_type_keyboard,
+    get_controller_tariff_selection_keyboard,
+    controller_geolocation_keyboard,
+)
 
-def get_call_center_staff_application_creation_router():
-    """Get call center staff application creation router"""
+# Mock search helpers (no DB)
+async def search_clients_by_phone(phone: str):
+    return [
+        {'id': 1, 'full_name': 'Ali Valiyev', 'phone': phone},
+        {'id': 2, 'full_name': 'Vali Aliev', 'phone': phone},
+    ]
+
+async def search_clients_by_name(name: str):
+    return [
+        {'id': 3, 'full_name': name, 'phone': '+998901112233'}
+    ]
+
+
+def get_call_center_connection_order_router():
     router = Router()
-    
-    # Apply role filter
+
+    # Role guard
     role_filter = RoleFilter("call_center")
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
+    # 1) Entry: client search method
     @router.message(F.text.in_(["🔌 Ulanish arizasi yaratish", "🔌 Создать заявку на подключение"]))
-    async def call_center_create_connection_request(message: Message, state: FSMContext):
-        """Create connection request for call center"""
-        text = (
-            "🔌 <b>Ulanish arizasi yaratish</b>\n\n"
-            "Mijoz ma'lumotlarini kiriting:\n\n"
-            "👤 <b>Mijoz ismi:</b> To'liq ism\n"
-            "📱 <b>Telefon:</b> +998 XX XXX XX XX\n"
-            "📍 <b>Manzil:</b> To'liq manzil\n"
-            "📝 <b>Xizmat turi:</b> Internet/TV/Telefon\n\n"
-            "Ma'lumotlarni kiriting:"
+    async def start_connection_order(message: Message, state: FSMContext):
+        await state.update_data(current_flow='connection')
+        await message.answer(
+            "Mijozni qanday qidiramiz?",
+            reply_markup=get_call_center_client_search_keyboard('uz')
         )
-        
-        await message.answer(text)
-        await state.set_state(StaffApplicationStates.entering_client_phone)
+        await state.set_state(CallCenterClientSearchStates.selecting_client_search_method)
 
-    @router.message(F.text.in_(["🔧 Texnik xizmat yaratish", "🔧 Создать техническую заявку"]))
-    async def call_center_create_technical_service(message: Message, state: FSMContext):
-        """Handle call center creating technical service request for client"""
-        lang = 'uz'  # Default language
-        
-        # Mock application creation start
-        await state.update_data(
-            creator_context={'role': 'call_center', 'id': 123},
-            application_type='technical_service'
-        )
-        
-        await state.set_state(StaffApplicationStates.selecting_client_search_method)
-        
-        prompt_text = (
-            "🔧 Call Center: Texnik xizmat arizasi yaratish\n\n"
-            "Mijoz bilan telefon orqali gaplashayotgan vaqtda texnik xizmat arizasi yaratish.\n\n"
-            "Mijozni qanday qidirishni xohlaysiz?\n\n"
-            "📱 Telefon raqami bo'yicha\n"
-            "👤 Ism bo'yicha\n"
-            "🆔 Mijoz ID bo'yicha\n"
-            "➕ Yangi mijoz qo'shish"
-        )
-        
-        await message.answer(prompt_text)
-
-    @router.callback_query(F.data.startswith("cc_client_search_"))
-    async def handle_call_center_client_search_method(callback: CallbackQuery, state: FSMContext):
-        """Handle call center client search method selection"""
+    # 2) Search flow
+    @router.callback_query(F.data == "cc_client_search_phone", StateFilter(CallCenterClientSearchStates.selecting_client_search_method))
+    async def search_by_phone(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
-        
-        search_method = callback.data.replace("cc_client_search_", "")
-        lang = 'uz'  # Default language
-        
-        if search_method == "phone":
-            await state.set_state(StaffApplicationStates.entering_client_phone)
-            prompt_text = (
-                "📱 Mijoz telefon raqamini kiriting:\n\n"
-                "Masalan: +998 90 123 45 67"
-            )
-            await callback.message.edit_text(prompt_text)
-            
-        elif search_method == "name":
-            await state.set_state(StaffApplicationStates.entering_client_name)
-            prompt_text = (
-                "👤 Mijoz ismini kiriting:\n\n"
-                "Masalan: Ahmad Karimov"
-            )
-            await callback.message.edit_text(prompt_text)
-            
-        elif search_method == "id":
-            await state.set_state(StaffApplicationStates.entering_client_id)
-            prompt_text = (
-                "🆔 Mijoz ID ni kiriting:\n\n"
-                "Masalan: CL123456"
-            )
-            await callback.message.edit_text(prompt_text)
-            
-        elif search_method == "new":
-            # Mock new client creation
-            await state.set_state(StaffApplicationStates.entering_client_name)
-            prompt_text = (
-                "➕ Yangi mijoz qo'shish\n\n"
-                "Mijoz to'liq ismini kiriting:"
-            )
-            await callback.message.edit_text(prompt_text)
+        await state.set_state(CallCenterClientSearchStates.entering_phone)
+        await callback.message.edit_text("📱 Telefon raqamini kiriting:\nMasalan: +998901234567")
+
+    @router.callback_query(F.data == "cc_client_search_name", StateFilter(CallCenterClientSearchStates.selecting_client_search_method))
+    async def search_by_name(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(CallCenterClientSearchStates.entering_name)
+        await callback.message.edit_text("👤 Mijoz ismini kiriting:\nMasalan: Alisher Karimov")
+
+    @router.callback_query(F.data == "cc_client_search_id", StateFilter(CallCenterClientSearchStates.selecting_client_search_method))
+    async def search_by_id(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(CallCenterClientSearchStates.entering_client_id)
+        await callback.message.edit_text("🆔 Mijoz ID sini kiriting:\nMasalan: 12345")
+
+    @router.callback_query(F.data == "cc_client_search_new", StateFilter(CallCenterClientSearchStates.selecting_client_search_method))
+    async def create_new_client(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(CallCenterClientSearchStates.entering_new_client_name)
+        await callback.message.edit_text("➕ Yangi mijoz nomini kiriting:")
 
     @router.callback_query(F.data == "cc_cancel_application_creation")
-    async def call_center_cancel_application_creation(callback: CallbackQuery, state: FSMContext):
-        """Handle call center canceling application creation"""
-        await callback.answer()
-        
-        lang = 'uz'  # Default language
-        
-        cancel_text = (
-            "❌ Ariza yaratish bekor qilindi.\n\n"
-            "Bosh sahifaga qaytdingiz."
-        )
-        
-        await callback.message.edit_text(cancel_text)
+    async def cancel_creation(callback: CallbackQuery, state: FSMContext):
         await state.clear()
+        await callback.message.edit_text("❌ Zayavka yaratish bekor qilindi")
+        await callback.answer()
 
-    @router.message(StaffApplicationStates.entering_client_phone)
-    async def handle_call_center_client_phone_input(message: Message, state: FSMContext):
-        """Handle call center client phone input"""
+    @router.message(StateFilter(CallCenterClientSearchStates.entering_phone))
+    async def process_phone_search(message: Message, state: FSMContext):
         phone = message.text.strip()
-        
-        if not phone:
-            await message.answer("Iltimos, telefon raqamini kiriting.")
-            return
-        
-        # Mock client found
-        await state.update_data(client_phone=phone)
-        
-        success_text = (
-            f"✅ Mijoz topildi!\n\n"
-            f"📱 Telefon: {phone}\n"
-            f"👤 Ism: Ahmad Karimov\n"
-            f"🆔 ID: CL123456\n\n"
-            f"Ariza yaratish davom etadi..."
-        )
-        
-        await message.answer(success_text)
-        await state.set_state(StaffApplicationStates.application_created)
+        clients = await search_clients_by_phone(phone)
+        await _show_clients_list(message, state, clients)
 
-    @router.message(StaffApplicationStates.entering_client_name)
-    async def handle_call_center_client_name_input(message: Message, state: FSMContext):
-        """Handle call center client name input"""
+    @router.message(StateFilter(CallCenterClientSearchStates.entering_name))
+    async def process_name_search(message: Message, state: FSMContext):
         name = message.text.strip()
-        
-        if not name:
-            await message.answer("Iltimos, mijoz ismini kiriting.")
-            return
-        
-        # Mock client found
-        await state.update_data(client_name=name)
-        
-        success_text = (
-            f"✅ Mijoz topildi!\n\n"
-            f"👤 Ism: {name}\n"
-            f"📱 Telefon: +998 90 123 45 67\n"
-            f"🆔 ID: CL123456\n\n"
-            f"Ariza yaratish davom etadi..."
-        )
-        
-        await message.answer(success_text)
-        await state.set_state(StaffApplicationStates.application_created)
+        clients = await search_clients_by_name(name)
+        await _show_clients_list(message, state, clients)
 
-    @router.message(StaffApplicationStates.entering_client_id)
-    async def handle_call_center_client_id_input(message: Message, state: FSMContext):
-        """Handle call center client ID input"""
+    @router.message(StateFilter(CallCenterClientSearchStates.entering_client_id))
+    async def process_id_search(message: Message, state: FSMContext):
         client_id = message.text.strip()
-        
-        if not client_id:
-            await message.answer("Iltimos, mijoz ID ni kiriting.")
+        clients = [{'id': int(client_id) if client_id.isdigit() else 9999, 'full_name': f'Mijoz #{client_id}', 'phone': '+998900000000'}]
+        await _show_clients_list(message, state, clients)
+
+    @router.message(StateFilter(CallCenterClientSearchStates.entering_new_client_name))
+    async def process_new_client(message: Message, state: FSMContext):
+        full_name = message.text.strip()
+        clients = [{'id': -1, 'full_name': full_name, 'phone': 'N/A'}]
+        await _show_clients_list(message, state, clients)
+
+    async def _show_clients_list(message: Message, state: FSMContext, clients):
+        if not clients:
+            await message.answer("Mijoz topilmadi. Qayta urinib ko'ring.")
+            await state.set_state(CallCenterClientSearchStates.selecting_client_search_method)
+            await message.answer("Qidirish usulini tanlang:", reply_markup=get_call_center_client_search_keyboard('uz'))
             return
-        
-        # Mock client found
-        await state.update_data(client_id=client_id)
-        
-        success_text = (
-            f"✅ Mijoz topildi!\n\n"
-            f"🆔 ID: {client_id}\n"
-            f"👤 Ism: Ahmad Karimov\n"
-            f"📱 Telefon: +998 90 123 45 67\n\n"
-            f"Ariza yaratish davom etadi..."
+        await state.update_data(found_clients=clients)
+        await state.set_state(CallCenterClientSearchStates.selecting_client)
+
+        rows = []
+        for i, c in enumerate(clients[:5]):
+            rows.append([InlineKeyboardButton(text=f"{c['full_name']} - {c.get('phone','N/A')}", callback_data=f"cc_select_client_{i}")])
+        rows.append([InlineKeyboardButton(text="🔍 Boshqa qidirish", callback_data="cc_search_again")])
+        rows.append([InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cc_cancel_application_creation")])
+        kb = InlineKeyboardMarkup(inline_keyboard=rows)
+        await message.answer("Mijozni tanlang:", reply_markup=kb)
+
+    @router.callback_query(lambda c: c.data.startswith("cc_select_client_"), StateFilter(CallCenterClientSearchStates.selecting_client))
+    async def select_client(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        data = await state.get_data()
+        clients = data.get('found_clients', [])
+        idx = int(callback.data.split('_')[-1])
+        if idx >= len(clients):
+            await callback.answer("Xato", show_alert=True)
+            return
+        await state.update_data(selected_client=clients[idx])
+        await callback.message.edit_text("Hududni tanlang:")
+        await callback.message.answer("Hududni tanlang:", reply_markup=get_controller_regions_keyboard('uz'))
+        await state.set_state(CallCenterConnectionOrderStates.selecting_region)
+
+    @router.callback_query(F.data == "cc_search_again")
+    async def search_again(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        await state.set_state(CallCenterClientSearchStates.selecting_client_search_method)
+        await callback.message.edit_text("Qidirish usulini tanlang:")
+        await callback.message.answer("Qidirish usulini tanlang:", reply_markup=get_call_center_client_search_keyboard('uz'))
+
+    # 3) Connection order flow (after client selected)
+    @router.callback_query(F.data.startswith("ctrl_region_"), StateFilter(CallCenterConnectionOrderStates.selecting_region))
+    async def select_region(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        region = callback.data.replace("ctrl_region_", "")
+        await state.update_data(region=region)
+        await callback.message.answer("Ulanish turini tanlang:", reply_markup=controller_zayavka_type_keyboard('uz'))
+        await state.set_state(CallCenterConnectionOrderStates.selecting_connection_type)
+
+    @router.callback_query(F.data.startswith("ctrl_zayavka_type_"), StateFilter(CallCenterConnectionOrderStates.selecting_connection_type))
+    async def select_connection_type(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        connection_type = callback.data.replace("ctrl_zayavka_type_", "")
+        await state.update_data(connection_type=connection_type)
+        await callback.message.answer("Tariflardan birini tanlang:", reply_markup=get_controller_tariff_selection_keyboard('uz'))
+        await state.set_state(CallCenterConnectionOrderStates.selecting_tariff)
+
+    @router.callback_query(F.data.in_(["ctrl_tariff_standard", "ctrl_tariff_new"]), StateFilter(CallCenterConnectionOrderStates.selecting_tariff))
+    async def select_tariff(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        tariff = "Standard" if callback.data == "ctrl_tariff_standard" else "Yangi"
+        await state.update_data(selected_tariff=tariff)
+        await callback.message.answer("Manzilingizni kiriting:")
+        await state.set_state(CallCenterConnectionOrderStates.entering_address)
+
+    @router.message(StateFilter(CallCenterConnectionOrderStates.entering_address))
+    async def get_connection_address(message: Message, state: FSMContext):
+        await state.update_data(address=message.text)
+        await message.answer("Geolokatsiya yuborasizmi?", reply_markup=controller_geolocation_keyboard('uz'))
+        await state.set_state(CallCenterConnectionOrderStates.asking_for_geo)
+
+    @router.callback_query(F.data.in_(["ctrl_send_location_yes", "ctrl_send_location_no"]), StateFilter(CallCenterConnectionOrderStates.asking_for_geo))
+    async def ask_for_geo(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        if callback.data == "ctrl_send_location_yes":
+            await callback.message.answer("Geolokatsiyani yuboring:")
+            await state.set_state(CallCenterConnectionOrderStates.waiting_for_geo)
+        else:
+            await show_connection_confirmation(callback, state, geo=None)
+
+    @router.message(StateFilter(CallCenterConnectionOrderStates.waiting_for_geo), F.location)
+    async def get_geo(message: Message, state: FSMContext):
+        await state.update_data(geo=message.location)
+        await show_connection_confirmation(message, state, geo=message.location)
+
+    async def show_connection_confirmation(message_or_callback, state: FSMContext, geo=None):
+        data = await state.get_data()
+        selected_client = data.get('selected_client', {})
+        region = data.get('region', '-')
+        connection_type = data.get('connection_type', '-')
+        tariff = data.get('selected_tariff', '-')
+        address = data.get('address', '-')
+
+        text = (
+            f"👤 <b>Mijoz:</b> {selected_client.get('full_name','N/A')}\n"
+            f"🏛️ <b>Hudud:</b> {region}\n"
+            f"🔌 <b>Ulanish turi:</b> {connection_type}\n"
+            f"💳 <b>Tarif:</b> {tariff}\n"
+            f"🏠 <b>Manzil:</b> {address}\n"
+            f"📍 <b>Geolokatsiya:</b> {'✅ Yuborilgan' if geo else '❌ Yuborilmagan'}"
         )
-        
-        await message.answer(success_text)
-        await state.set_state(StaffApplicationStates.application_created)
+
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="cc_confirm_zayavka"),
+             InlineKeyboardButton(text="🔄 Qayta yuborish", callback_data="cc_resend_zayavka")]
+        ])
+
+        if hasattr(message_or_callback, 'message'):
+            await message_or_callback.message.answer(text, parse_mode='HTML', reply_markup=kb)
+        else:
+            await message_or_callback.answer(text, parse_mode='HTML', reply_markup=kb)
+        await state.set_state(CallCenterConnectionOrderStates.confirming_connection)
+
+    @router.callback_query(F.data == "cc_confirm_zayavka", StateFilter(CallCenterConnectionOrderStates.confirming_connection))
+    async def confirm_connection_order(callback: CallbackQuery, state: FSMContext):
+        try:
+            try:
+                await callback.message.edit_reply_markup(reply_markup=None)
+            except Exception:
+                pass
+            await callback.answer()
+
+            request_id = f"UL_CC_{callback.from_user.id}_{int(datetime.now().timestamp())}"
+            success_msg = (
+                "✅ Ulanish arizasi call center tomonidan yaratildi!\n"
+                f"Ariza ID: {request_id[:10]}\n"
+                "Operatorlar tez orada mijoz bilan bog'lanadi."
+            )
+            await callback.message.answer(success_msg)
+            await state.clear()
+        except Exception:
+            await callback.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data == "cc_resend_zayavka", StateFilter(CallCenterConnectionOrderStates.confirming_connection))
+    async def resend_connection_summary(callback: CallbackQuery, state: FSMContext):
+        await callback.answer()
+        data = await state.get_data()
+        await show_connection_confirmation(callback, state, geo=data.get('geo'))
 
     return router
