@@ -1,15 +1,21 @@
 """
-Junior Manager Orders Handler
-Manages orders for junior manager
+Junior Manager Application Viewing - Complete Implementation
+
+This module handles application viewing for junior managers.
 """
 
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
-from keyboards.junior_manager_buttons import get_orders_keyboard, get_junior_manager_back_keyboard, get_orders_navigation_keyboard
 from typing import Dict, Any, List, Optional
+import asyncio
+import json
 from datetime import datetime
 from filters.role_filter import RoleFilter
+from keyboards.junior_manager_buttons import (
+    get_application_list_keyboard,
+    get_application_action_keyboard
+)
 
 # Mock functions to replace utils and database imports
 async def get_user_by_telegram_id(telegram_id: int):
@@ -27,43 +33,56 @@ async def get_user_lang(telegram_id: int):
     """Mock get user language"""
     return 'uz'
 
-async def get_junior_manager_orders(user_id: int):
-    """Mock get junior manager orders"""
+# Using get_role_router from utils.role_system
+
+async def get_junior_manager_applications(user_id: int, limit: int = 50):
+    """Mock junior manager applications"""
     return [
         {
             'id': 1,
-            'order_number': 'ORD-001',
             'client_name': 'Aziz Karimov',
-            'service_type': 'Internet xizmati',
+            'client_phone': '+998901234567',
+            'client_address': 'Tashkent, Chorsu',
+            'priority': 'medium',
             'status': 'pending',
-            'priority': 'high',
-            'created_at': datetime.now(),
-            'assigned_to': 'Junior Manager'
+            'details': 'Internet ulanish arizasi',
+            'created_at': datetime.now()
         },
         {
             'id': 2,
-            'order_number': 'ORD-002',
             'client_name': 'Malika Toshmatova',
-            'service_type': 'TV xizmati',
+            'client_phone': '+998901234568',
+            'client_address': 'Tashkent, Yunusabad',
+            'priority': 'high',
             'status': 'in_progress',
-            'priority': 'medium',
-            'created_at': datetime.now(),
-            'assigned_to': 'Junior Manager'
+            'details': 'TV signal muammosi',
+            'created_at': datetime.now()
         },
         {
             'id': 3,
-            'order_number': 'ORD-003',
             'client_name': 'Jamshid Mirzayev',
-            'service_type': 'Telefon xizmati',
+            'client_phone': '+998901234569',
+            'client_address': 'Samarkand, Registon',
+            'priority': 'urgent',
             'status': 'completed',
-            'priority': 'low',
-            'created_at': datetime.now(),
-            'assigned_to': 'Junior Manager'
+            'details': 'Telefon xizmati',
+            'created_at': datetime.now()
         }
     ]
 
-def get_junior_manager_orders_router():
-    """Get junior manager orders router"""
+async def update_application_status_as_junior_manager(app_id: int, status: str):
+    """Mock update application status"""
+    return True
+
+# Mock states
+from aiogram.fsm.state import State, StatesGroup
+
+class JuniorManagerApplicationStates(StatesGroup):
+    viewing_applications = State()
+    viewing_application_details = State()
+
+def get_junior_manager_application_viewing_router():
+    """Get router for junior manager application viewing handlers"""
     router = Router()
     
     # Apply role filter
@@ -71,153 +90,182 @@ def get_junior_manager_orders_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text.in_(["📋 Buyurtmalar", "📋 Заказы"]))
-    async def view_orders(message: Message, state: FSMContext):
-        """Handle view orders"""
-        user_id = message.from_user.id
-        
+    @router.message(F.text.in_(["📋 Arizalarni ko'rish"]))
+    async def view_applications(message: Message, state: FSMContext):
+        """View applications list"""
         try:
-            user = await get_user_by_telegram_id(user_id)
+            user = await get_user_by_telegram_id(message.from_user.id)
             if not user or user['role'] != 'junior_manager':
-                await message.answer("Sizda ruxsat yo'q.")
+                return
+
+            lang = user.get('language', 'uz')
+            
+            # Get applications
+            applications = await get_junior_manager_applications(user['id'], limit=50)
+            
+            if applications:
+                text = f"📋 Sizning arizalaringiz ({len(applications)} ta):\n\n"
+                
+                await message.answer(
+                    text,
+                    reply_markup=get_application_list_keyboard(applications, lang=lang)
+                )
+            else:
+                text = """📋 Hozircha arizalar yo'q.
+
+🔌 Yangi ariza yaratishni xohlaysizmi?"""
+                
+                await message.answer(text)
+            
+        except Exception as e:
+            print(f"Error in view_applications: {e}")
+            await message.answer("Xatolik yuz berdi")
+
+    @router.callback_query(F.data.startswith("jm_view_app_"))
+    async def handle_application_view(callback: CallbackQuery, state: FSMContext):
+        """Handle application view details"""
+        try:
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'junior_manager':
+                await callback.answer("Ruxsat yo'q", show_alert=True)
+                return
+
+            lang = user.get('language', 'uz')
+            app_id = int(callback.data.split("_")[-1])
+            
+            # Get application details
+            applications = await get_junior_manager_applications(user['id'], limit=1000)
+            application = next((app for app in applications if app['id'] == app_id), None)
+            
+            if application:
+                status_text = {
+                    'pending': 'Kutilmoqda',
+                    'in_progress': 'Jarayonda',
+                    'completed': 'Bajarildi',
+                    'cancelled': 'Bekor qilindi'
+                }.get(application.get('status', 'pending'), application.get('status', 'pending'))
+                
+                priority_text = {
+                    'low': 'Past',
+                    'medium': 'O\'rta',
+                    'high': 'Yuqori',
+                    'urgent': 'Shoshilinch'
+                }.get(application.get('priority', 'medium'), application.get('priority', 'medium'))
+                
+                text = f"""📋 Ariza #{app_id} ma'lumotlari:
+
+👤 Mijoz: {application.get('client_name', 'N/A')}
+📱 Telefon: {application.get('client_phone', 'N/A')}
+📍 Manzil: {application.get('client_address', 'N/A')}
+⚡ Ustuvorlik: {priority_text}
+📊 Holat: {status_text}
+📝 Tafsilotlar: {application.get('details', 'N/A')}
+📅 Yaratilgan: {application.get('created_at', 'N/A')}"""
+                
+                # Create action keyboard
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=get_application_action_keyboard(app_id, application.get('status'), lang=lang)
+                )
+            else:
+                text = "❌ Ariza topilmadi"
+                await callback.answer(text, show_alert=True)
+            
+        except Exception as e:
+            print(f"Error in handle_application_view: {e}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("jm_cancel_app_"))
+    async def handle_application_cancellation(callback: CallbackQuery, state: FSMContext):
+        """Handle application cancellation"""
+        try:
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'junior_manager':
+                await callback.answer("Ruxsat yo'q", show_alert=True)
+                return
+
+            lang = user.get('language', 'uz')
+            app_id = int(callback.data.split("_")[-1])
+            
+            # Check if application belongs to this junior manager
+            applications = await get_junior_manager_applications(user['id'], limit=1000)
+            application = next((app for app in applications if app['id'] == app_id), None)
+            
+            if not application:
+                await callback.answer("Ariza topilmadi", show_alert=True)
+                return
+            
+            if application.get('status') == 'cancelled':
+                text = "❌ Ariza allaqachon bekor qilingan"
+                await callback.answer(text, show_alert=True)
+                return
+            
+            # Cancel application
+            success = await update_application_status_as_junior_manager(app_id, 'cancelled')
+            
+            if success:
+                text = f"""✅ Ariza #{app_id} muvaffaqiyatli bekor qilindi.
+
+Статус заявки изменен на 'отменена'."""
+                
+                await callback.message.edit_text(text)
+                print(f"Junior Manager {user['id']} cancelled application {app_id}")
+            else:
+                text = "❌ Arizani bekor qilishda xatolik"
+                await callback.answer(text, show_alert=True)
+            
+            await callback.answer()
+            
+        except Exception as e:
+            print(f"Error cancelling application: {e}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
+
+    @router.callback_query(F.data.startswith("jm_details_app_"))
+    async def handle_application_details_view(callback: CallbackQuery, state: FSMContext):
+        """Handle detailed application view"""
+        # This is the same as jm_view_app_ but can be extended for more detailed view
+        await handle_application_view(callback, state)
+
+    @router.callback_query(F.data.startswith("jm_apps_page_"))
+    async def handle_application_pagination(callback: CallbackQuery, state: FSMContext):
+        """Handle application list pagination"""
+        try:
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            if not user or user['role'] != 'junior_manager':
+                await callback.answer("Ruxsat yo'q", show_alert=True)
                 return
             
             lang = user.get('language', 'uz')
-            orders = await get_junior_manager_orders(user['id'])
+            page = int(callback.data.split("_")[-1])
             
-            if not orders:
-                no_orders_text = "📋 Hozircha buyurtmalar yo'q."
-                await message.answer(no_orders_text)
-                return
+            # Get applications for the page
+            applications = await get_junior_manager_applications(user['id'], limit=50)
             
-            # Show first order
-            await show_order_details(message, orders[0], orders, 0)
+            text = f"📋 Sizning arizalaringiz ({len(applications)} ta):\n\n"
             
-        except Exception as e:
-            print(f"Error in view_orders: {str(e)}")
-            error_text = "Xatolik yuz berdi"
-            await message.answer(error_text)
-
-    async def show_order_details(message_or_callback, order, orders, index):
-        """Show order details with navigation"""
-        try:
-            # Format order type
-            order_type_emoji = {
-                'connection': '🔌',
-                'technical_service': '🔧',
-                'tv_service': '📺',
-                'phone_service': '📞'
-            }.get(order['order_type'], '📄')
-            
-            order_type_text = {
-                'connection': 'Ulanish',
-                'technical_service': 'Texnik xizmat',
-                'tv_service': 'TV xizmat',
-                'phone_service': 'Telefon xizmat'
-            }.get(order['order_type'], 'Boshqa')
-            
-            # Format status
-            status_emoji = {
-                'pending': '🟡',
-                'in_progress': '🟠',
-                'completed': '🟢',
-                'cancelled': '🔴'
-            }.get(order['status'], '⚪')
-            
-            status_text = {
-                'pending': 'Kutilmoqda',
-                'in_progress': 'Jarayonda',
-                'completed': 'Bajarilgan',
-                'cancelled': 'Bekor qilingan'
-            }.get(order['status'], 'Noma\'lum')
-            
-            # Format priority
-            priority_emoji = {
-                'high': '🔴',
-                'normal': '🟡',
-                'low': '🟢'
-            }.get(order.get('priority', 'normal'), '🟡')
-            
-            priority_text = {
-                'high': 'Yuqori',
-                'normal': 'O\'rtacha',
-                'low': 'Past'
-            }.get(order.get('priority', 'normal'), 'O\'rtacha')
-            
-            # Format date
-            created_date = order['created_at'].strftime('%d.%m.%Y %H:%M')
-            
-            # To'liq ma'lumot
-            text = (
-                f"{order_type_emoji} <b>{order_type_text} buyurtmasi - To'liq ma'lumot</b>\n\n"
-                f"🆔 <b>Buyurtma ID:</b> {order['id']}\n"
-                f"📅 <b>Sana:</b> {created_date}\n"
-                f"👤 <b>Mijoz:</b> {order['client_name']}\n"
-                f"📞 <b>Telefon:</b> {order['client_phone']}\n"
-                f"🏠 <b>Manzil:</b> {order['address']}\n"
-                f"📝 <b>Tavsif:</b> {order['description']}\n"
-                f"{status_emoji} <b>Holat:</b> {status_text}\n"
-                f"{priority_emoji} <b>Ustuvorlik:</b> {priority_text}\n"
-                f"⏰ <b>Taxminiy vaqt:</b> {order['estimated_completion']}\n\n"
-                f"📊 <b>Buyurtma #{index + 1} / {len(orders)}</b>"
+            await callback.message.edit_text(
+                text, 
+                reply_markup=get_application_list_keyboard(applications, page=page, lang=lang)
             )
-            
-            # Create navigation keyboard
-            keyboard = get_orders_navigation_keyboard(index, len(orders))
-            
-            if isinstance(message_or_callback, Message):
-                await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
-            else:
-                await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
-                
-        except Exception as e:
-            if isinstance(message_or_callback, Message):
-                await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
-            else:
-                await message_or_callback.answer("Xatolik yuz berdi")
-
-    @router.callback_query(F.data == "jm_prev_order")
-    async def show_previous_order(callback: CallbackQuery, state: FSMContext):
-        """Show previous order"""
-        try:
             await callback.answer()
             
-            # Get current index from state or default to 0
-            current_index = await state.get_data()
-            current_index = current_index.get('current_order_index', 0)
-            
-            orders = await get_junior_manager_orders(callback.from_user.id)
-            
-            if current_index > 0:
-                new_index = current_index - 1
-                await state.update_data(current_order_index=new_index)
-                await show_order_details(callback, orders[new_index], orders, new_index)
-            else:
-                await callback.answer("Bu birinchi buyurtma")
-                
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            print(f"Error handling pagination: {e}")
+            await callback.answer("Xatolik yuz berdi", show_alert=True)
 
-    @router.callback_query(F.data == "jm_next_order")
-    async def show_next_order(callback: CallbackQuery, state: FSMContext):
-        """Show next order"""
+    @router.callback_query(F.data == "jm_close_menu")
+    async def handle_close_menu(callback: CallbackQuery, state: FSMContext):
+        """Handle menu closing"""
         try:
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz') if user else 'uz'
+            
+            text = "✅ Menyu yopildi"
+            await callback.message.edit_text(text)
             await callback.answer()
             
-            # Get current index from state or default to 0
-            current_index = await state.get_data()
-            current_index = current_index.get('current_order_index', 0)
-            
-            orders = await get_junior_manager_orders(callback.from_user.id)
-            
-            if current_index < len(orders) - 1:
-                new_index = current_index + 1
-                await state.update_data(current_order_index=new_index)
-                await show_order_details(callback, orders[new_index], orders, new_index)
-            else:
-                await callback.answer("Bu oxirgi buyurtma")
-                
         except Exception as e:
-            await callback.answer("Xatolik yuz berdi")
+            print(f"Error closing menu: {e}")
+            await callback.answer()
 
     return router 

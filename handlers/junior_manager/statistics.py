@@ -74,7 +74,7 @@ def get_junior_manager_statistics_router():
             
             lang = user.get('language', 'uz')
             
-            # Get junior manager statistics
+            # Get junior manager statistics (only own stats)
             stats = await get_junior_manager_statistics(message.from_user.id)
             
             statistics_text = (
@@ -101,22 +101,24 @@ def get_junior_manager_statistics_router():
                 "Выберите один из разделов ниже:"
             )
             
-            sent_message = await message.answer(
+            await message.answer(
                 text=statistics_text,
                 reply_markup=get_statistics_keyboard(lang),
                 parse_mode='HTML'
             )
             
-        except Exception as e:
+        except Exception:
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.callback_query(F.data == "view_detailed_statistics")
     async def view_detailed_statistics(callback: CallbackQuery, state: FSMContext):
-        """View detailed statistics"""
+        """View detailed statistics (only for current junior manager)"""
         try:
             await callback.answer()
             
-            # Get detailed statistics
+            # Get user language and detailed statistics
+            user = await get_user_by_telegram_id(callback.from_user.id)
+            lang = user.get('language', 'uz') if user else 'uz'
             stats = await get_junior_manager_statistics(callback.from_user.id)
             
             detailed_stats_text = (
@@ -144,7 +146,7 @@ def get_junior_manager_statistics_router():
             
             await callback.message.edit_text(detailed_stats_text, reply_markup=keyboard, parse_mode='HTML')
             
-        except Exception as e:
+        except Exception:
             await callback.answer("❌ Xatolik yuz berdi")
 
     @router.callback_query(F.data == "back_to_statistics")
@@ -154,9 +156,9 @@ def get_junior_manager_statistics_router():
             await callback.answer()
             
             user = await get_user_by_telegram_id(callback.from_user.id)
-            lang = user.get('language', 'uz')
+            lang = user.get('language', 'uz') if user else 'uz'
             
-            # Get statistics
+            # Get statistics (only own)
             stats = await get_junior_manager_statistics(callback.from_user.id)
             
             statistics_text = (
@@ -189,7 +191,7 @@ def get_junior_manager_statistics_router():
                 parse_mode='HTML'
             )
             
-        except Exception as e:
+        except Exception:
             await callback.answer("❌ Xatolik yuz berdi")
 
     return router

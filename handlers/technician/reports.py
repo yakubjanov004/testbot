@@ -15,7 +15,7 @@ def get_reports_router():
     router.message.filter(role_filter)
     router.callback_query.filter(role_filter)
 
-    @router.message(F.text == "📊 Hisobotlar")
+    @router.message(F.text.in_(["📊 Hisobotlarim", "📊 Мои отчеты"]))
     async def show_reports_menu(message: Message, state: FSMContext):
         """Show reports menu handler"""
         try:

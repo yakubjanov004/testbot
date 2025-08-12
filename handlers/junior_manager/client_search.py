@@ -115,15 +115,17 @@ def get_client_search_router():
                 "Введите поисковый запрос:"
             )
             
-            sent_message = await message.answer(
+            await message.answer(
                 text=search_text,
                 reply_markup=get_client_search_keyboard(lang),
                 parse_mode='HTML'
             )
             
+            # Reset previous search context
+            await state.update_data(search_results=[], search_query="", current_client_index=0)
             await state.set_state("waiting_for_search_query")
             
-        except Exception as e:
+        except Exception:
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     @router.message(lambda message: message.text and len(message.text) > 2)
@@ -156,10 +158,17 @@ def get_client_search_router():
                 )
                 return
             
+            # Store results in state for navigation
+            await state.update_data(
+                search_results=search_results,
+                search_query=message.text,
+                current_client_index=0,
+            )
+            
             # Show first result
             await show_client_details(message, search_results[0], search_results, 0, message.text)
             
-        except Exception as e:
+        except Exception:
             await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
 
     async def show_client_details(message_or_callback, client, clients, index, query):
@@ -168,7 +177,7 @@ def get_client_search_router():
             # Format date
             created_date = client['created_at'].strftime('%d.%m.%Y')
             
-            # To'liq ma'lumot
+            # Full info
             text = (
                 f"👤 <b>Mijoz ma'lumotlari - To'liq ma'lumot</b>\n\n"
                 f"🔎 <b>Qidiruv so'zi:</b> {query}\n"
@@ -183,7 +192,7 @@ def get_client_search_router():
                 f"📊 <b>Mijoz #{index + 1} / {len(clients)}</b>"
             )
             
-            # Create navigation keyboard
+            # Navigation keyboard
             keyboard = get_clients_navigation_keyboard(index, len(clients))
             
             if isinstance(message_or_callback, Message):
@@ -191,7 +200,7 @@ def get_client_search_router():
             else:
                 await message_or_callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
                 
-        except Exception as e:
+        except Exception:
             if isinstance(message_or_callback, Message):
                 await message_or_callback.answer("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
             else:
@@ -202,16 +211,15 @@ def get_client_search_router():
         """Show previous client"""
         try:
             await callback.answer()
+            data = await state.get_data()
+            current_index = data.get('current_client_index', 0)
+            search_results = data.get('search_results', [])
+            query = data.get('search_query', '')
             
-            # Get current index from state or default to 0
-            current_index = await state.get_data()
-            current_index = current_index.get('current_client_index', 0)
-            
-            # Get search results from state
-            search_data = await state.get_data()
-            search_results = search_data.get('search_results', [])
-            query = search_data.get('search_query', '')
-            
+            if not search_results:
+                await callback.answer("Natijalar topilmadi")
+                return
+
             if current_index > 0:
                 new_index = current_index - 1
                 await state.update_data(current_client_index=new_index)
@@ -219,7 +227,7 @@ def get_client_search_router():
             else:
                 await callback.answer("Bu birinchi mijoz")
                 
-        except Exception as e:
+        except Exception:
             await callback.answer("Xatolik yuz berdi")
 
     @router.callback_query(F.data == "client_next")
@@ -227,15 +235,14 @@ def get_client_search_router():
         """Show next client"""
         try:
             await callback.answer()
+            data = await state.get_data()
+            current_index = data.get('current_client_index', 0)
+            search_results = data.get('search_results', [])
+            query = data.get('search_query', '')
             
-            # Get current index from state or default to 0
-            current_index = await state.get_data()
-            current_index = current_index.get('current_client_index', 0)
-            
-            # Get search results from state
-            search_data = await state.get_data()
-            search_results = search_data.get('search_results', [])
-            query = search_data.get('search_query', '')
+            if not search_results:
+                await callback.answer("Natijalar topilmadi")
+                return
             
             if current_index < len(search_results) - 1:
                 new_index = current_index + 1
@@ -244,7 +251,7 @@ def get_client_search_router():
             else:
                 await callback.answer("Bu oxirgi mijoz")
                 
-        except Exception as e:
+        except Exception:
             await callback.answer("Xatolik yuz berdi")
 
     return router

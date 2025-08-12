@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from datetime import datetime
-from keyboards.technician_buttons import get_technician_main_menu_keyboard, get_back_technician_keyboard, get_language_keyboard, get_reports_keyboard, get_help_request_types_keyboard
+from keyboards.technician_buttons import get_technician_main_menu_keyboard, get_back_technician_keyboard, get_language_keyboard
 from states.technician_states import TechnicianMainMenuStates
 from filters.role_filter import RoleFilter
 
@@ -139,107 +139,9 @@ Kerakli bo'limni tanlang:
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
 
-#     @router.message(F.text == "📋 Vazifalarim")
-#     async def my_tasks_handler(message: Message, state: FSMContext):
-#         """My tasks handler"""
-#         try:
-#             # Mock user data (like other modules)
-#             user = {
-#                 'id': 1,
-#                 'full_name': 'Technician xodimi',
-#                 'language': 'uz',
-#                 'role': 'technician'
-#             }
-            
-#             lang = user.get('language', 'uz')
-            
-#             text = f"""
-# 📋 <b>Vazifalarim</b>
+    # Removed unused "Vazifalarim" and "Hisobotlar" handlers for simplified UI
 
-# 🔧 Texnik xizmat arizalari
-# 📥 Inbox - tayinlangan arizalar
-# 📊 Hisobotlar - ish natijalari
-# 🆘 Yordam - qo'llab-quvvatlash
-
-# Kerakli bo'limni tanlang:
-#             """
-            
-#             await message.answer(
-#                 text.strip(),
-#                 parse_mode='HTML',
-#                 reply_markup=get_technician_main_menu_keyboard(lang)
-#             )
-            
-#         except Exception as e:
-#             await message.answer("❌ Xatolik yuz berdi")
-
-#     @router.message(F.text == "📊 Hisobotlar")
-#     async def reports_handler(message: Message, state: FSMContext):
-#         """Reports handler"""
-#         try:
-#             # Mock user data (like other modules)
-#             user = {
-#                 'id': 1,
-#                 'full_name': 'Technician xodimi',
-#                 'language': 'uz',
-#                 'role': 'technician'
-#             }
-            
-#             lang = user.get('language', 'uz')
-            
-#             text = f"""
-# 📊 <b>Hisobotlar</b>
-
-# 📈 Kunlik hisobot
-# 📊 Haftalik hisobot
-# 📋 Oylik hisobot
-# 📋 Ish natijalari
-
-# Kerakli hisobotni tanlang:
-#             """
-            
-#             await message.answer(
-#                 text.strip(),
-#                 parse_mode='HTML',
-#                 reply_markup=get_reports_keyboard(lang)
-#             )
-            
-#         except Exception as e:
-#             await message.answer("❌ Xatolik yuz berdi")
-
-#     @router.message(F.text == "🆘 Yordam")
-#     async def help_handler(message: Message, state: FSMContext):
-#         """Help handler"""
-#         try:
-#             # Mock user data (like other modules)
-#             user = {
-#                 'id': 1,
-#                 'full_name': 'Technician xodimi',
-#                 'language': 'uz',
-#                 'role': 'technician'
-#             }
-            
-#             lang = user.get('language', 'uz')
-            
-#             text = f"""
-# 🆘 <b>Yordam</b>
-
-# 📞 Manager bilan bog'lanish
-# 🔧 Texnik yordam
-# 📦 Ombor bilan bog'lanish
-# 🚨 Shoshilinch holatlar
-
-# Kerakli yordam turini tanlang:
-#             """
-            
-#             await message.answer(
-#                 text.strip(),
-#                 parse_mode='HTML',
-#                 reply_markup=get_help_request_types_keyboard(lang)
-#             )
-            
-#         except Exception as e:
-#             await message.answer("❌ Xatolik yuz berdi")
+    # Removed legacy help entry point from main menu for simplified UI
 
 #     @router.message(F.text == "📥 Inbox")
 #     async def inbox_handler(message: Message, state: FSMContext):

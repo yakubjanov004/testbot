@@ -15,9 +15,7 @@ from aiogram import Router
 from .main_menu import get_technician_main_menu_router
 from .inbox import get_technician_inbox_router
 from .reports import get_reports_router
-from .help import get_help_router
-from .communication import get_technician_communication_router
-from .equipment import get_technician_equipment_router
+from .tasks import get_technician_tasks_router
 
 def get_technician_router():
     """Get the complete technician router with all handlers"""
@@ -27,9 +25,7 @@ def get_technician_router():
     router.include_router(get_technician_main_menu_router())
     router.include_router(get_technician_inbox_router())
     router.include_router(get_reports_router())
-    router.include_router(get_help_router())
-    router.include_router(get_technician_communication_router())
-    router.include_router(get_technician_equipment_router())
+    router.include_router(get_technician_tasks_router())
 
     return router
 
