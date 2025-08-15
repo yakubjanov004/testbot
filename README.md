@@ -58,8 +58,22 @@ python main.py
 
 `.env` faylida quyidagi sozlamalar mavjud:
 - `BOT_TOKEN` - Telegram bot token (@BotFather dan)
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Database sozlamalari (kelajakda)
-- `LOG_LEVEL` - Logging darajasi (INFO, DEBUG, ERROR)
+- `BOT_ID` - Ixtiyoriy. Agar kiritilmasa, `BOT_TOKEN` dan avtomatik olinadi
+- `ADMIN_IDS` - Adminlar roʻyxati, vergul bilan ajratilgan (masalan: `123,456`)
+- `ZAYAVKA_GROUP_ID` - Ixtiyoriy. Arizalar uchun guruh ID si
+- `LOG_LEVEL` - Logging darajasi (`INFO`, `DEBUG`, `ERROR`)
+
+- Postgres uchun bitta umumiy URL yoki bo'linma/regionlarga ajratilgan URL lar:
+  - `DATABASE_URL` - Umumiy standart baza URL (masalan: `postgresql://user:pass@host:5432/dbname`)
+  - `DB_URL_TOSHKENT` yoki `DATABASE_URL_TOSHKENT` - Toshkent bazasi
+  - `DB_URL_SAMARQAND` yoki `DATABASE_URL_SAMARQAND` - Samarqand bazasi
+  - `CLIENTS_DB_URL` yoki `CLIENTS_DATABASE_URL` - Mijozlar bazasi
+
+- Agar yuqoridagi URL lar berilmagan bo'lsa, quyidagilar orqali `DATABASE_URL` avtomatik yig'iladi:
+  - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+
+- Ixtiyoriy rollar uchun IDs (kiritilsa, rol menyulari shu ID egalari bilan bog'lanadi):
+  - `MANAGER_ID`, `CLIENT_ID`, `JUNIOR_MANAGER_ID`, `CONTROLLER_ID`, `TECHNICIAN_ID`, `WAREHOUSE_ID`, `CALL_CENTER_SUPERVISOR_ID`, `CALL_CENTER_ID`
 
 ## 📁 Fayl strukturasi
 

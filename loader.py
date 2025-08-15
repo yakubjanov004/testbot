@@ -39,11 +39,24 @@ activity_logger.addHandler(activity_handler)
 # Load environment variables
 load_dotenv()
 
+# Logging level from environment
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+_numeric_log_level = getattr(logging, LOG_LEVEL, logging.INFO)
+logging.getLogger().setLevel(_numeric_log_level)
+logger.setLevel(_numeric_log_level)
+activity_logger.setLevel(_numeric_log_level)
+
 # Bot configuration
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if id.strip()]
 BOT_ID = int(os.getenv('BOT_ID', 0))
 ZAYAVKA_GROUP_ID = int(os.getenv('ZAYAVKA_GROUP_ID', 0))
+# Derive BOT_ID from token if not provided
+if not BOT_ID and BOT_TOKEN and ':' in BOT_TOKEN:
+    try:
+        BOT_ID = int(BOT_TOKEN.split(':', 1)[0])
+    except ValueError:
+        pass
 
 # Database configuration (for future use)
 DB_HOST = os.getenv('DB_HOST', 'localhost')
@@ -76,16 +89,20 @@ dp.callback_query.middleware(LoggerMiddleware())
 dp.message.middleware(ErrorMiddleware())
 dp.callback_query.middleware(ErrorMiddleware())
 
-# Role mapping
+# Role mapping (only include IDs that are set)
 ROLE_MAPPING = {
-    MANAGER_ID: 'manager',
-    CLIENT_ID: 'client',
-    JUNIOR_MANAGER_ID: 'junior_manager',
-    CONTROLLER_ID: 'controller',
-    TECHNICIAN_ID: 'technician',
-    WAREHOUSE_ID: 'warehouse',
-    CALL_CENTER_SUPERVISOR_ID: 'call_center_supervisor',
-    CALL_CENTER_ID: 'call_center'
+    role_id: role_name
+    for role_id, role_name in [
+        (MANAGER_ID, 'manager'),
+        (CLIENT_ID, 'client'),
+        (JUNIOR_MANAGER_ID, 'junior_manager'),
+        (CONTROLLER_ID, 'controller'),
+        (TECHNICIAN_ID, 'technician'),
+        (WAREHOUSE_ID, 'warehouse'),
+        (CALL_CENTER_SUPERVISOR_ID, 'call_center_supervisor'),
+        (CALL_CENTER_ID, 'call_center'),
+    ]
+    if isinstance(role_id, int) and role_id > 0
 }
 
 def get_user_role(user_id: int) -> str:
