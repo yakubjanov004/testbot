@@ -17,6 +17,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 from config import settings
+from config import get_admin_regions
 
 # Logger sozlash - batafsil
 logging.basicConfig(
@@ -72,9 +73,16 @@ dp.message.middleware(ErrorMiddleware())
 dp.callback_query.middleware(ErrorMiddleware())
 
 async def get_user_role(user_id: int) -> str:
-    """Get user role based on database records and admin list"""
+    """Get user role based on database records and admin list.
+
+    A user is considered admin if they are either in global ADMIN_IDS or in any
+    region-specific admin list (ADMIN_IDS_<REGION>) defined in the environment.
+    """
     try:
+        # Global admin or region-scoped admin
         if user_id in ADMIN_IDS:
+            return 'admin'
+        if get_admin_regions(user_id):
             return 'admin'
 
         # Try database lookup
