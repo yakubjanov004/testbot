@@ -50,7 +50,11 @@ activity_logger.setLevel(_numeric_log_level)
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if id.strip()]
 BOT_ID = int(os.getenv('BOT_ID', 0))
-ZAYAVKA_GROUP_ID = int(os.getenv('ZAYAVKA_GROUP_ID', 0))
+raw_group = os.getenv('ZAYAVKA_GROUP_ID', '0').strip().strip('"').strip("'")
+try:
+    ZAYAVKA_GROUP_ID = int(raw_group)
+except ValueError:
+    ZAYAVKA_GROUP_ID = 0
 # Derive BOT_ID from token if not provided
 if not BOT_ID and BOT_TOKEN and ':' in BOT_TOKEN:
     try:
@@ -109,12 +113,12 @@ def get_dp():
 async def setup_bot():
     """Setup bot with all handlers"""
     try:
-        # Initialize DB pool (if DATABASE_URL is configured)
+        # Initialize DB pools (default, clients, regions)
         try:
-            from utils.db import init_db_pool
-            await init_db_pool()
+            from utils.db import init_db_pools
+            await init_db_pools()
         except Exception as e:
-            logger.warning(f"DB pool init skipped/failed: {e}")
+            logger.warning(f"DB pools init skipped/failed: {e}")
 
         # Import and setup handlers
         from handlers import setup_handlers
@@ -123,6 +127,7 @@ async def setup_bot():
         print("✅ Bot setup completed successfully")
         print(f"🤖 Bot ID: {BOT_ID}")
         print(f"👥 Admin IDs: {ADMIN_IDS}")
+        print(f"📣 Zayavka group: {ZAYAVKA_GROUP_ID}")
         
     except ImportError as e:
         logger.error(f"Import Error in setup_bot: {e}", exc_info=True)

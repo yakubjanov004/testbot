@@ -1,37 +1,51 @@
 import logging
-from typing import Optional
+from typing import Optional, Dict
 
 import asyncpg
 
-from utils.db_config import get_database_url
+from utils.db_config import DATABASES
 
 logger = logging.getLogger(__name__)
 
-_pool: Optional[asyncpg.pool.Pool] = None
+_pools: Dict[str, asyncpg.pool.Pool] = {}
 
 
-async def init_db_pool() -> Optional[asyncpg.pool.Pool]:
-    global _pool
-    if _pool is not None:
-        return _pool
+async def init_db_pools() -> Dict[str, asyncpg.pool.Pool]:
+    """Initialize asyncpg pools for all configured DATABASES."""
+    global _pools
+    if _pools:
+        return _pools
 
-    dsn = get_database_url()
-    if not dsn:
-        logger.info("DATABASE_URL not set; DB pool not initialized")
-        return None
-
-    _pool = await asyncpg.create_pool(dsn, min_size=1, max_size=5)
-    logger.info("Database pool initialized")
-    return _pool
-
-
-async def get_pool() -> Optional[asyncpg.pool.Pool]:
-    return _pool
+    for name, dsn in DATABASES.items():
+        try:
+            pool = await asyncpg.create_pool(dsn, min_size=1, max_size=5)
+            _pools[name] = pool
+            logger.info(f"Database pool initialized: {name}")
+        except Exception as e:
+            logger.warning(f"Failed to init pool '{name}': {e}")
+    if not _pools:
+        logger.info("No database URLs configured; no pools initialized")
+    return _pools
 
 
-async def close_db_pool() -> None:
-    global _pool
-    if _pool is not None:
-        await _pool.close()
-        _pool = None
-        logger.info("Database pool closed")
+async def get_pool(name: str = "default") -> Optional[asyncpg.pool.Pool]:
+    return _pools.get(name)
+
+
+async def get_clients_pool() -> Optional[asyncpg.pool.Pool]:
+    return _pools.get("clients")
+
+
+async def get_region_pool(region: str) -> Optional[asyncpg.pool.Pool]:
+    return _pools.get(region)
+
+
+async def close_all_pools() -> None:
+    global _pools
+    for name, pool in list(_pools.items()):
+        try:
+            await pool.close()
+            logger.info(f"Database pool closed: {name}")
+        except Exception:
+            pass
+    _pools.clear()
