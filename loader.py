@@ -65,16 +65,6 @@ DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 DB_NAME = os.getenv('DB_NAME', 'alfaconnect_db')
 
-# Role IDs
-MANAGER_ID = int(os.getenv('MANAGER_ID', 0)) if os.getenv('MANAGER_ID') else None
-CLIENT_ID = int(os.getenv('CLIENT_ID', 0)) if os.getenv('CLIENT_ID') else None
-JUNIOR_MANAGER_ID = int(os.getenv('JUNIOR_MANAGER_ID', 0)) if os.getenv('JUNIOR_MANAGER_ID') else None
-CONTROLLER_ID = int(os.getenv('CONTROLLER_ID', 0)) if os.getenv('CONTROLLER_ID') else None
-TECHNICIAN_ID = int(os.getenv('TECHNICIAN_ID', 0)) if os.getenv('TECHNICIAN_ID') else None
-WAREHOUSE_ID = int(os.getenv('WAREHOUSE_ID', 0)) if os.getenv('WAREHOUSE_ID') else None
-CALL_CENTER_SUPERVISOR_ID = int(os.getenv('CALL_CENTER_SUPERVISOR_ID', 0)) if os.getenv('CALL_CENTER_SUPERVISOR_ID') else None
-CALL_CENTER_ID = int(os.getenv('CALL_CENTER_ID', 0)) if os.getenv('CALL_CENTER_ID') else None
-
 # Initialize bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
@@ -89,33 +79,25 @@ dp.callback_query.middleware(LoggerMiddleware())
 dp.message.middleware(ErrorMiddleware())
 dp.callback_query.middleware(ErrorMiddleware())
 
-# Role mapping (only include IDs that are set)
-ROLE_MAPPING = {
-    role_id: role_name
-    for role_id, role_name in [
-        (MANAGER_ID, 'manager'),
-        (CLIENT_ID, 'client'),
-        (JUNIOR_MANAGER_ID, 'junior_manager'),
-        (CONTROLLER_ID, 'controller'),
-        (TECHNICIAN_ID, 'technician'),
-        (WAREHOUSE_ID, 'warehouse'),
-        (CALL_CENTER_SUPERVISOR_ID, 'call_center_supervisor'),
-        (CALL_CENTER_ID, 'call_center'),
-    ]
-    if isinstance(role_id, int) and role_id > 0
-}
+async def get_user_role(user_id: int) -> str:
+    """Get user role based on database records and admin list"""
+    try:
+        if user_id in ADMIN_IDS:
+            return 'admin'
 
-def get_user_role(user_id: int) -> str:
-    """Get user role based on user ID"""
-    if user_id in ADMIN_IDS:
-        return 'admin'
-    
-    for role_id, role_name in ROLE_MAPPING.items():
-        if role_id and user_id == role_id:
-            return role_name
-    
-    # Default role for testing
-    return 'client'
+        # Try database lookup
+        try:
+            from utils.user_repository import get_user_role as repo_get_user_role
+            role = await repo_get_user_role(user_id)
+            if role:
+                return role
+        except Exception as db_err:
+            logger.debug(f"DB role lookup failed for {user_id}: {db_err}")
+
+        # Default role
+        return 'client'
+    except Exception:
+        return 'client'
 
 # Global bot instance for use in handlers
 def get_bot():
@@ -127,6 +109,13 @@ def get_dp():
 async def setup_bot():
     """Setup bot with all handlers"""
     try:
+        # Initialize DB pool (if DATABASE_URL is configured)
+        try:
+            from utils.db import init_db_pool
+            await init_db_pool()
+        except Exception as e:
+            logger.warning(f"DB pool init skipped/failed: {e}")
+
         # Import and setup handlers
         from handlers import setup_handlers
         setup_handlers(dp)
@@ -134,7 +123,6 @@ async def setup_bot():
         print("✅ Bot setup completed successfully")
         print(f"🤖 Bot ID: {BOT_ID}")
         print(f"👥 Admin IDs: {ADMIN_IDS}")
-        print(f"📋 Role mapping: {ROLE_MAPPING}")
         
     except ImportError as e:
         logger.error(f"Import Error in setup_bot: {e}", exc_info=True)

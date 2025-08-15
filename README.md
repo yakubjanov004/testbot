@@ -72,9 +72,6 @@ python main.py
 - Agar yuqoridagi URL lar berilmagan bo'lsa, quyidagilar orqali `DATABASE_URL` avtomatik yig'iladi:
   - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 
-- Ixtiyoriy rollar uchun IDs (kiritilsa, rol menyulari shu ID egalari bilan bog'lanadi):
-  - `MANAGER_ID`, `CLIENT_ID`, `JUNIOR_MANAGER_ID`, `CONTROLLER_ID`, `TECHNICIAN_ID`, `WAREHOUSE_ID`, `CALL_CENTER_SUPERVISOR_ID`, `CALL_CENTER_ID`
-
 ## 📁 Fayl strukturasi
 
 ```

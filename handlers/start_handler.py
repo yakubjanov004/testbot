@@ -20,7 +20,7 @@ def get_start_router():
     async def start_command(message: Message, state: FSMContext):
         """Handle /start command"""
         try:
-            user_role = get_user_role(message.from_user.id)
+            user_role = await get_user_role(message.from_user.id)
 
             # Mock persist user on first start
             is_created, saved = await upsert_user(
