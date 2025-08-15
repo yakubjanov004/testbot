@@ -11,8 +11,7 @@ from aiogram.fsm.context import FSMContext
 from loader import get_user_role
 from utils.user_repository import upsert_user_in_clients
 from utils.role_system import show_role_menu
-from config import get_admin_regions
-from database.region_config import get_region_codes
+from utils.region_context import detect_user_regions
 from states.admin_states import AdminRegionStates
 from typing import List
 
@@ -47,11 +46,9 @@ def get_start_router():
             # Clear any existing state
             await state.clear()
 
-            # Region context selection for region-bound roles (admin, manager, etc.)
+            # Region context selection: detect assigned regions for this user+role
             if user_role in {"admin", "manager", "technician", "controller", "warehouse", "call_center", "call_center_supervisor", "junior_manager"}:
-                regions = get_region_codes()
-                assigned = get_admin_regions(message.from_user.id) if user_role == "admin" else regions
-                # If no regions configured, skip
+                assigned = await detect_user_regions(message.from_user.id, user_role)
                 if assigned:
                     if len(assigned) == 1:
                         await state.update_data(active_region=assigned[0])
