@@ -59,7 +59,7 @@ python main.py
 `.env` faylida quyidagi sozlamalar mavjud:
 - `BOT_TOKEN` - Telegram bot token (@BotFather dan)
 - `BOT_ID` - Ixtiyoriy. Agar kiritilmasa, `BOT_TOKEN` dan avtomatik olinadi
-- `ADMIN_IDS` - Adminlar roʻyxati, vergul bilan ajratilgan (masalan: `123,456`)
+- `ADMIN_IDS` - Global adminlar roʻyxati, vergul bilan ajratilgan (masalan: `123,456`)
 - `ZAYAVKA_GROUP_ID` - Ixtiyoriy. Arizalar uchun guruh ID si
 - `LOG_LEVEL` - Logging darajasi (`INFO`, `DEBUG`, `ERROR`)
 
@@ -71,6 +71,11 @@ python main.py
 
 - Agar yuqoridagi URL lar berilmagan bo'lsa, quyidagilar orqali `DATABASE_URL` avtomatik yig'iladi:
   - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+
+- Region bo‘yicha admin tayinlash:
+  - `ADMIN_IDS_TOSHKENT=111,222`
+  - `ADMIN_IDS_SAMARQAND=333,444`
+  - Har bir region uchun `ADMIN_IDS_<REGION>` yozuvi (suffix katta-kichik harfga sezgir emas)
 
 ## 📁 Fayl strukturasi
 

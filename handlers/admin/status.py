@@ -3,7 +3,7 @@ from aiogram.types import Message
 from aiogram.filters import Command
 import asyncio
 
-from config import settings
+from config import settings, get_admin_regions
 from utils.db import get_pool, get_clients_pool
 from database.region_config import get_region_codes
 
@@ -40,13 +40,16 @@ def get_admin_status_router() -> Router:
         if message.from_user.id not in settings.admin_ids:
             return
         regions = get_region_codes()
-        # Only check currently configured regions
-        checks = [
-            _check_pool(region) for region in regions
-        ]
+        checks = [_check_pool(region) for region in regions]
         checks.append(_check_clients())
         results = await asyncio.gather(*checks, return_exceptions=False)
-        text = "\n".join(["🔎 DB status:"] + results)
+        assigned_regions = get_admin_regions(message.from_user.id)
+        text = "\n".join([
+            "🔎 DB status:",
+            *results,
+            "",
+            f"👮‍♂️ Siz admin bo'lgan regionlar: {', '.join(assigned_regions) if assigned_regions else '—'}",
+        ])
         await message.answer(text)
 
     return router

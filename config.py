@@ -9,7 +9,7 @@ in one place.
 import os
 import logging
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 
 from dotenv import load_dotenv
 
@@ -40,6 +40,24 @@ def _parse_group_id(raw: str) -> int:
 		return 0
 
 
+def _collect_region_admins_from_env() -> Dict[str, List[int]]:
+	"""Parse ADMIN_IDS_<REGION> style variables into a mapping.
+
+	Examples:
+	- ADMIN_IDS_TOSHKENT=111,222
+	- ADMIN_IDS_SAMARQAND=333,444
+	"""
+	mapping: Dict[str, List[int]] = {}
+	for key, value in os.environ.items():
+		if not key.startswith("ADMIN_IDS_") or key == "ADMIN_IDS":
+			continue
+		suffix = key[len("ADMIN_IDS_"):].strip().lower()
+		if not suffix:
+			continue
+		mapping[suffix] = _parse_admin_ids(value)
+	return mapping
+
+
 @dataclass(frozen=True)
 class Settings:
 	bot_token: str
@@ -47,6 +65,7 @@ class Settings:
 	bot_id: int
 	zayavka_group_id: int
 	log_level: str
+	region_admin_ids: Dict[str, List[int]]
 
 	@property
 	def numeric_log_level(self) -> int:
@@ -60,6 +79,7 @@ class Settings:
 		bot_id_str = os.getenv("BOT_ID", "0").strip()
 		zayavka_group_id = _parse_group_id(os.getenv("ZAYAVKA_GROUP_ID", "0"))
 		log_level = os.getenv("LOG_LEVEL", "INFO").strip()
+		region_admin_ids = _collect_region_admins_from_env()
 
 		# Derive BOT_ID from token if not explicitly provided
 		try:
@@ -78,6 +98,7 @@ class Settings:
 			bot_id=bot_id,
 			zayavka_group_id=zayavka_group_id,
 			log_level=log_level,
+			region_admin_ids=region_admin_ids,
 		)
 
 
@@ -87,3 +108,20 @@ settings = Settings.from_env()
 
 def get_settings() -> Settings:
 	return settings
+
+
+def is_global_admin(telegram_id: int) -> bool:
+	return telegram_id in settings.admin_ids
+
+
+def is_region_admin(telegram_id: int, region_code: str) -> bool:
+	code = (region_code or "").lower()
+	return telegram_id in set(settings.region_admin_ids.get(code, []))
+
+
+def get_admin_regions(telegram_id: int) -> List[str]:
+	regions: List[str] = []
+	for code, ids in settings.region_admin_ids.items():
+		if telegram_id in set(ids):
+			regions.append(code)
+	return sorted(regions)
