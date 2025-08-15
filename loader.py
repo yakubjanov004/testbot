@@ -16,9 +16,11 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
+from config import settings
+
 # Logger sozlash - batafsil
 logging.basicConfig(
-    level=logging.INFO,
+    level=settings.numeric_log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),  # Terminal uchun
@@ -30,37 +32,23 @@ logger = logging.getLogger(__name__)
 
 # Qo'shimcha logger'lar
 activity_logger = logging.getLogger('activity')
-activity_logger.setLevel(logging.INFO)
+activity_logger.setLevel(settings.numeric_log_level)
 activity_handler = logging.FileHandler('testbot_activity.log', encoding='utf-8')
 activity_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 activity_handler.setFormatter(activity_formatter)
 activity_logger.addHandler(activity_handler)
 
-# Load environment variables
+# Ensure env is loaded (idempotent) and apply configured logging level
 load_dotenv()
+logging.getLogger().setLevel(settings.numeric_log_level)
+logger.setLevel(settings.numeric_log_level)
+activity_logger.setLevel(settings.numeric_log_level)
 
-# Logging level from environment
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
-_numeric_log_level = getattr(logging, LOG_LEVEL, logging.INFO)
-logging.getLogger().setLevel(_numeric_log_level)
-logger.setLevel(_numeric_log_level)
-activity_logger.setLevel(_numeric_log_level)
-
-# Bot configuration
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if id.strip()]
-BOT_ID = int(os.getenv('BOT_ID', 0))
-raw_group = os.getenv('ZAYAVKA_GROUP_ID', '0').strip().strip('"').strip("'")
-try:
-    ZAYAVKA_GROUP_ID = int(raw_group)
-except ValueError:
-    ZAYAVKA_GROUP_ID = 0
-# Derive BOT_ID from token if not provided
-if not BOT_ID and BOT_TOKEN and ':' in BOT_TOKEN:
-    try:
-        BOT_ID = int(BOT_TOKEN.split(':', 1)[0])
-    except ValueError:
-        pass
+# Bot configuration (from centralized settings)
+BOT_TOKEN = settings.bot_token
+ADMIN_IDS = settings.admin_ids
+BOT_ID = settings.bot_id
+ZAYAVKA_GROUP_ID = settings.zayavka_group_id
 
 # Database configuration (for future use)
 DB_HOST = os.getenv('DB_HOST', 'localhost')

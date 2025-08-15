@@ -22,23 +22,29 @@ def _read_env_url(name: str) -> Optional[str]:
 # Collect databases from common env names
 _DATABASES: Dict[str, str] = {}
 
+# Default, if provided as a single DSN
 _default_url = _read_env_url("DATABASE_URL")
 if _default_url:
     _DATABASES["default"] = _default_url
 
-# Backward/alternative names supported for regions
-_toshkent = _read_env_url("DATABASE_URL_TOSHKENT") or _read_env_url("DB_URL_TOSHKENT")
-if _toshkent:
-    _DATABASES["toshkent"] = _toshkent
+# Discover regional DSNs from flexible env names for scalability
+# Supports both patterns: DB_URL_<REGION> and DATABASE_URL_<REGION>
+for key, value in os.environ.items():
+    if not value:
+        continue
+    if key.startswith("DATABASE_URL_"):
+        suffix = key[len("DATABASE_URL_"):]
+        if suffix:
+            _DATABASES[suffix.lower()] = value
+    elif key.startswith("DB_URL_"):
+        suffix = key[len("DB_URL_"):]
+        if suffix:
+            _DATABASES[suffix.lower()] = value
 
-_samarqand = _read_env_url("DATABASE_URL_SAMARQAND") or _read_env_url("DB_URL_SAMARQAND")
-if _samarqand:
-    _DATABASES["samarqand"] = _samarqand
-
+# Clients DB
 _clients = _read_env_url("CLIENTS_DATABASE_URL") or _read_env_url("CLIENTS_DB_URL")
 if _clients:
     _DATABASES["clients"] = _clients
-
 
 # Optionally build default DSN from split parts if not provided
 if "default" not in _DATABASES:
