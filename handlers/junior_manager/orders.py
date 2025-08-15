@@ -81,7 +81,7 @@ class JuniorManagerApplicationStates(StatesGroup):
     viewing_applications = State()
     viewing_application_details = State()
 
-def get_junior_manager_application_viewing_router():
+def get_junior_manager_orders_router():
     """Get router for junior manager application viewing handlers"""
     router = Router()
     
