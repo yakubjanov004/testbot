@@ -2,6 +2,11 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from typing import List, Dict, Any
 
 
+def get_controller_main_keyboard(lang='uz'):
+    """Controller uchun asosiy klaviatura (controllers_main_menu bilan bir xil)"""
+    return controllers_main_menu(lang)
+
+
 def controllers_main_menu(lang='uz'):
     if lang == 'uz':
         keyboard = [
