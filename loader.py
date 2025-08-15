@@ -39,11 +39,28 @@ activity_logger.addHandler(activity_handler)
 # Load environment variables
 load_dotenv()
 
+# Logging level from environment
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+_numeric_log_level = getattr(logging, LOG_LEVEL, logging.INFO)
+logging.getLogger().setLevel(_numeric_log_level)
+logger.setLevel(_numeric_log_level)
+activity_logger.setLevel(_numeric_log_level)
+
 # Bot configuration
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if id.strip()]
 BOT_ID = int(os.getenv('BOT_ID', 0))
-ZAYAVKA_GROUP_ID = int(os.getenv('ZAYAVKA_GROUP_ID', 0))
+raw_group = os.getenv('ZAYAVKA_GROUP_ID', '0').strip().strip('"').strip("'")
+try:
+    ZAYAVKA_GROUP_ID = int(raw_group)
+except ValueError:
+    ZAYAVKA_GROUP_ID = 0
+# Derive BOT_ID from token if not provided
+if not BOT_ID and BOT_TOKEN and ':' in BOT_TOKEN:
+    try:
+        BOT_ID = int(BOT_TOKEN.split(':', 1)[0])
+    except ValueError:
+        pass
 
 # Database configuration (for future use)
 DB_HOST = os.getenv('DB_HOST', 'localhost')
@@ -51,16 +68,6 @@ DB_PORT = int(os.getenv('DB_PORT', 5432))
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 DB_NAME = os.getenv('DB_NAME', 'alfaconnect_db')
-
-# Role IDs
-MANAGER_ID = int(os.getenv('MANAGER_ID', 0)) if os.getenv('MANAGER_ID') else None
-CLIENT_ID = int(os.getenv('CLIENT_ID', 0)) if os.getenv('CLIENT_ID') else None
-JUNIOR_MANAGER_ID = int(os.getenv('JUNIOR_MANAGER_ID', 0)) if os.getenv('JUNIOR_MANAGER_ID') else None
-CONTROLLER_ID = int(os.getenv('CONTROLLER_ID', 0)) if os.getenv('CONTROLLER_ID') else None
-TECHNICIAN_ID = int(os.getenv('TECHNICIAN_ID', 0)) if os.getenv('TECHNICIAN_ID') else None
-WAREHOUSE_ID = int(os.getenv('WAREHOUSE_ID', 0)) if os.getenv('WAREHOUSE_ID') else None
-CALL_CENTER_SUPERVISOR_ID = int(os.getenv('CALL_CENTER_SUPERVISOR_ID', 0)) if os.getenv('CALL_CENTER_SUPERVISOR_ID') else None
-CALL_CENTER_ID = int(os.getenv('CALL_CENTER_ID', 0)) if os.getenv('CALL_CENTER_ID') else None
 
 # Initialize bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
@@ -76,29 +83,25 @@ dp.callback_query.middleware(LoggerMiddleware())
 dp.message.middleware(ErrorMiddleware())
 dp.callback_query.middleware(ErrorMiddleware())
 
-# Role mapping
-ROLE_MAPPING = {
-    MANAGER_ID: 'manager',
-    CLIENT_ID: 'client',
-    JUNIOR_MANAGER_ID: 'junior_manager',
-    CONTROLLER_ID: 'controller',
-    TECHNICIAN_ID: 'technician',
-    WAREHOUSE_ID: 'warehouse',
-    CALL_CENTER_SUPERVISOR_ID: 'call_center_supervisor',
-    CALL_CENTER_ID: 'call_center'
-}
+async def get_user_role(user_id: int) -> str:
+    """Get user role based on database records and admin list"""
+    try:
+        if user_id in ADMIN_IDS:
+            return 'admin'
 
-def get_user_role(user_id: int) -> str:
-    """Get user role based on user ID"""
-    if user_id in ADMIN_IDS:
-        return 'admin'
-    
-    for role_id, role_name in ROLE_MAPPING.items():
-        if role_id and user_id == role_id:
-            return role_name
-    
-    # Default role for testing
-    return 'client'
+        # Try database lookup
+        try:
+            from utils.user_repository import get_user_role as repo_get_user_role
+            role = await repo_get_user_role(user_id)
+            if role:
+                return role
+        except Exception as db_err:
+            logger.debug(f"DB role lookup failed for {user_id}: {db_err}")
+
+        # Default role
+        return 'client'
+    except Exception:
+        return 'client'
 
 # Global bot instance for use in handlers
 def get_bot():
@@ -110,6 +113,13 @@ def get_dp():
 async def setup_bot():
     """Setup bot with all handlers"""
     try:
+        # Initialize DB pools (default, clients, regions)
+        try:
+            from utils.db import init_db_pools
+            await init_db_pools()
+        except Exception as e:
+            logger.warning(f"DB pools init skipped/failed: {e}")
+
         # Import and setup handlers
         from handlers import setup_handlers
         setup_handlers(dp)
@@ -117,7 +127,7 @@ async def setup_bot():
         print("✅ Bot setup completed successfully")
         print(f"🤖 Bot ID: {BOT_ID}")
         print(f"👥 Admin IDs: {ADMIN_IDS}")
-        print(f"📋 Role mapping: {ROLE_MAPPING}")
+        print(f"📣 Zayavka group: {ZAYAVKA_GROUP_ID}")
         
     except ImportError as e:
         logger.error(f"Import Error in setup_bot: {e}", exc_info=True)

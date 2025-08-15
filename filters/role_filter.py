@@ -70,7 +70,7 @@ class RoleFilter(BaseFilter):
                 return False
             
             # Get role from database if not cached
-            user_role = get_user_role(user_id)
+            user_role = await get_user_role(user_id)
             
             result = user_role == self.role
             
