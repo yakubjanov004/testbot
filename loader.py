@@ -1,8 +1,8 @@
 """
-Bot Loader - Complete Implementation
+Bot Loader - Complete Implementation with Database
 
-This module sets up the Telegram bot with environment variables
-and role-based routing system.
+This module sets up the Telegram bot with environment variables,
+database initialization, and role-based routing system.
 """
 
 import os
@@ -45,7 +45,7 @@ ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if 
 BOT_ID = int(os.getenv('BOT_ID', 0))
 ZAYAVKA_GROUP_ID = int(os.getenv('ZAYAVKA_GROUP_ID', 0))
 
-# Database configuration (for future use)
+# Database configuration
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_PORT = int(os.getenv('DB_PORT', 5432))
 DB_USER = os.getenv('DB_USER', 'postgres')
@@ -107,9 +107,24 @@ def get_bot():
 def get_dp():
     return dp
 
+async def init_database():
+    """Initialize database"""
+    try:
+        from database.base import init_db
+        logger.info("Initializing database...")
+        await init_db()
+        logger.info("✅ Database initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize database: {e}")
+        # Don't raise - allow bot to run even if DB fails
+        # In production, you might want to raise this
+
 async def setup_bot():
     """Setup bot with all handlers"""
     try:
+        # Initialize database
+        await init_database()
+        
         # Import and setup handlers
         from handlers import setup_handlers
         setup_handlers(dp)
@@ -118,6 +133,7 @@ async def setup_bot():
         print(f"🤖 Bot ID: {BOT_ID}")
         print(f"👥 Admin IDs: {ADMIN_IDS}")
         print(f"📋 Role mapping: {ROLE_MAPPING}")
+        print(f"🗄️ Database: {DB_NAME}@{DB_HOST}:{DB_PORT}")
         
     except ImportError as e:
         logger.error(f"Import Error in setup_bot: {e}", exc_info=True)
@@ -170,6 +186,14 @@ async def start_bot():
         print(f"📄 Line number: {e.__traceback__.tb_lineno}")
         traceback.print_exc()
         raise
+    finally:
+        # Close database connections on shutdown
+        try:
+            from database.base import close_db
+            await close_db()
+            logger.info("Database connections closed")
+        except:
+            pass
 
 if __name__ == "__main__":
     asyncio.run(start_bot())

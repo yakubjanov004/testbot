@@ -1,92 +1,217 @@
 """
-Start Handler - Simplified Implementation
+Start Handler - Database Implementation
 
-This module handles the /start command and shows appropriate menus
-based on user role.
+This module handles the /start command and initial user registration
+using the real database.
 """
 
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from loader import get_user_role
-from utils.mock_user_store import upsert_user
-from utils.role_system import show_role_menu
+from aiogram.fsm.state import State, StatesGroup
+import logging
+
+# Import database service
+from database.service import DatabaseService
+from database.models import UserRole
+
+logger = logging.getLogger(__name__)
+
+# States for registration
+class RegistrationStates(StatesGroup):
+    waiting_for_name = State()
+    waiting_for_phone = State()
+    waiting_for_language = State()
 
 def get_start_router():
-    """Get start router with all handlers"""
     router = Router()
     
-    @router.message(F.text == "/start")
-    async def start_command(message: Message, state: FSMContext):
+    @router.message(Command("start"))
+    async def start_handler(message: Message, state: FSMContext):
         """Handle /start command"""
         try:
-            user_role = get_user_role(message.from_user.id)
-
-            # Mock persist user on first start
-            is_created, saved = await upsert_user(
-                message.from_user.id,
-                {
-                    "telegram_id": message.from_user.id,
-                    "username": message.from_user.username,
-                    "first_name": message.from_user.first_name,
-                    "last_name": message.from_user.last_name,
-                    "language": message.from_user.language_code or "uz",
-                    "role": user_role,
-                    "is_bot": message.from_user.is_bot,
-                },
+            user_id = message.from_user.id
+            username = message.from_user.username
+            full_name = message.from_user.full_name
+            
+            # Get or create user in database
+            user = await DatabaseService.get_or_create_user(
+                telegram_id=user_id,
+                username=username,
+                full_name=full_name
             )
             
             # Clear any existing state
             await state.clear()
             
-            # Show welcome message
-            created_note = "🆕 Ro'yxatdan o'tdingiz." if is_created else "🔄 Ma'lumotlaringiz yangilandi."
-            welcome_text = (
-                f"👋 Xush kelibsiz, {message.from_user.first_name}!\n\n"
-                f"🤖 Alfa Connect botiga xush kelibsiz!\n"
-                f"👤 Sizning rolingiz: {user_role.upper()}\n"
-                f"{created_note}\n\n"
-                f"Quyidagi menyulardan birini tanlang:"
-            )
-            
-            await message.answer(welcome_text)
-            
-            # Show appropriate menu based on role
-            if user_role == 'client':
-                from keyboards.client_buttons import get_main_menu_keyboard
-                keyboard = get_main_menu_keyboard('uz')
-                await message.answer("Quyidagi menyudan kerakli bo'limni tanlang.", reply_markup=keyboard)
+            # Check if user needs to complete registration
+            if not user.phone_number:
+                # Start registration process
+                await state.set_state(RegistrationStates.waiting_for_phone)
+                
+                text = (
+                    f"Assalomu alaykum, {full_name}! 🎉\n\n"
+                    "AlfaConnect tizimiga xush kelibsiz!\n\n"
+                    "Ro'yxatdan o'tish uchun telefon raqamingizni yuboring:\n"
+                    "(Format: +998901234567)"
+                )
+                
+                # Create phone number request button
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(
+                        text="📱 Telefon raqamni yuborish",
+                        callback_data="request_phone"
+                    )]
+                ])
+                
+                await message.answer(text, reply_markup=keyboard)
             else:
-                await show_role_menu(message, user_role)
-            
+                # User already registered, show main menu based on role
+                await show_main_menu(message, user)
+                
         except Exception as e:
-            #await message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
-            pass
+            logger.error(f"Error in start handler: {e}")
+            await message.answer(
+                "❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.\n"
+                "/start buyrug'ini qayta yuboring."
+            )
     
-    @router.callback_query(F.data == "back_to_main_menu")
-    async def back_to_main_menu_handler(callback: CallbackQuery, state: FSMContext):
-        """Handle back to main menu button"""
+    @router.message(RegistrationStates.waiting_for_phone)
+    async def process_phone(message: Message, state: FSMContext):
+        """Process phone number input"""
         try:
-            await callback.answer()
+            phone = message.text.strip()
             
-            user_role = get_user_role(callback.from_user.id)
+            # Validate phone number
+            if not phone.startswith('+998') or len(phone) != 13:
+                await message.answer(
+                    "❌ Noto'g'ri telefon raqam formati!\n"
+                    "Iltimos, +998901234567 formatida yuboring."
+                )
+                return
             
-            # Clear any existing state
-            await state.clear()
+            # Update user phone number
+            user = await DatabaseService.update_user(
+                telegram_id=message.from_user.id,
+                phone_number=phone
+            )
             
-            # Show appropriate menu based on role
-            if user_role == 'client':
-                from keyboards.client_buttons import get_main_menu_keyboard
-                keyboard = get_main_menu_keyboard('uz')
-                await callback.message.edit_text(
-                    "Quyidagi menyudan kerakli bo'limni tanlang.",
+            if user:
+                # Ask for language preference
+                await state.set_state(RegistrationStates.waiting_for_language)
+                
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [
+                        InlineKeyboardButton(text="🇺🇿 O'zbek", callback_data="lang_uz"),
+                        InlineKeyboardButton(text="🇷🇺 Русский", callback_data="lang_ru")
+                    ]
+                ])
+                
+                await message.answer(
+                    "Tilni tanlang / Выберите язык:",
                     reply_markup=keyboard
                 )
             else:
-                await show_role_menu(callback.message, user_role)
+                await message.answer("❌ Xatolik yuz berdi. Qaytadan urinib ko'ring.")
+                
+        except Exception as e:
+            logger.error(f"Error processing phone: {e}")
+            await message.answer("❌ Xatolik yuz berdi.")
+    
+    @router.callback_query(F.data.startswith("lang_"))
+    async def process_language(callback: CallbackQuery, state: FSMContext):
+        """Process language selection"""
+        try:
+            language = callback.data.split("_")[1]
+            
+            # Update user language
+            user = await DatabaseService.update_user(
+                telegram_id=callback.from_user.id,
+                language=language
+            )
+            
+            if user:
+                # Clear state
+                await state.clear()
+                
+                # Send success message
+                success_text = {
+                    'uz': "✅ Ro'yxatdan muvaffaqiyatli o'tdingiz!\n\nEndi tizimdan foydalanishingiz mumkin.",
+                    'ru': "✅ Вы успешно зарегистрированы!\n\nТеперь вы можете использовать систему."
+                }
+                
+                await callback.message.edit_text(success_text.get(language, success_text['uz']))
+                
+                # Show main menu
+                await show_main_menu(callback.message, user)
+            else:
+                await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+                
+        except Exception as e:
+            logger.error(f"Error processing language: {e}")
+            await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
+    
+    async def show_main_menu(message: Message, user):
+        """Show main menu based on user role"""
+        try:
+            # Get role-specific menu text
+            role_menus = {
+                UserRole.ADMIN: "👨‍💼 Admin Panel",
+                UserRole.MANAGER: "📊 Manager Dashboard",
+                UserRole.JUNIOR_MANAGER: "📋 Junior Manager Panel",
+                UserRole.CONTROLLER: "🎮 Controller Dashboard",
+                UserRole.TECHNICIAN: "🔧 Technician Panel",
+                UserRole.CALL_CENTER: "☎️ Call Center Dashboard",
+                UserRole.CALL_CENTER_SUPERVISOR: "📞 Call Center Supervisor Panel",
+                UserRole.CLIENT: "🏠 Asosiy Menyu"
+            }
+            
+            menu_title = role_menus.get(user.role, "🏠 Asosiy Menyu")
+            
+            text = f"{menu_title}\n\n"
+            text += f"👤 Foydalanuvchi: {user.full_name}\n"
+            text += f"📱 Telefon: {user.phone_number}\n"
+            text += f"🔑 Rol: {user.role.value}\n\n"
+            text += "Kerakli bo'limni tanlang:"
+            
+            # Create role-specific keyboard
+            keyboard = create_role_keyboard(user.role, user.language)
+            
+            await message.answer(text, reply_markup=keyboard)
             
         except Exception as e:
-            #await callback.message.answer("❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.")
-            pass
+            logger.error(f"Error showing main menu: {e}")
+            await message.answer("❌ Menyu yuklanmadi")
+    
+    def create_role_keyboard(role: UserRole, language: str):
+        """Create role-specific keyboard"""
+        keyboards = {
+            UserRole.CLIENT: InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔌 Ulanish uchun ariza", callback_data="connection_request")],
+                [InlineKeyboardButton(text="🔧 Texnik xizmat", callback_data="technical_service")],
+                [InlineKeyboardButton(text="📋 Mening arizalarim", callback_data="my_applications")],
+                [InlineKeyboardButton(text="📞 Aloqa", callback_data="contact")],
+                [InlineKeyboardButton(text="ℹ️ Yordam", callback_data="help")]
+            ]),
+            UserRole.MANAGER: InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📊 Arizalar", callback_data="applications")],
+                [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="users")],
+                [InlineKeyboardButton(text="📈 Statistika", callback_data="statistics")],
+                [InlineKeyboardButton(text="📋 Buyurtmalar", callback_data="orders")],
+                [InlineKeyboardButton(text="🔔 Xabarnomalar", callback_data="notifications")]
+            ]),
+            UserRole.TECHNICIAN: InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📋 Mening buyurtmalarim", callback_data="my_orders")],
+                [InlineKeyboardButton(text="🗺 Xarita", callback_data="map")],
+                [InlineKeyboardButton(text="📊 Hisobotlar", callback_data="reports")],
+                [InlineKeyboardButton(text="🔔 Xabarnomalar", callback_data="notifications")]
+            ])
+        }
+        
+        # Return appropriate keyboard or default
+        return keyboards.get(role, InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="main_menu")]
+        ]))
     
     return router 
