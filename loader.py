@@ -45,12 +45,9 @@ ADMIN_IDS = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if 
 BOT_ID = int(os.getenv('BOT_ID', 0))
 ZAYAVKA_GROUP_ID = int(os.getenv('ZAYAVKA_GROUP_ID', 0))
 
-# Database configuration (for future use)
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = int(os.getenv('DB_PORT', 5432))
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', '')
-DB_NAME = os.getenv('DB_NAME', 'alfaconnect_db')
+# Database configuration
+DB_PATH = os.getenv('DB_PATH', 'bot_database.db')
+USE_DATABASE = os.getenv('USE_DATABASE', 'true').lower() == 'true'
 
 # Role IDs
 MANAGER_ID = int(os.getenv('MANAGER_ID', 0)) if os.getenv('MANAGER_ID') else None
@@ -110,6 +107,14 @@ def get_dp():
 async def setup_bot():
     """Setup bot with all handlers"""
     try:
+        # Initialize database if enabled
+        if USE_DATABASE:
+            from utils.database import db
+            print("✅ Database initialized successfully")
+            print(f"🗄️ Database path: {DB_PATH}")
+        else:
+            print("⚠️ Database disabled, using mock data")
+        
         # Import and setup handlers
         from handlers import setup_handlers
         setup_handlers(dp)
@@ -130,7 +135,7 @@ async def setup_bot():
         logger.error(f"Name Error in setup_bot: {e}", exc_info=True)
         print(f"❌ Name Error in setup_bot: {e}")
         print(f"📁 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"🔍 Line number: {e.__traceback__.tb_lineno}")
+        print(f"🔍 Line number: {e.__traceback__.tb_frame.f_code.co_filename}")
         traceback.print_exc()
         raise
     except Exception as e:
@@ -138,7 +143,7 @@ async def setup_bot():
         print(f"❌ Error setting up bot: {e}")
         print(f"📁 Error type: {type(e).__name__}")
         print(f"🔍 Error location: {e.__traceback__.tb_frame.f_code.co_filename}")
-        print(f"📄 Line number: {e.__traceback__.tb_lineno}")
+        print(f"📄 Line number: {e.__traceback__.tb_frame.f_code.co_filename}")
         traceback.print_exc()
         raise
 
