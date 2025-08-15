@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import controllers_main_menu
+from keyboards.controllers_buttons import get_controller_main_keyboard
 from states.controller_states import ControllerMainMenuStates
 from filters.role_filter import RoleFilter
 
@@ -72,7 +72,7 @@ def get_controller_main_menu_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            await message.answer(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await message.answer(welcome_text, reply_markup=get_controller_main_keyboard(lang), parse_mode='HTML')
             
         except Exception as e:
             print(f"Error in controllers_start: {str(e)}")
@@ -121,7 +121,7 @@ def get_controller_main_menu_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            await callback.message.edit_text(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await callback.message.edit_text(welcome_text, reply_markup=get_controller_main_keyboard(lang), parse_mode='HTML')
             await state.set_state(ControllerMainMenuStates.main_menu)
             
         except Exception as e:
@@ -151,7 +151,7 @@ def get_controller_main_menu_router():
                 "Kerakli bo'limni tanlang:"
             )
             
-            await callback.message.edit_text(welcome_text, reply_markup=controllers_main_menu(lang), parse_mode='HTML')
+            await callback.message.edit_text(welcome_text, reply_markup=get_controller_main_keyboard(lang), parse_mode='HTML')
             await state.set_state(ControllerMainMenuStates.main_menu)
             
         except Exception as e:

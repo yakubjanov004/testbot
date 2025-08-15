@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
-from keyboards.controllers_buttons import controllers_main_menu
+from keyboards.controllers_buttons import get_controller_main_keyboard
 from states.controller_states import ControllerSettingsStates
 from filters.role_filter import RoleFilter
 
@@ -84,7 +84,7 @@ Bosh menyuga qaytish uchun tugmani bosing."""
                 
                 await message.answer(
                     text,
-                    reply_markup=controllers_main_menu('uz'),
+                    reply_markup=get_controller_main_keyboard('uz'),
                     parse_mode='HTML'
                 )
                 await state.set_state(ControllerSettingsStates.main_menu)
@@ -119,7 +119,7 @@ Bosh menyuga qaytish uchun tugmani bosing."""
             
             await message.answer(
                 welcome_text,
-                reply_markup=controllers_main_menu(lang)
+                reply_markup=get_controller_main_keyboard(lang)
             )
             
         except Exception as e:

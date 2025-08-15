@@ -55,6 +55,8 @@ CLIENTS_DB_URL=postgresql://alfaconnect:ulugbek202@localhost:5432/alfaconnect_cl
 ADMIN_IDS_GLOBAL=125
 ADMIN_IDS_TOSHKENT=123
 ADMIN_IDS_SAMARQAND=1234
+
+LOG_LEVEL=INFO
 ```
 
 ### Ishlash mantig'i (qisqa)
@@ -67,7 +69,7 @@ ADMIN_IDS_SAMARQAND=1234
 ### Arxitektura va zayavkalar bo'yicha tavsiya
 - Clientda "region" yo'q; bir client bir nechta regionda zayavka berishi mumkin.
 - Tavsiya etilgan yondashuv (Hybrid):
-  - Ochiq zayavkalar: operatsion manba sifatida region DB'larda yuritiladi.
+  - Ochiq zayavkalar: operatsion manba sifatida region DB'lardan yuritiladi.
   - Zayavka yopilganda: soddalashtirilgan nusxasi `alfaconnect_clients` ga ko'chiriladi (client tarixini ko'rsatish uchun).
   - Client UI:
     - Faol zayavkalar — region DB'lardan on-demand.
@@ -78,3 +80,35 @@ ADMIN_IDS_SAMARQAND=1234
 ### Qo'shimcha izohlar
 - Indentatsiyalar to'g'rilandi (kerakli joylarda tab → space), kod kompilyatsiya tekshiruvidan o'tkazildi.
 - Hech qanday yangi dependency qo'shilmagan (mavjud `requirements.txt` yetarli).
+
+### Hozirgi holat va muammolar (2025-08-15)
+
+#### Yaratilgan modullar:
+- `handlers/manager/statistics.py` - Manager statistika funksiyalari
+- `handlers/manager/technician_assignment.py` - Texnik tayinlash
+- `handlers/manager/word_documents.py` - Hujjat yaratish
+- `handlers/manager/notifications.py` - Bildirishnomalar
+- `handlers/manager/reports.py` - Hisobotlar
+- `handlers/junior_manager/application_creation.py` - Ariza yaratish
+- `handlers/junior_manager/application_viewing.py` - Ariza ko'rish
+- `handlers/junior_manager/details_input.py` - Ma'lumot kiritish
+- `handlers/junior_manager/staff_application_creation.py` - Xodim arizasi
+- `handlers/junior_manager/workflow_management.py` - Workflow boshqaruvi
+- `handlers/warehouse/workflow_integration.py` - Workflow integratsiyasi
+
+#### Qo'shilgan klaviatura funksiyalari:
+- `keyboards/manager_buttons.py` - Barcha manager klaviatura funksiyalari
+- `keyboards/technician_buttons.py` - Texnik klaviatura funksiyalari
+- `keyboards/controllers_buttons.py` - Controller klaviatura funksiyalari
+- `keyboards/call_center_supervisor_buttons.py` - Call center supervisor klaviatura funksiyalari
+
+#### Hali hal qilinmagan muammolar:
+1. **Database ulanishi** - PostgreSQL server ishlamayapti
+2. **Ko'p modullar** - Hali yaratilmagan yoki to'liq emas
+3. **Import xatoliklari** - Ba'zi modullar bir-birini topa olmayapti
+
+#### Keyingi qadamlar:
+1. **Database serverini ishga tushirish** - PostgreSQL o'rnatish va sozlash
+2. **Eksport qilish** - GitHub repository ga o'zgarishlarni yuklash
+3. **Test qilish** - Bot ishlashini tekshirish
+4. **Dokumentatsiya** - README va CHANGES fayllarini yangilash

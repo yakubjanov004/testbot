@@ -23,6 +23,23 @@ def get_call_center_supervisor_main_menu(lang: str = 'uz') -> ReplyKeyboardMarku
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
+def get_staff_activity_menu(lang: str = 'uz') -> ReplyKeyboardMarkup:
+    """Staff activity management menu for Call Center Supervisor."""
+    if lang == 'ru':
+        keyboard = [
+            [KeyboardButton(text="📊 Faoliyat ko'rsatkichlari"), KeyboardButton(text="👥 Xodimlar ro'yxati")],
+            [KeyboardButton(text="📈 Kunlik hisobot"), KeyboardButton(text="🗓 Haftalik hisobot")],
+            [KeyboardButton(text="⬅️ Orqaga")],
+        ]
+    else:
+        keyboard = [
+            [KeyboardButton(text="📊 Faoliyat ko'rsatkichlari"), KeyboardButton(text="👥 Xodimlar ro'yxati")],
+            [KeyboardButton(text="📈 Kunlik hisobot"), KeyboardButton(text="🗓 Haftalik hisobot")],
+            [KeyboardButton(text="⬅️ Orqaga")],
+        ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
 # ========= INBOX SUPPORT KEYS =========
 def get_supervisor_navigation_keyboard(current_index: int, total: int, application_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
     prev_text = "⬅️ Oldingi" if lang == 'uz' else "⬅️ Предыдущая"
