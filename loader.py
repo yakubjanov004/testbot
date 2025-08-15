@@ -76,13 +76,14 @@ dp.callback_query.middleware(ErrorMiddleware())
 async def get_user_role(user_id: int) -> str:
     """Get user role based on database records and admin list.
 
-    Admin aniqlash tartibi:
-    1) Toshkent DB: agar role='admin' bo'lsa → admin
-    2) Global ADMIN_IDS yoki ADMIN_IDS_<REGION> (env) → admin
-    3) Aks holda DB orqali rol topilsa o'sha, bo'lmasa 'client'
+    Admin aniqlash shartlari (birortasi to'g'ri bo'lsa admin):
+    - Toshkent DB'da `role='admin'`
+    - `.env` dagi `ADMIN_IDS_TOSHKENT` yoki boshqa `ADMIN_IDS_<REGION>` ichida bo'lsa
+    - `.env` dagi global `ADMIN_IDS` ichida bo'lsa
+    Aks holda: DB orqali rol topilsa o'sha, bo'lmasa `client`.
     """
     try:
-        # 1) Regional DB (Toshkent) bo'yicha admin tekshirish
+        # Toshkent DB bo'yicha admin
         try:
             r = await get_role_in_region('toshkent', user_id)
             if r and str(r).lower() == 'admin':
@@ -90,13 +91,13 @@ async def get_user_role(user_id: int) -> str:
         except Exception as db_err:
             logger.debug(f"Toshkent DB admin check failed for {user_id}: {db_err}")
 
-        # 2) Env-based global yoki region adminlar
+        # .env fallback: region/admin ro'yxatlar
         if user_id in ADMIN_IDS:
             return 'admin'
-        if get_admin_regions(user_id):
+        if get_admin_regions(user_id):  # ADMIN_IDS_<REGION> lar ichida bor-yo'qligi
             return 'admin'
 
-        # 3) Default DB lookup (default/clients)
+        # Default DB lookup (default/clients)
         try:
             from utils.user_repository import get_user_role as repo_get_user_role
             role = await repo_get_user_role(user_id)
