@@ -1,6 +1,6 @@
 """Clients DB connection (pool).
 
-Uses env var CLIENTS_DB_URL for DSN.
+Uses env var CLIENTS_DB_URL (or CLIENTS_DATABASE_URL) for DSN.
 """
 
 import os
@@ -21,9 +21,9 @@ async def get_pool() -> asyncpg.Pool:
 	async with _lock:
 		if _pool is not None:
 			return _pool
-		dsn = os.environ.get("CLIENTS_DB_URL")
+		dsn = os.environ.get("CLIENTS_DB_URL") or os.environ.get("CLIENTS_DATABASE_URL")
 		if not dsn:
-			raise RuntimeError("CLIENTS_DB_URL is not set")
+			raise RuntimeError("CLIENTS_DB_URL/CLIENTS_DATABASE_URL is not set")
 		_pool = await asyncpg.create_pool(dsn)
 		return _pool
 

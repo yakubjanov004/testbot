@@ -9,7 +9,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from loader import get_user_role
-from utils.user_repository import upsert_user_in_clients
+from database.clients.queries import ensure_global_user, get_by_telegram_id
 from utils.role_system import show_role_menu
 from utils.region_context import detect_user_regions
 from states.admin_states import AdminRegionStates
@@ -32,16 +32,26 @@ def get_start_router():
         try:
             user_role = await get_user_role(message.from_user.id)
 
-            # Persist user to clients DB on first start
-            is_created, saved = await upsert_user_in_clients({
-                "telegram_id": message.from_user.id,
-                "username": message.from_user.username,
-                "first_name": message.from_user.first_name,
-                "last_name": message.from_user.last_name,
-                "language": message.from_user.language_code or "uz",
-                "role": user_role,
-                "is_bot": message.from_user.is_bot,
-            })
+            # Persist user to clients DB on first start (alfaconnect_clients)
+            from_user = message.from_user
+            full_name = " ".join(filter(None, [from_user.first_name, from_user.last_name])) or (from_user.first_name or from_user.username or "")
+            try:
+                existing = await get_by_telegram_id(from_user.id)
+            except Exception:
+                existing = None
+            is_created = existing is None
+            try:
+                await ensure_global_user(
+                    telegram_id=from_user.id,
+                    full_name=full_name,
+                    username=from_user.username,
+                    phone=None,
+                    language=(from_user.language_code or "uz"),
+                    address=None,
+                    abonent_id=None,
+                )
+            except Exception:
+                pass
             
             # Clear any existing state
             await state.clear()
