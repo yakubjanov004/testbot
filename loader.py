@@ -77,21 +77,25 @@ async def get_user_role(user_id: int) -> str:
     """Get user role based on database records and admin list.
 
     Admin aniqlash shartlari (birortasi to'g'ri bo'lsa admin):
-    - Toshkent DB'da `role='admin'`
-    - `.env` dagi `ADMIN_IDS_TOSHKENT` yoki boshqa `ADMIN_IDS_<REGION>` ichida bo'lsa
-    - `.env` dagi global `ADMIN_IDS` ichida bo'lsa
+    - Regional DB'larda (barcha mavjud regionlar) `role='admin'`
+    - `.env` dagi `ADMIN_IDS_*` yoki global `ADMIN_IDS` ichida bo'lsa
     Aks holda: DB orqali rol topilsa o'sha, bo'lmasa `client`.
     """
     try:
-        # Toshkent DB bo'yicha admin
+        # Regional DB'lar bo'yicha admin (barcha kashf qilingan regionlar)
         try:
-            r = await get_role_in_region('toshkent', user_id)
-            if r and str(r).lower() == 'admin':
-                return 'admin'
-        except Exception as db_err:
-            logger.debug(f"Toshkent DB admin check failed for {user_id}: {db_err}")
+            from database.region_config import get_region_codes
+            for region_code in get_region_codes():
+                try:
+                    r = await get_role_in_region(region_code, user_id)
+                    if r and str(r).lower() == 'admin':
+                        return 'admin'
+                except Exception as db_err:
+                    logger.debug(f"Region DB admin check failed for {user_id} in {region_code}: {db_err}")
+        except Exception as err:
+            logger.debug(f"Region discovery failed while checking admin for {user_id}: {err}")
 
-        # .env fallback: region/admin ro'yxatlar
+        # .env fallback: global yoki region-admin ro'yxatlar
         if user_id in ADMIN_IDS:
             return 'admin'
         if get_admin_regions(user_id):  # ADMIN_IDS_<REGION> lar ichida bor-yo'qligi

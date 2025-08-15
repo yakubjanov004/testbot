@@ -2,6 +2,7 @@ from aiogram.filters import BaseFilter
 from aiogram.types import Message, CallbackQuery
 from utils.role_system import get_cached_role
 from loader import get_user_role
+from utils.role_system import cache_role
 import logging
 import time
 from typing import Dict
@@ -71,6 +72,8 @@ class RoleFilter(BaseFilter):
             
             # Get role from database if not cached
             user_role = await get_user_role(user_id)
+            if user_role:
+                cache_role(user_id, user_role)
             
             result = user_role == self.role
             

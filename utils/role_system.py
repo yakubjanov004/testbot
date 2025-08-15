@@ -157,10 +157,10 @@ async def show_manager_menu(message: Message):
 
 async def show_client_menu(message: Message):
     """Show client menu"""
-    from keyboards.client_buttons import get_client_main_keyboard
+    from keyboards.client_buttons import get_main_menu_keyboard
     
     text = "👤 Mijoz paneliga xush kelibsiz!\n\nQuyidagi funksiyalardan birini tanlang:"
-    keyboard = get_client_main_keyboard('uz')
+    keyboard = get_main_menu_keyboard('uz')
     
     await message.answer(text, reply_markup=keyboard)
 
