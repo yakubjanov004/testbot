@@ -51,6 +51,7 @@ DB_PORT = int(os.getenv('DB_PORT', 5432))
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 DB_NAME = os.getenv('DB_NAME', 'alfaconnect_db')
+DB_ENABLED = os.getenv('DB_ENABLED', '0').lower() in {'1', 'true', 'yes', 'on'}
 
 # Role IDs
 MANAGER_ID = int(os.getenv('MANAGER_ID', 0)) if os.getenv('MANAGER_ID') else None
@@ -70,6 +71,9 @@ dp = Dispatcher(storage=storage)
 # Middleware'larni qo'shish
 from middlewares.logger_middleware import LoggerMiddleware
 from middlewares.error_middleware import ErrorMiddleware
+
+# DB utils
+from utils.db import init_db_pool, close_db_pool
 
 dp.message.middleware(LoggerMiddleware())
 dp.callback_query.middleware(LoggerMiddleware())
@@ -110,6 +114,12 @@ def get_dp():
 async def setup_bot():
     """Setup bot with all handlers"""
     try:
+        # Initialize DB pool and ensure schema (optional)
+        if DB_ENABLED:
+            await init_db_pool()
+        else:
+            print("ℹ️ DB disabled (set DB_ENABLED=1 to enable)")
+
         # Import and setup handlers
         from handlers import setup_handlers
         setup_handlers(dp)
@@ -170,6 +180,12 @@ async def start_bot():
         print(f"📄 Line number: {e.__traceback__.tb_lineno}")
         traceback.print_exc()
         raise
+    finally:
+        try:
+            if DB_ENABLED:
+                await close_db_pool()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     asyncio.run(start_bot())

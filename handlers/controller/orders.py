@@ -8,79 +8,8 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from typing import Dict, Any, List, Optional
 from filters.role_filter import RoleFilter
+from utils.db import get_user_by_telegram_id, get_all_orders, get_orders_by_status, get_single_order_details
 
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'controller',
-        'language': 'uz',
-        'full_name': 'Test Controller',
-        'phone_number': '+998901234567'
-    }
-
-async def get_all_orders(limit: int = 50):
-    """Mock get all orders"""
-    return [
-        {
-            'id': 1,
-            'order_number': 'ORD-001',
-            'client_name': 'Test Client 1',
-            'service_type': 'Internet xizmati',
-            'status': 'Yangi',
-            'priority': 'Yuqori',
-            'created_at': '2024-01-15 10:30',
-            'assigned_to': 'Aziz Karimov'
-        },
-        {
-            'id': 2,
-            'order_number': 'ORD-002',
-            'client_name': 'Test Client 2',
-            'service_type': 'TV xizmati',
-            'status': 'Jarayonda',
-            'priority': "O'rta",
-            'created_at': '2024-01-15 09:15',
-            'assigned_to': 'Malika Yusupova'
-        }
-    ]
-
-async def get_orders_by_status(statuses: list):
-    """Mock get orders by status"""
-    return await get_all_orders()
-
-async def update_order_priority(order_id: int, priority: str):
-    """Mock update order priority"""
-    return True
-
-async def get_unresolved_issues():
-    """Mock get unresolved issues"""
-    return [
-        {
-            'id': 1,
-            'order_number': 'ORD-003',
-            'client_name': 'Test Client 3',
-            'issue_type': 'Texnik muammo',
-            'description': 'Internet uzulish',
-            'priority': 'Shoshilinch',
-            'created_at': '2024-01-15 08:00'
-        }
-    ]
-
-async def get_single_order_details(order_id: int):
-    """Mock get single order details"""
-    return {
-        'id': order_id,
-        'order_number': f'ORD-{order_id:03d}',
-        'client_name': f'Test Client {order_id}',
-        'service_type': 'Internet xizmati',
-        'status': 'Yangi',
-        'priority': 'Yuqori',
-        'created_at': '2024-01-15 10:30',
-        'assigned_to': 'Aziz Karimov',
-        'description': 'Test order description'
-    }
 
 def orders_control_menu(lang: str):
     """Create orders control menu"""
@@ -98,6 +27,7 @@ def orders_control_menu(lang: str):
         ]
     ])
 
+
 def order_priority_keyboard(order_id: int):
     """Create order priority keyboard"""
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -114,16 +44,19 @@ def order_priority_keyboard(order_id: int):
         ]
     ])
 
+
 def back_to_controllers_menu():
     """Create back to controllers menu"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_to_controllers")]
     ])
 
+
 class ControllerOrdersStates:
     orders_control = "orders_control"
     viewing_orders = "viewing_orders"
     order_details = "order_details"
+
 
 def get_controller_orders_router():
     """Get controller orders router"""
@@ -141,7 +74,7 @@ def get_controller_orders_router():
         
         try:
             user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
+            if not user or user.get('role') != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
             
@@ -151,7 +84,7 @@ def get_controller_orders_router():
             all_orders = await get_all_orders()
             new_orders = [o for o in all_orders if o['status'] == 'Yangi']
             pending_orders = [o for o in all_orders if o['status'] == 'Jarayonda']
-            problem_orders = await get_unresolved_issues()
+            problem_orders = []  # Placeholder: derive from rules or use separate issues table
             
             stats_text = (
                 "📋 <b>Buyurtmalar nazorati</b>\n\n"
@@ -182,7 +115,7 @@ def get_controller_orders_router():
         
         try:
             user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
+            if not user or user.get('role') != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
             
@@ -221,19 +154,19 @@ def get_controller_orders_router():
         
         try:
             user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
+            if not user or user.get('role') != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
-            orders = await get_orders_by_status(['pending', 'assigned'])
+            orders = await get_orders_by_status(['pending', 'assigned', 'in_progress'])
             
             text = "⏳ <b>Kutilayotgan buyurtmalar:</b>\n\n"
             
             if orders:
                 for order in orders[:10]:
                     client_name = order.get('client_name', 'Noma\'lum')
-                    technician_name = order.get('technician_name', 'Tayinlanmagan')
+                    technician_name = order.get('assigned_to', 'Tayinlanmagan')
                     created_at = order.get('created_at', '')
                     
                     text += f"🔸 <b>#{order['id']}</b> - {client_name}\n"
@@ -260,12 +193,13 @@ def get_controller_orders_router():
         
         try:
             user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
+            if not user or user.get('role') != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
             
             lang = user.get('language', 'uz')
-            issues = await get_unresolved_issues()
+            # Without a problem flag, show long-pending (demo placeholder)
+            issues = []
             
             text = "🔴 <b>Muammoli buyurtmalar:</b>\n\n"
             
@@ -301,7 +235,7 @@ def get_controller_orders_router():
         
         try:
             user = await get_user_by_telegram_id(user_id)
-            if not user or user['role'] != 'controller':
+            if not user or user.get('role') != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
             
@@ -310,9 +244,9 @@ def get_controller_orders_router():
             
             # Statistikani hisoblash
             total_orders = len(orders)
-            completed_orders = len([o for o in orders if o['status'] == 'completed'])
-            pending_orders = len([o for o in orders if o['status'] in ['new', 'pending', 'assigned']])
-            in_progress_orders = len([o for o in orders if o['status'] == 'in_progress'])
+            completed_orders = len([o for o in orders if o['status'] == 'Bajarilgan'])
+            pending_orders = len([o for o in orders if o['status'] in ['Yangi', 'Kutilmoqda', 'Jarayonda']])
+            in_progress_orders = len([o for o in orders if o['status'] == 'Jarayonda'])
             
             completion_rate = (completed_orders / total_orders * 100) if total_orders > 0 else 0
             
@@ -464,7 +398,7 @@ def get_controller_orders_router():
     async def controller_view_orders(message: Message, state: FSMContext):
         try:
             user = await get_user_by_telegram_id(message.from_user.id)
-            if not user or user['role'] != 'controller':
+            if not user or user.get('role') != 'controller':
                 await message.answer("Sizda controller huquqi yo'q.")
                 return
             await _render_order_detail(message, flt='all', index=0)

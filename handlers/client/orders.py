@@ -16,101 +16,8 @@ from keyboards.client_buttons import (
     get_back_to_orders_menu_keyboard,
     get_client_orders_navigation_keyboard
 )
+from utils.db import get_user_by_telegram_id, get_user_orders, get_order_details
 
-# Mock functions to replace utils and database imports
-async def get_user_by_telegram_id(telegram_id: int):
-    """Mock user data"""
-    return {
-        'id': 1,
-        'telegram_id': telegram_id,
-        'role': 'client',
-        'language': 'uz',
-        'full_name': 'Test Client',
-        'phone_number': '+998901234567'
-    }
-
-async def get_user_orders(user_id: int, page: int = 1, limit: int = 5):
-    """Mock user orders"""
-    # Mock orders data
-    orders = [
-        {
-            'id': 1,
-            'type': 'service',
-            'status': 'active',
-            'created_at': '2024-01-15 10:30:00',
-            'description': 'Internet tezligi sekin',
-            'region': 'Toshkent shahri',
-            'address': 'Chilanzar tumani, 15-uy',
-            'request_id': 'TX_12345678'
-        },
-        {
-            'id': 2,
-            'type': 'connection',
-            'status': 'completed',
-            'created_at': '2024-01-10 14:20:00',
-            'description': 'Yangi ulanish',
-            'region': 'Toshkent viloyati',
-            'address': 'Zangiota tumani, 25-uy',
-            'request_id': 'UL_87654321'
-        },
-        {
-            'id': 3,
-            'type': 'service',
-            'status': 'pending',
-            'created_at': '2024-01-12 09:15:00',
-            'description': 'TV signal yo\'q',
-            'region': 'Andijon',
-            'address': 'Andijon shahri, 8-uy',
-            'request_id': 'TX_11223344'
-        },
-        {
-            'id': 4,
-            'type': 'connection',
-            'status': 'active',
-            'created_at': '2024-01-08 16:45:00',
-            'description': 'Uy internet ulanishi',
-            'region': 'Farg\'ona',
-            'address': 'Farg\'ona shahri, 12-uy',
-            'request_id': 'UL_55667788'
-        },
-        {
-            'id': 5,
-            'type': 'service',
-            'status': 'completed',
-            'created_at': '2024-01-05 11:30:00',
-            'description': 'Router muammosi',
-            'region': 'Samarqand',
-            'address': 'Samarqand shahri, 30-uy',
-            'request_id': 'TX_99887766'
-        }
-    ]
-    
-    # Pagination
-    start = (page - 1) * limit
-    end = start + limit
-    paginated_orders = orders[start:end]
-    
-    return {
-        'orders': paginated_orders,
-        'total': len(orders),
-        'page': page,
-        'total_pages': (len(orders) + limit - 1) // limit
-    }
-
-async def get_order_details(order_id: int):
-    """Mock order details"""
-    return {
-        'id': order_id,
-        'type': 'service' if order_id % 2 == 1 else 'connection',
-        'status': 'active',
-        'created_at': '2024-01-15 10:30:00',
-        'description': 'Test order description',
-        'region': 'Test region',
-        'address': 'Test address',
-        'request_id': f'{"TX" if order_id % 2 == 1 else "UL"}_{order_id:08d}',
-        'phone': '+998901234567',
-        'full_name': 'Test Client'
-    }
 
 def get_orders_router():
     router = Router()
@@ -162,7 +69,10 @@ def get_orders_router():
             elif action == "details":
                 order_id = int(data[2])
                 order = await get_order_details(order_id)
-                await show_order_details(callback, order, None, 0)
+                if order:
+                    await show_order_details(callback, order, None, 0)
+                else:
+                    await callback.answer("Topilmadi", show_alert=True)
                 
         except Exception as e:
             await callback.answer("❌ Xatolik yuz berdi", show_alert=True)
@@ -190,29 +100,31 @@ def get_orders_router():
             }.get(order['status'], 'Noma\'lum')
             
             # Format date
-            created_date = datetime.strptime(order['created_at'], '%Y-%m-%d %H:%M:%S')
-            formatted_date = created_date.strftime('%d.%m.%Y %H:%M')
+            created_date = datetime.strptime(order['created_at'], '%Y-%m-%d %H:%M:%S') if isinstance(order['created_at'], str) else order['created_at']
+            formatted_date = created_date.strftime('%d.%m.%Y %H:%M') if isinstance(created_date, datetime) else '-'
             
             # To'liq ma'lumot
             text = (
                 f"{order_type_emoji} <b>{order_type_text} - To'liq ma'lumot</b>\n\n"
                 f"🆔 <b>Ariza ID:</b> {order['request_id']}\n"
                 f"📅 <b>Sana:</b> {formatted_date}\n"
-                f"🏛️ <b>Hudud:</b> {order['region']}\n"
-                f"🏠 <b>Manzil:</b> {order['address']}\n"
-                f"📝 <b>Tavsif:</b> {order['description']}\n"
+                f"🏛️ <b>Hudud:</b> {order.get('region','')}\n"
+                f"🏠 <b>Manzil:</b> {order.get('address','')}\n"
+                f"📝 <b>Tavsif:</b> {order.get('description','')}\n"
                 f"{status_emoji} <b>Holat:</b> {status_text}\n"
-                f"👨‍🔧 <b>Texnik:</b> Ahmad Karimov\n"
+                f"👨‍🔧 <b>Texnik:</b> {order.get('assigned_to','Tayinlanmagan') if isinstance(order, dict) else 'Tayinlanmagan'}\n"
                 f"⏰ <b>Taxminiy vaqt:</b> 2-3 kun\n"
                 f"⚡ <b>Ustuvorlik:</b> Normal\n\n"
-                f"📊 <b>Buyurtma #{index + 1} / {len(orders_data['orders'])}</b>"
+                f"📊 <b>Buyurtma #{(index + 1) if orders_data else 1} / {(len(orders_data['orders'])) if orders_data else 1}</b>"
             )
             
             # Create navigation keyboard
             keyboard = get_client_orders_navigation_keyboard(
-                index, orders_data['page'], orders_data['total_pages'], 
-                len(orders_data['orders']), order['id']
-            )
+                index if orders_data else 0,
+                (orders_data['page'] if orders_data else 1),
+                (orders_data['total_pages'] if orders_data else 1), 
+                (len(orders_data['orders']) if orders_data else 1), order['id']
+            ) if orders_data else get_client_orders_navigation_keyboard(0, 1, 1, 1, order['id'])
             
             if isinstance(message_or_callback, Message):
                 await message_or_callback.answer(text, reply_markup=keyboard, parse_mode='HTML')
