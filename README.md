@@ -72,91 +72,32 @@ python main.py
 - Agar yuqoridagi URL lar berilmagan bo'lsa, quyidagilar orqali `DATABASE_URL` avtomatik yig'iladi:
   - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 
-- Region bo‘yicha admin tayinlash:
-  - `ADMIN_IDS_TOSHKENT=111,222`
-  - `ADMIN_IDS_SAMARQAND=333,444`
-  - Har bir region uchun `ADMIN_IDS_<REGION>` yozuvi (suffix katta-kichik harfga sezgir emas)
+- Region bo‘yicha admin tayinlash hozir DB orqali (region users jadvalidagi `role='admin'`) aniqlanadi.
+  `.env` dagi `ADMIN_IDS_*` fallback sifatida ishlatilishi mumkin.
+
+### .env namunasi
+
+```
+BOT_TOKEN=7591107647:AAEF1v90SSoi1gJBxhvrzGIzCvUvw9-t0Kg
+ADMIN_IDS=1978574076
+BOT_ID=7591107647
+ZAYAVKA_GROUP_ID="-4867209768"
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=ulugbek202
+
+DB_URL_TOSHKENT=postgresql://alfaconnect:ulugbek202@localhost:5432/alfaconnect_toshkent
+DB_URL_SAMARQAND=postgresql://alfaconnect:ulugbek202@localhost:5432/alfaconnect_samarqand
+CLIENTS_DB_URL=postgresql://alfaconnect:ulugbek202@localhost:5432/alfaconnect_clients
+
+# Ixtiyoriy fallback ro'yxatlar
+ADMIN_IDS_GLOBAL=125
+ADMIN_IDS_TOSHKENT=123
+ADMIN_IDS_SAMARQAND=1234
+```
 
 ## 📁 Fayl strukturasi
 
 ```
-alfaconnect-bot/
-├── handlers/           # Bot handlerlari
-│   ├── admin/         # Admin funksiyalari
-│   ├── manager/       # Manager funksiyalari
-│   ├── controller/    # Controller funksiyalari
-│   └── ...
-├── keyboards/         # Klaviaturalar
-├── states/           # FSM states
-├── utils/            # Yordamchi funksiyalar
-├── middlewares/      # Middleware
-├── filters/          # Filterlar
-├── main.py          # Asosiy fayl
-└── requirements.txt # Dependencies
-```
-
-## 🛠️ Texnologiyalar
-
-- **Python 3.8+**
-- **aiogram 3.x** - Telegram Bot framework
-- **openpyxl** - Excel fayllar bilan ishlash
-- **python-docx** - Word fayllar bilan ishlash
-- **reportlab** - PDF generatsiya
-- **Faker** - Test ma'lumotlar generatsiyasi
-
-## 📊 Export funksiyalari
-
-Har bir rol uchun maxsus export imkoniyatlari:
-
-### Manager:
-- Buyurtmalar
-- Statistika
-- Xodimlar
-- Hisobotlar
-
-### Controller:
-- Buyurtmalar (sifat ko'rsatkichlari bilan)
-- Sifat nazorati
-- Texniklar
-- Statistika
-
-### Call Center Supervisor:
-- Buyurtmalar
-- Xodimlar
-- Fikr-mulohazalar
-- Workflow
-
-### Admin:
-- Foydalanuvchilar
-- Buyurtmalar
-- Tizim sozlamalari
-- Loglar
-
-### Warehouse:
-- Inventarizatsiya
-- Berilgan materiallar
-- Buyurtmalar
-- Statistika
-
-## ⚠️ Muhim eslatmalar
-
-1. **Database**: Hozircha database integratsiyasi yo'q, barcha ma'lumotlar fake
-2. **Security**: Production uchun qo'shimcha xavfsizlik choralari kerak
-3. **Performance**: Katta hajmdagi export uchun optimization kerak
-
-## 🐛 Xatoliklar va takliflar
-
-Xatolik topsangiz yoki taklif bo'lsa, GitHub Issues orqali xabar bering.
-
-## 📄 Litsenziya
-
-MIT License
-
-## 👥 Hissa qo'shish
-
-Pull requestlar qabul qilinadi. Katta o'zgarishlar uchun avval issue oching.
-
-## 📞 Aloqa
-
-Support: @your_support_bot
-Email: support@alfaconnect.uz
