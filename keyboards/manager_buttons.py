@@ -101,6 +101,17 @@ def get_status_management_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     ])
 
 
+def get_inbox_navigation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Inbox navigation keyboard for manager"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=("📋 Barcha arizalar" if lang=='uz' else "📋 Все заявки"), callback_data="mgr_inbox_all")],
+        [InlineKeyboardButton(text=("🆕 Yangi arizalar" if lang=='uz' else "🆕 Новые заявки"), callback_data="mgr_inbox_new")],
+        [InlineKeyboardButton(text=("🔄 Jarayondagi arizalar" if lang=='uz' else "🔄 Заявки в процессе"), callback_data="mgr_inbox_progress")],
+        [InlineKeyboardButton(text=("✅ Bajarilgan arizalar" if lang=='uz' else "✅ Выполненные заявки"), callback_data="mgr_inbox_completed")],
+        [InlineKeyboardButton(text=("⬅️ Orqaga" if lang=='uz' else "⬅️ Назад"), callback_data="back_to_main_menu")],
+    ])
+
+
 def get_status_navigation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=("📋 Barchasi" if lang=='uz' else "📋 Все"), callback_data="status_view_all_applications"),
@@ -130,4 +141,20 @@ def get_status_confirmation_keyboard(app_id: str, new_status: str, lang: str = '
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=confirm_text, callback_data=f"confirm_status_change_{app_id}_{new_status}")],
         [InlineKeyboardButton(text=back_text, callback_data="back_to_status_main")],
+    ])
+
+
+def get_junior_assignment_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Junior manager assignment keyboard for manager"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=("👥 Junior Manager ga yuborish" if lang=='uz' else "👥 Отправить Junior Manager"), callback_data="mgr_assign_junior")],
+        [InlineKeyboardButton(text=("⬅️ Orqaga" if lang=='uz' else "⬅️ Назад"), callback_data="back_to_main_menu")],
+    ])
+
+
+def get_junior_confirmation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Junior manager confirmation keyboard for manager"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=("✅ Tasdiqlash" if lang=='uz' else "✅ Подтвердить"), callback_data="mgr_confirm_junior")],
+        [InlineKeyboardButton(text=("⬅️ Orqaga" if lang=='uz' else "⬅️ Назад"), callback_data="back_to_main_menu")],
     ])

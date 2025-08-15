@@ -8,9 +8,14 @@ based on user role.
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from loader import get_user_role
-from utils.mock_user_store import upsert_user
+from loader import get_user_role, USE_DATABASE
 from utils.role_system import show_role_menu
+
+# Import database or mock functions based on configuration
+if USE_DATABASE:
+    from utils.database import create_user, get_user
+else:
+    from utils.mock_user_store import upsert_user, get_user
 
 def get_start_router():
     """Get start router with all handlers"""
@@ -22,19 +27,38 @@ def get_start_router():
         try:
             user_role = get_user_role(message.from_user.id)
 
-            # Mock persist user on first start
-            is_created, saved = await upsert_user(
-                message.from_user.id,
-                {
-                    "telegram_id": message.from_user.id,
-                    "username": message.from_user.username,
-                    "first_name": message.from_user.first_name,
-                    "last_name": message.from_user.last_name,
-                    "language": message.from_user.language_code or "uz",
-                    "role": user_role,
-                    "is_bot": message.from_user.is_bot,
-                },
-            )
+            # Persist user on first start
+            if USE_DATABASE:
+                # Check if user exists
+                existing_user = await get_user(message.from_user.id)
+                if not existing_user:
+                    # Create new user
+                    user_data = {
+                        'user_id': message.from_user.id,
+                        'username': message.from_user.username,
+                        'first_name': message.from_user.first_name,
+                        'last_name': message.from_user.last_name,
+                        'role': user_role,
+                        'phone': None,
+                        'email': None
+                    }
+                    is_created = await create_user(user_data)
+                else:
+                    is_created = False
+            else:
+                # Mock persist user on first start
+                is_created, saved = await upsert_user(
+                    message.from_user.id,
+                    {
+                        "telegram_id": message.from_user.id,
+                        "username": message.from_user.username,
+                        "first_name": message.from_user.first_name,
+                        "last_name": message.from_user.last_name,
+                        "language": message.from_user.language_code or "uz",
+                        "role": user_role,
+                        "is_bot": message.from_user.is_bot,
+                    },
+                )
             
             # Clear any existing state
             await state.clear()

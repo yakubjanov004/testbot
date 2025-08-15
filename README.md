@@ -58,7 +58,8 @@ python main.py
 
 `.env` faylida quyidagi sozlamalar mavjud:
 - `BOT_TOKEN` - Telegram bot token (@BotFather dan)
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Database sozlamalari (kelajakda)
+- `USE_DATABASE` - Database ishlatish (true/false)
+- `DB_PATH` - Database fayl yo'li (SQLite uchun)
 - `LOG_LEVEL` - Logging darajasi (INFO, DEBUG, ERROR)
 
 ## 📁 Fayl strukturasi
@@ -124,9 +125,24 @@ Har bir rol uchun maxsus export imkoniyatlari:
 
 ## ⚠️ Muhim eslatmalar
 
-1. **Database**: Hozircha database integratsiyasi yo'q, barcha ma'lumotlar fake
+1. **Database**: SQLite database integratsiyasi mavjud, mock data ham qo'llab-quvvatlanadi
 2. **Security**: Production uchun qo'shimcha xavfsizlik choralari kerak
 3. **Performance**: Katta hajmdagi export uchun optimization kerak
+
+## 🗄️ Database
+
+Bot SQLite database bilan ishlaydi va quyidagi jadvallarni o'z ichiga oladi:
+
+- **users** - Foydalanuvchilar ma'lumotlari
+- **orders** - Buyurtmalar
+- **inventory** - Inventarizatsiya
+- **feedback** - Fikr-mulohazalar
+- **activity_logs** - Faollik loglari
+
+Database test qilish uchun:
+```bash
+python test_database.py
+```
 
 ## 🐛 Xatoliklar va takliflar
 
