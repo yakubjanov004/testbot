@@ -19,6 +19,7 @@ from .statistics import get_admin_statistics_router
 from .settings import get_admin_settings_router
 from .language import get_admin_language_router
 from .export import get_admin_export_router
+from .status import get_admin_status_router
 
 def get_admin_router():
     """Get the complete admin router with all handlers"""
@@ -33,6 +34,7 @@ def get_admin_router():
     router.include_router(get_admin_settings_router())
     router.include_router(get_admin_language_router())
     router.include_router(get_admin_export_router())
+    router.include_router(get_admin_status_router())
     
     return router
 
