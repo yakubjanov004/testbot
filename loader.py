@@ -18,6 +18,7 @@ from aiogram.fsm.context import FSMContext
 
 from config import settings
 from config import get_admin_regions
+from database.core_queries import get_user_role as get_role_in_region
 
 # Logger sozlash - batafsil
 logging.basicConfig(
@@ -75,17 +76,27 @@ dp.callback_query.middleware(ErrorMiddleware())
 async def get_user_role(user_id: int) -> str:
     """Get user role based on database records and admin list.
 
-    A user is considered admin if they are either in global ADMIN_IDS or in any
-    region-specific admin list (ADMIN_IDS_<REGION>) defined in the environment.
+    Admin aniqlash tartibi:
+    1) Toshkent DB: agar role='admin' bo'lsa → admin
+    2) Global ADMIN_IDS yoki ADMIN_IDS_<REGION> (env) → admin
+    3) Aks holda DB orqali rol topilsa o'sha, bo'lmasa 'client'
     """
     try:
-        # Global admin or region-scoped admin
+        # 1) Regional DB (Toshkent) bo'yicha admin tekshirish
+        try:
+            r = await get_role_in_region('toshkent', user_id)
+            if r and str(r).lower() == 'admin':
+                return 'admin'
+        except Exception as db_err:
+            logger.debug(f"Toshkent DB admin check failed for {user_id}: {db_err}")
+
+        # 2) Env-based global yoki region adminlar
         if user_id in ADMIN_IDS:
             return 'admin'
         if get_admin_regions(user_id):
             return 'admin'
 
-        # Try database lookup
+        # 3) Default DB lookup (default/clients)
         try:
             from utils.user_repository import get_user_role as repo_get_user_role
             role = await repo_get_user_role(user_id)
@@ -94,7 +105,6 @@ async def get_user_role(user_id: int) -> str:
         except Exception as db_err:
             logger.debug(f"DB role lookup failed for {user_id}: {db_err}")
 
-        # Default role
         return 'client'
     except Exception:
         return 'client'
