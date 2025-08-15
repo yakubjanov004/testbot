@@ -11,7 +11,12 @@ _pools: Dict[str, asyncpg.pool.Pool] = {}
 
 
 async def init_db_pools() -> Dict[str, asyncpg.pool.Pool]:
-    """Initialize asyncpg pools for all configured DATABASES."""
+    """Initialize asyncpg pools for configured databases.
+
+    Only initialize pools for known keys: 'clients' and region codes
+    present in DATABASES (e.g., 'toshkent', 'samarqand'). If a generic
+    'default' is provided, it will also be initialized.
+    """
     global _pools
     if _pools:
         return _pools

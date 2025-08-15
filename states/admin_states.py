@@ -55,4 +55,10 @@ class AdminStatisticsStates(StatesGroup):
 class AdminWorkflowRecoveryStates(StatesGroup):
     """Workflow recovery states for admin"""
     recovery_menu = State()
-    workflow_recovery = State() 
+    workflow_recovery = State()
+
+
+class AdminRegionStates(StatesGroup):
+    """Region selection/state for admin context"""
+    choosing_region = State()
+    active_region = State() 
