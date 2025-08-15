@@ -6,21 +6,30 @@ B-variant: use env vars with prefix DB_URL_ e.g. DB_URL_TOSHKENT, DB_URL_SAMARQA
 
 import os
 from typing import Dict, List
+from dotenv import load_dotenv
+
+# Ensure .env is loaded so env-based discovery works when this module is imported
+load_dotenv()
 
 
 def get_region_dsn_map() -> Dict[str, str]:
 	"""Return mapping of region_code (lowercase) -> DSN from environment.
 
-	Looks for all env keys that start with 'DB_URL_' and maps the suffix (lowercased)
-	to its DSN value.
+	Looks for all env keys that start with 'DB_URL_' or 'DATABASE_URL_'
+	and maps the suffix (lowercased) to its DSN value.
 	"""
 	dsns: Dict[str, str] = {}
 	for key, value in os.environ.items():
-		if not key.startswith("DB_URL_"):
+		if not value:
 			continue
-		region_code = key[len("DB_URL_"):].lower()
-		if value:
-			dsns[region_code] = value
+		if key.startswith("DB_URL_"):
+			region_code = key[len("DB_URL_"):].lower()
+			if region_code:
+				dsns[region_code] = value
+		elif key.startswith("DATABASE_URL_"):
+			region_code = key[len("DATABASE_URL_"):].lower()
+			if region_code:
+				dsns[region_code] = value
 	return dsns
 
 
