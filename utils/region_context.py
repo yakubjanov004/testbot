@@ -8,16 +8,16 @@ from database.core_queries import get_user_role as get_role_in_region
 async def detect_user_regions(user_id: int, role: str) -> List[str]:
     """Detect regions assigned to the user for the given role.
 
-    - For admins: read from ADMIN_IDS_<REGION> mapping (env).
-    - For other roles: scan configured regions and check user role in each
-      regional DB. Regions where the role matches are returned.
+    - Adminlar uchun: .env dagi ADMIN_IDS_<REGION> ro'yxatlari BILAN BIRGA
+      regional DB'lardagi `role='admin'` mos tushgan regionlar ham birgalikda olinadi.
+    - Boshqa rollar uchun: faqat regional DB'dagi rol mos kelgan regionlar qaytariladi.
     """
     role = (role or "").lower()
-    if role == "admin":
-        return get_admin_regions(user_id)
 
     regions = get_region_codes()
     assigned: List[str] = []
+
+    # DB bo'yicha rolni tekshirib chiqamiz
     for region in regions:
         try:
             r = await get_role_in_region(region, user_id)
@@ -26,4 +26,10 @@ async def detect_user_regions(user_id: int, role: str) -> List[str]:
         except Exception:
             # Ignore per-region errors to keep /start fast
             continue
+
+    # Adminlar uchun .env dagi regionlar bilan union
+    if role == "admin":
+        env_regions = set(get_admin_regions(user_id))
+        assigned = sorted(set(assigned) | env_regions)
+
     return assigned
