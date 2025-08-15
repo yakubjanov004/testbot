@@ -11,12 +11,13 @@ from aiogram.fsm.context import FSMContext
 from loader import get_user_role
 from utils.user_repository import upsert_user_in_clients
 from utils.role_system import show_role_menu
-from config import get_admin_regions, is_global_admin
+from config import get_admin_regions
 from database.region_config import get_region_codes
 from states.admin_states import AdminRegionStates
+from typing import List
 
 
-def _build_region_keyboard(regions: list[str]) -> InlineKeyboardMarkup:
+def _build_region_keyboard(regions: List[str]) -> InlineKeyboardMarkup:
     rows = [[InlineKeyboardButton(text=r.title(), callback_data=f"choose_region:{r}")]
             for r in regions]
     return InlineKeyboardMarkup(inline_keyboard=rows)
@@ -46,23 +47,22 @@ def get_start_router():
             # Clear any existing state
             await state.clear()
 
-            # If admin (global or region), set/select region context
-            if user_role == 'admin':
-                assigned = get_admin_regions(message.from_user.id)
-                if len(assigned) == 1:
-                    await state.update_data(active_region=assigned[0])
-                elif len(assigned) > 1:
-                    # Ask to choose region
-                    await state.set_state(AdminRegionStates.choosing_region)
-                    await message.answer(
-                        "Qaysi region uchun ishlamoqchisiz?",
-                        reply_markup=_build_region_keyboard(assigned)
-                    )
-                    return
-                else:
-                    # Global admin bo‘lishi mumkin; agar region ko‘rsatilmagan bo‘lsa hech narsa qilmamiz
-                    pass
-            
+            # Region context selection for region-bound roles (admin, manager, etc.)
+            if user_role in {"admin", "manager", "technician", "controller", "warehouse", "call_center", "call_center_supervisor", "junior_manager"}:
+                regions = get_region_codes()
+                assigned = get_admin_regions(message.from_user.id) if user_role == "admin" else regions
+                # If no regions configured, skip
+                if assigned:
+                    if len(assigned) == 1:
+                        await state.update_data(active_region=assigned[0])
+                    else:
+                        await state.set_state(AdminRegionStates.choosing_region)
+                        await message.answer(
+                            "Qaysi region uchun ishlamoqchisiz?",
+                            reply_markup=_build_region_keyboard(assigned)
+                        )
+                        return
+
             # Show welcome message
             created_note = "🆕 Ro'yxatdan o'tdingiz." if is_created else "🔄 Ma'lumotlaringiz yangilandi."
             welcome_text = (
@@ -95,8 +95,9 @@ def get_start_router():
             await state.set_state(AdminRegionStates.active_region)
             await callback.answer()
             await callback.message.edit_text(f"Region tanlandi: {region.title()}")
-            # After selecting region, open role menu
-            await show_role_menu(callback.message, 'admin')
+            # After selecting region, open role-specific menu
+            role = await get_user_role(callback.from_user.id)
+            await show_role_menu(callback.message, role)
         except Exception:
             await callback.answer("Xatolik", show_alert=True)
     
@@ -106,7 +107,7 @@ def get_start_router():
         try:
             await callback.answer()
             
-            user_role = get_user_role(callback.from_user.id)
+            user_role = await get_user_role(callback.from_user.id)
             
             # Clear any existing state
             await state.clear()
