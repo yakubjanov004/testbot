@@ -26,8 +26,8 @@ Alfa Connect - telekommunikatsiya kompaniyasi uchun Telegram bot.
 
 ### 1. Repository ni clone qilish:
 ```bash
-git clone https://github.com/yourusername/alfaconnect-bot.git
-cd alfaconnect-bot
+git clone https://github.com/yakubjanov004/mybot.git
+cd mybot
 ```
 
 ### 2. Virtual environment yaratish:
@@ -52,6 +52,16 @@ cp .env.example .env
 ### 5. Botni ishga tushirish:
 ```bash
 python main.py
+```
+
+### 6. Migratsiyalarni qo‘llash (ixtiyoriy, Postgres sozlangan bo‘lsa):
+```bash
+python scripts/migrate.py
+```
+
+Agar `.env` faylini tez sozlash kerak bo‘lsa, `.env.example` ni nusxa oling:
+```bash
+cp .env.example .env
 ```
 
 ## 🔧 Konfiguratsiya
@@ -99,5 +109,3 @@ ADMIN_IDS_SAMARQAND=1234
 ```
 
 ## 📁 Fayl strukturasi
-
-```
