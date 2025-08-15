@@ -1,103 +1,176 @@
 # Alfa Connect Bot
 
-Alfa Connect - telekommunikatsiya kompaniyasi uchun Telegram bot.
+Telegram bot for managing service requests and staff workflows in multiple regions.
 
-## 🚀 Xususiyatlari
+## 🚀 Hozirgi holat
 
-### Rollar va funksiyalar:
-- **Admin** - Tizim boshqaruvi
-- **Manager** - Buyurtmalar va xodimlar boshqaruvi  
-- **Controller** - Sifat nazorati va monitoring
-- **Call Center Supervisor** - Call center boshqaruvi
-- **Call Center** - Mijozlar bilan ishlash
-- **Warehouse** - Ombor boshqaruvi
-- **Technician** - Texnik xizmatlar
-- **Client** - Mijozlar uchun
+Bot asosiy struktura bilan tayyor, lekin hali to'liq ishlamayapti. Asosiy muammolar:
 
-### Asosiy imkoniyatlar:
-- 📊 Export (CSV, Excel, Word, PDF)
-- 📥 Inbox tizimi
-- 📈 Statistika va hisobotlar
-- 🔄 Workflow boshqaruvi
-- 👥 Xodimlar boshqaruvi
-- 🌐 Ko'p tillilik (O'zbek, Rus)
+- ✅ **Asosiy struktura** - Barcha handler va keyboard modullar yaratilgan
+- ❌ **Database ulanishi** - PostgreSQL server ishlamayapti
+- ⚠️ **Import xatoliklari** - Ba'zi modullar bir-birini topa olmayapti
+- ⚠️ **To'liq emas** - Ko'p funksiyalar hali yaratilmagan
 
-## 📋 O'rnatish
+## 📋 Keyingi qadamlar
 
-### 1. Repository ni clone qilish:
+### 1. Database serverini ishga tushirish
 ```bash
-git clone https://github.com/yourusername/alfaconnect-bot.git
-cd alfaconnect-bot
+# PostgreSQL o'rnatish (Ubuntu/Debian)
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Database yaratish
+sudo -u postgres createdb alfaconnect_toshkent
+sudo -u postgres createdb alfaconnect_samarqand
+sudo -u postgres createdb alfaconnect_clients
+
+# Foydalanuvchi yaratish
+sudo -u postgres createuser alfaconnect
+sudo -u postgres psql -c "ALTER USER alfaconnect WITH PASSWORD 'ulugbek202';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE alfaconnect_toshkent TO alfaconnect;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE alfaconnect_samarqand TO alfaconnect;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE alfaconnect_clients TO alfaconnect;"
 ```
 
-### 2. Virtual environment yaratish:
+### 2. Bot ishga tushirish
 ```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# yoki
-venv\Scripts\activate  # Windows
-```
+# Virtual environment yaratish
+python3 -m venv venv
+source venv/bin/activate
 
-### 3. Dependencies o'rnatish:
-```bash
+# Modellarni o'rnatish
 pip install -r requirements.txt
-```
 
-### 4. Environment sozlash:
-```bash
-cp .env.example .env
-# .env faylini tahrirlang va BOT_TOKEN ni kiriting
-```
-
-### 5. Botni ishga tushirish:
-```bash
+# Bot ishga tushirish
 python main.py
 ```
 
-## 🔧 Konfiguratsiya
-
-`.env` faylida quyidagi sozlamalar mavjud:
-- `BOT_TOKEN` - Telegram bot token (@BotFather dan)
-- `BOT_ID` - Ixtiyoriy. Agar kiritilmasa, `BOT_TOKEN` dan avtomatik olinadi
-- `ADMIN_IDS` - Global adminlar roʻyxati, vergul bilan ajratilgan (masalan: `123,456`)
-- `ZAYAVKA_GROUP_ID` - Ixtiyoriy. Arizalar uchun guruh ID si
-- `LOG_LEVEL` - Logging darajasi (`INFO`, `DEBUG`, `ERROR`)
-
-- Postgres uchun bitta umumiy URL yoki bo'linma/regionlarga ajratilgan URL lar:
-  - `DATABASE_URL` - Umumiy standart baza URL (masalan: `postgresql://user:pass@host:5432/dbname`)
-  - `DB_URL_TOSHKENT` yoki `DATABASE_URL_TOSHKENT` - Toshkent bazasi
-  - `DB_URL_SAMARQAND` yoki `DATABASE_URL_SAMARQAND` - Samarqand bazasi
-  - `CLIENTS_DB_URL` yoki `CLIENTS_DATABASE_URL` - Mijozlar bazasi
-
-- Agar yuqoridagi URL lar berilmagan bo'lsa, quyidagilar orqali `DATABASE_URL` avtomatik yig'iladi:
-  - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-
-- Region bo‘yicha admin tayinlash hozir DB orqali (region users jadvalidagi `role='admin'`) aniqlanadi.
-  `.env` dagi `ADMIN_IDS_*` fallback sifatida ishlatilishi mumkin.
-
-### .env namunasi
-
+### 3. GitHub ga o'zgarishlarni yuklash
+```bash
+git add .
+git commit -m "Fix import errors and add missing modules"
+git push origin main
 ```
-BOT_TOKEN=7591107647:AAEF1v90SSoi1gJBxhvrzGIzCvUvw9-t0Kg
-ADMIN_IDS=1978574076
-BOT_ID=7591107647
-ZAYAVKA_GROUP_ID="-4867209768"
+
+## 🏗️ Arxitektura
+
+### Database struktura
+- **`alfaconnect_toshkent`** - Toshkent region ma'lumotlari
+- **`alfaconnect_samarqand`** - Samarqand region ma'lumotlari  
+- **`alfaconnect_clients`** - Mijozlar va ularning arizalari
+
+### Handler modullar
+- **`handlers/admin/`** - Administrator funksiyalari
+- **`handlers/manager/`** - Manager funksiyalari
+- **`handlers/technician/`** - Texnik xizmat
+- **`handlers/controller/`** - Nazoratchi
+- **`handlers/warehouse/`** - Ombor
+- **`handlers/call_center/`** - Qo'ng'iroq markazi
+- **`handlers/client/`** - Mijoz interfeysi
+
+### Keyboard modullar
+- **`keyboards/admin_buttons.py`** - Admin klaviatura
+- **`keyboards/manager_buttons.py`** - Manager klaviatura
+- **`keyboards/technician_buttons.py`** - Texnik klaviatura
+- **`keyboards/controllers_buttons.py`** - Controller klaviatura
+- **`keyboards/warehouse_buttons.py`** - Ombor klaviatura
+
+## ⚙️ Sozlash
+
+### .env fayl
+```bash
+BOT_TOKEN=your_bot_token_here
+ADMIN_IDS=123,456,789
+BOT_ID=your_bot_id
+ZAYAVKA_GROUP_ID="-1001234567890"
 
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
+DB_USER=alfaconnect
 DB_PASSWORD=ulugbek202
 
 DB_URL_TOSHKENT=postgresql://alfaconnect:ulugbek202@localhost:5432/alfaconnect_toshkent
 DB_URL_SAMARQAND=postgresql://alfaconnect:ulugbek202@localhost:5432/alfaconnect_samarqand
 CLIENTS_DB_URL=postgresql://alfaconnect:ulugbek202@localhost:5432/alfaconnect_clients
 
-# Ixtiyoriy fallback ro'yxatlar
-ADMIN_IDS_GLOBAL=125
-ADMIN_IDS_TOSHKENT=123
-ADMIN_IDS_SAMARQAND=1234
+ADMIN_IDS_TOSHKENT=123,456
+ADMIN_IDS_SAMARQAND=789,012
+
+LOG_LEVEL=INFO
 ```
 
-## 📁 Fayl strukturasi
+## 🔧 O'rnatish
 
+### Talablar
+- Python 3.8+
+- PostgreSQL 12+
+- Git
+
+### O'rnatish qadamlar
+```bash
+# Repository ni klonlash
+git clone https://github.com/yakubjanov004/mybot.git
+cd mybot
+
+# Virtual environment yaratish
+python3 -m venv venv
+source venv/bin/activate
+
+# Modellarni o'rnatish
+pip install -r requirements.txt
+
+# .env fayl yaratish
+cp .env.example .env
+# .env faylni o'zgartiring
+
+# Database sozlash (yuqorida ko'rsatilgan)
+# Bot ishga tushirish
+python main.py
 ```
+
+## 📊 Test qilish
+
+### 1. Database ulanishini tekshirish
+```bash
+psql -h localhost -U alfaconnect -d alfaconnect_toshkent
+# Parol: ulugbek202
+```
+
+### 2. Bot ishlashini tekshirish
+```bash
+python main.py
+# Xatoliklar log fayllarda saqlanadi
+```
+
+### 3. Telegram da test qilish
+- Botga `/start` buyrug'ini yuboring
+- Turli rollar bilan test qiling
+
+## 🐛 Xatoliklarni hal qilish
+
+### Umumiy muammolar
+1. **Import xatoliklari** - Modul yo'q, uni yarating
+2. **Database ulanishi** - PostgreSQL server ishlamayapti
+3. **Keyboard funksiyalari** - Funksiya yo'q, uni qo'shing
+
+### Log fayllar
+- `testbot_errors.log` - Xatoliklar
+- `testbot_activity.log` - Faollik
+
+## 📝 Yordam
+
+Agar muammolar bo'lsa:
+1. Log fayllarni tekshiring
+2. Database ulanishini tekshiring
+3. GitHub Issues da muammoni yozing
+
+## 🤝 Hissa qo'shish
+
+1. Fork qiling
+2. Feature branch yarating
+3. O'zgarishlarni commit qiling
+4. Pull request yuboring
+
+## 📄 Litsenziya
+
+Bu loyiha ochiq manba hisoblanadi.

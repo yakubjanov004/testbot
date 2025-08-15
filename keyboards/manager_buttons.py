@@ -30,6 +30,135 @@ def get_manager_main_keyboard(lang: str = "uz") -> ReplyKeyboardMarkup:
 
 # Inline keyboards required by handlers
 
+def get_manager_realtime_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Manager realtime monitoring keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("🔄 Yangilash" if lang == 'uz' else "🔄 Обновить"), callback_data="realtime_refresh"),
+            InlineKeyboardButton(text=("📊 Batafsil" if lang == 'uz' else "📊 Детально"), callback_data="realtime_details"),
+        ],
+        [
+            InlineKeyboardButton(text=("🔴 Shoshilinch" if lang == 'uz' else "🔴 Срочно"), callback_data="realtime_urgent"),
+            InlineKeyboardButton(text=("🟠 Yuqori" if lang == 'uz' else "🟠 Высокий"), callback_data="realtime_high"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="back_to_main_menu")],
+    ])
+
+
+def get_realtime_navigation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Realtime navigation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("📋 Barchasi" if lang == 'uz' else "📋 Все"), callback_data="realtime_all"),
+            InlineKeyboardButton(text=("🔴 Shoshilinch" if lang == 'uz' else "🔴 Срочно"), callback_data="realtime_urgent"),
+        ],
+        [
+            InlineKeyboardButton(text=("🟠 Yuqori" if lang == 'uz' else "🟠 Высокий"), callback_data="realtime_high"),
+            InlineKeyboardButton(text=("🟡 O'rtacha" if lang == 'uz' else "🟡 Средний"), callback_data="realtime_normal"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="back_to_realtime")],
+    ])
+
+
+def get_realtime_refresh_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Realtime refresh keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("🔄 Yangilash" if lang == 'uz' else "🔄 Обновить"), callback_data="realtime_refresh"),
+            InlineKeyboardButton(text=("⏸️ To'xtatish" if lang == 'uz' else "⏸️ Остановить"), callback_data="realtime_pause"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="back_to_realtime")],
+    ])
+
+
+def get_application_actions_keyboard(app_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Application actions keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("👁️ Ko'rish" if lang == 'uz' else "👁️ Просмотр"), callback_data=f"view_app_{app_id}"),
+            InlineKeyboardButton(text=("✏️ Tahrirlash" if lang == 'uz' else "✏️ Редактировать"), callback_data=f"edit_app_{app_id}"),
+        ],
+        [
+            InlineKeyboardButton(text=("🔄 Status" if lang == 'uz' else "🔄 Статус"), callback_data=f"status_app_{app_id}"),
+            InlineKeyboardButton(text=("👤 Tayinlash" if lang == 'uz' else "👤 Назначить"), callback_data=f"assign_app_{app_id}"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="back_to_applications_list")],
+    ])
+
+
+def get_application_navigation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Application navigation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("📋 Barchasi" if lang == 'uz' else "📋 Все"), callback_data="apps_all"),
+            InlineKeyboardButton(text=("🆕 Yangi" if lang == 'uz' else "🆕 Новые"), callback_data="apps_new"),
+        ],
+        [
+            InlineKeyboardButton(text=("🔄 Jarayonda" if lang == 'uz' else "🔄 В процессе"), callback_data="apps_in_progress"),
+            InlineKeyboardButton(text=("✅ Bajarilgan" if lang == 'uz' else "✅ Выполненные"), callback_data="apps_completed"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="back_to_main_menu")],
+    ])
+
+
+def get_inbox_navigation_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Inbox navigation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("📋 Barchasi" if lang == 'uz' else "📋 Все"), callback_data="inbox_all"),
+            InlineKeyboardButton(text=("🆕 Yangi" if lang == 'uz' else "🆕 Новые"), callback_data="inbox_new"),
+        ],
+        [
+            InlineKeyboardButton(text=("🔄 Jarayonda" if lang == 'uz' else "🔄 В процессе"), callback_data="inbox_in_progress"),
+            InlineKeyboardButton(text=("✅ Bajarilgan" if lang == 'uz' else "✅ Выполненные"), callback_data="inbox_completed"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="back_to_main_menu")],
+    ])
+
+
+def get_junior_assignment_keyboard(juniors, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Junior manager assignment keyboard"""
+    rows = []
+    for junior in juniors:
+        rows.append([
+            InlineKeyboardButton(
+                text=junior['full_name'], 
+                callback_data=f"assign_junior_{junior['id']}"
+            )
+        ])
+    rows.append([
+        InlineKeyboardButton(
+            text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), 
+            callback_data="back_to_inbox"
+        )
+    ])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def get_junior_confirmation_keyboard(junior_id: int, request_id: str, lang: str = 'uz') -> InlineKeyboardMarkup:
+    """Junior assignment confirmation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text=("✅ Tasdiqlash" if lang == 'uz' else "✅ Подтвердить"), 
+                callback_data=f"confirm_junior_{junior_id}_{request_id}"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), 
+                callback_data="back_to_inbox"
+            )
+        ]
+    ])
+
+
 def get_manager_client_search_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [

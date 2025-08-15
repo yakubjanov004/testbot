@@ -17,6 +17,61 @@ def get_technician_main_menu_keyboard(lang: str = "uz") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
+def get_technician_inbox_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Technician inbox navigation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("📋 Barchasi" if lang == 'uz' else "📋 Все"), callback_data="tech_inbox_all"),
+            InlineKeyboardButton(text=("🆕 Yangi" if lang == 'uz' else "🆕 Новые"), callback_data="tech_inbox_new"),
+        ],
+        [
+            InlineKeyboardButton(text=("🔄 Jarayonda" if lang == 'uz' else "🔄 В процессе"), callback_data="tech_inbox_in_progress"),
+            InlineKeyboardButton(text=("✅ Bajarilgan" if lang == 'uz' else "✅ Выполненные"), callback_data="tech_inbox_completed"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="tech_back_to_main")],
+    ])
+
+
+def get_technician_tasks_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Technician tasks navigation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("📋 Barchasi" if lang == 'uz' else "📋 Все"), callback_data="tech_tasks_all"),
+            InlineKeyboardButton(text=("🆕 Yangi" if lang == 'uz' else "🆕 Новые"), callback_data="tech_tasks_new"),
+        ],
+        [
+            InlineKeyboardButton(text=("🔄 Jarayonda" if lang == 'uz' else "🔄 В процессе"), callback_data="tech_tasks_in_progress"),
+            InlineKeyboardButton(text=("✅ Bajarilgan" if lang == 'uz' else "✅ Выполненные"), callback_data="tech_tasks_completed"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="tech_back_to_main")],
+    ])
+
+
+def get_technician_reports_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Technician reports navigation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=("📊 Kunlik" if lang == 'uz' else "📊 Ежедневный"), callback_data="tech_report_daily"),
+            InlineKeyboardButton(text=("🗓 Haftalik" if lang == 'uz' else "🗓 Еженедельный"), callback_data="tech_report_weekly"),
+        ],
+        [
+            InlineKeyboardButton(text=("📅 Oylik" if lang == 'uz' else "📅 Ежемесячный"), callback_data="tech_report_monthly"),
+            InlineKeyboardButton(text=("📈 Natijalar" if lang == 'uz' else "📈 Показатели"), callback_data="tech_report_performance"),
+        ],
+        [
+            InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="tech_back_to_main")],
+    ])
+
+
+def get_technician_back_keyboard(lang: str = "uz") -> InlineKeyboardMarkup:
+    """Technician back navigation keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=("⬅️ Orqaga" if lang == 'uz' else "⬅️ Назад"), callback_data="tech_back_to_main")],
+    ])
+
+
 def get_back_technician_keyboard(lang: str = "uz") -> ReplyKeyboardMarkup:
     """Reply keyboard with a single 'Home' button"""
     back_text = "🏠 Asosiy menyu" if lang == "uz" else "🏠 Главное меню"

@@ -2,7 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from typing import List, Dict, Any
 
 
-def controllers_main_menu(lang='uz'):
+def get_controller_main_keyboard(lang='uz'):
     if lang == 'uz':
         keyboard = [
             [KeyboardButton(text="📥 Inbox"), KeyboardButton(text="📋 Arizalarni ko'rish")],
